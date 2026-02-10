@@ -1,65 +1,136 @@
-import Image from "next/image";
+import DashboardCard from "@/components/DashboardCard";
+import WalletManagement from "@/components/WalletManagement";
+import FloatingActionButton from "@/components/FloatingActionButton";
+import QuickTransferButton from "@/components/QuickTransferButton";
+import NotificationsBadge from "@/components/NotificationsBadge";
+import RecentActivityCard from "@/components/RecentActivityCard";
+import { getServerUserId } from "@/lib/auth-helpers";
+import { createClient } from "@/lib/supabase-server";
+import type { Transaction, Wallet } from "@/types";
 
-export default function Home() {
+async function getWallets(): Promise<Wallet[]> {
+  try {
+    const userId = await getServerUserId();
+    
+    if (!userId) {
+      console.warn("No user_id found, returning empty wallets");
+      return [];
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name", { ascending: true });
+
+    if (error) throw error;
+    return (data as Wallet[]) || [];
+  } catch (error) {
+    console.error("Error fetching wallets:", error);
+    return [];
+  }
+}
+
+async function getTransactions(): Promise<Transaction[]> {
+  try {
+    const userId = await getServerUserId();
+    
+    if (!userId) {
+      return [];
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    return (data as Transaction[]) || [];
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    return [];
+  }
+}
+
+function calculateMonthlyStats(transactions: Transaction[]) {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthlyTransactions = transactions.filter((t) => {
+    const transactionDate = new Date(t.date);
+    return (
+      transactionDate.getMonth() === currentMonth &&
+      transactionDate.getFullYear() === currentYear
+    );
+  });
+
+  const income = monthlyTransactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const expense = monthlyTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  return { income, expense };
+}
+
+export default async function Home() {
+  const wallets = await getWallets();
+  const transactions = await getTransactions();
+  
+  // Calculate total balance from wallets
+  const totalBalance = wallets.reduce((sum, wallet) => sum + (wallet.balance || 0), 0);
+  
+  // Calculate monthly income and expense
+  const { income: monthlyIncome, expense: monthlyExpense } = calculateMonthlyStats(transactions);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen pb-32 px-4 py-8 relative z-10">
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-1">
+              Welcome back
+            </h1>
+            <p className="text-slate-400 text-sm">
+              Here's your financial overview
+            </p>
+          </div>
+          <NotificationsBadge />
+        </div>
+      </div>
+
+      {/* Bento Grid Layout */}
+      <div className="space-y-6">
+        {/* Main Dashboard Card - Full Width */}
+        <DashboardCard
+          totalBalance={totalBalance}
+          monthlyIncome={monthlyIncome}
+          monthlyExpense={monthlyExpense}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        {/* Quick Actions Bento Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Quick Transfer */}
+          <QuickTransferButton />
+
+          {/* Recent Activity */}
+          <RecentActivityCard />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* Wallet Management Section */}
+        <WalletManagement initialWallets={wallets} />
+      </div>
+
+      {/* Floating Action Button */}
+      <FloatingActionButton />
+    </main>
   );
 }
