@@ -24,17 +24,17 @@ function getErrorMessage(error: { message?: string; status?: number }): string {
 }
 
 export default function LoginPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      window.location.href = "/";
+    if (!loading && user) {
+      window.location.replace("/");
     }
-  }, [user]);
+  }, [loading, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,13 +64,22 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href = "/";
+      await new Promise((r) => setTimeout(r, 300));
+      window.location.replace("/");
     } catch {
       setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#0F111A]">
+        <div className="animate-pulse text-white/50">Memuat...</div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#0F111A]">

@@ -39,7 +39,7 @@ function getErrorMessage(error: { message?: string; status?: number }): string {
 }
 
 export default function RegisterPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,10 +52,10 @@ export default function RegisterPage() {
   const strength = getPasswordStrength(password);
 
   useEffect(() => {
-    if (user) {
-      window.location.href = "/";
+    if (!loading && user) {
+      window.location.replace("/");
     }
-  }, [user]);
+  }, [loading, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +126,14 @@ export default function RegisterPage() {
       setResendLoading(false);
     }
   };
+
+  if (loading && !emailSent) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#0F111A]">
+        <div className="animate-pulse text-white/50">Memuat...</div>
+      </main>
+    );
+  }
 
   if (emailSent) {
     return (
