@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletIcon } from "lucide-react";
 import WalletFormSheet from "./WalletFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
@@ -62,6 +62,10 @@ export default function WalletManagement({ initialWallets }: WalletManagementPro
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
+
+  useEffect(() => {
+    setWallets(initialWallets);
+  }, [initialWallets]);
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat("id-ID", {

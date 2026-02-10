@@ -61,11 +61,13 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
 
   const getTransactionLabel = () => {
     if (transaction.type === "income") {
-      return transaction.destination_wallet?.name || "Income";
+      return transaction.destination_wallet?.name || transaction.destination_wallet_id || "Income";
     } else if (transaction.type === "transfer") {
-      return `${transaction.source_wallet?.name || ""} → ${transaction.destination_wallet?.name || ""}`;
+      return `${transaction.source_wallet?.name || transaction.source_wallet_id || ""} → ${
+        transaction.destination_wallet?.name || transaction.destination_wallet_id || ""
+      }`;
     }
-    return transaction.source_wallet?.name || "Expense";
+    return transaction.source_wallet?.name || transaction.source_wallet_id || "Expense";
   };
 
   // Helper function to get category style (icon + color)

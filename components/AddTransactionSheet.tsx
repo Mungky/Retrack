@@ -392,15 +392,13 @@ export default function AddTransactionSheet({ isOpen, onClose }: AddTransactionS
         date: selectedDate,
         category_id: categoryId,
         user_id: user.id, // Use authenticated user ID
+        source_wallet_id: selectedWallet,
       };
 
-      // Add wallet based on transaction type
-      if (isIncome) {
-        transactionData.destination_wallet_id = selectedWallet;
-      } else {
-        transactionData.source_wallet_id = selectedWallet;
-      }
+      // Income and expense both use source_wallet_id in current schema.
+      transactionData.destination_wallet_id = null;
 
+      // Wallet balance updates are handled by database trigger.
       const { data, error } = await supabaseClient
         .from("transactions")
         .insert([transactionData])
@@ -416,9 +414,9 @@ export default function AddTransactionSheet({ isOpen, onClose }: AddTransactionS
       }
 
       showToast("Transaksi berhasil disimpan!", "success");
+      router.refresh();
       onClose();
       resetForm();
-      setTimeout(() => { router.refresh(); }, 500);
     } catch (error: any) {
       console.error("Error saving transaction:", error);
       

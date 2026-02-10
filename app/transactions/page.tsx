@@ -15,10 +15,16 @@ async function getTransactions(userId: string | null): Promise<Transaction[]> {
     const { data: transactions, error } = await supabase
       .from("transactions")
       .select(`
-        *,
+        id,
+        amount,
+        type,
+        date,
+        category_id,
+        source_wallet_id,
+        destination_wallet_id,
         category:categories(id, name, icon),
-        source_wallet:wallets!transactions_source_wallet_id_fkey(id, name),
-        destination_wallet:wallets!transactions_destination_wallet_id_fkey(id, name)
+        source_wallet:wallets!source_wallet_id(id, name),
+        destination_wallet:wallets!destination_wallet_id(id, name)
       `)
       .eq("user_id", userId)
       .order("date", { ascending: false });
