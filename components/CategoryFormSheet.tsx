@@ -60,7 +60,7 @@ export default function CategoryFormSheet({
         setName(category.name);
         setSelectedIcon(category.icon || "receipt");
         setSelectedColor(category.color || COLORS[0]);
-        setType(category.type);
+        setType(category.type || 'expense');
       }
     } else {
       setIsSheetOpen(false);
