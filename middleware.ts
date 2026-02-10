@@ -12,7 +12,7 @@ const PROTECTED_PATHS = [
   "/budget",
 ];
 
-const AUTH_PATHS = ["/login", "/register"];
+const AUTH_PATHS = ["/login", "/register", "/signup"];
 
 function isMatchedPath(pathname: string, targetPath: string) {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
@@ -95,5 +95,6 @@ export const config = {
     "/budget/:path*",
     "/login",
     "/register",
+    "/signup",
   ],
 };
