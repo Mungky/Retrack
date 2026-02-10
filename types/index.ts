@@ -21,6 +21,13 @@ export interface Category {
   user_id?: string;
 }
 
+export interface Budget {
+  id: string;
+  user_id: string;
+  category_id: string;
+  amount: number;
+}
+
 export interface WalletReference {
   id: string;
   name: string;
@@ -37,6 +44,7 @@ export interface Transaction {
   amount: number;
   type: TransactionType;
   date: string;
+  description?: string | null;
   category_id: string | null;
   source_wallet_id: string | null;
   destination_wallet_id: string | null;

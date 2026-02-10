@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
-  ArrowRightLeft, 
-  Pencil, 
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import {
+  ArrowUpCircle,
+  ArrowDownCircle,
+  ArrowRightLeft,
+  MoreVertical,
+  Pencil,
   Trash2,
   Utensils,
   ShoppingBag,
@@ -17,21 +19,25 @@ import {
   Briefcase,
   Coffee,
   Plane,
-  Home,
   Banknote,
-  Receipt
 } from "lucide-react";
 import EditTransactionSheet from "./EditTransactionSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import { isIncome, isExpense } from "@/lib/transaction-calc";
 import type { Transaction } from "@/types";
 
 interface TransactionItemProps {
   transaction: Transaction;
+  /** When true, dropdown opens upwards to avoid clipping by bottom nav */
+  isLastItem?: boolean;
 }
 
-export default function TransactionItem({ transaction }: TransactionItemProps) {
+export default function TransactionItem({ transaction, isLastItem = false }: TransactionItemProps) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -41,201 +47,196 @@ export default function TransactionItem({ transaction }: TransactionItemProps) {
     }).format(amount);
   };
 
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+    });
+  };
+
   const getTransactionIcon = () => {
-    if (transaction.type === "income") {
-      return ArrowUpCircle;
-    } else if (transaction.type === "transfer") {
-      return ArrowRightLeft;
-    }
+    if (isIncome(transaction)) return ArrowUpCircle;
+    if (transaction.type === "transfer") return ArrowRightLeft;
     return ArrowDownCircle;
   };
 
   const getTransactionColor = () => {
-    if (transaction.type === "income") {
-      return "text-emerald-400";
-    } else if (transaction.type === "transfer") {
-      return "text-cyan-400";
-    }
-    return "text-red-400";
+    if (isIncome(transaction)) return "text-emerald-400";
+    if (transaction.type === "transfer") return "text-blue-400";
+    return "text-rose-500";
+  };
+
+  const getAmountColor = () => {
+    if (isIncome(transaction)) return "text-emerald-400";
+    if (isExpense(transaction)) return "text-rose-500";
+    return "text-white";
   };
 
   const getTransactionLabel = () => {
-    if (transaction.type === "income") {
-      return transaction.destination_wallet?.name || transaction.destination_wallet_id || "Income";
-    } else if (transaction.type === "transfer") {
-      return `${transaction.source_wallet?.name || transaction.source_wallet_id || ""} → ${
-        transaction.destination_wallet?.name || transaction.destination_wallet_id || ""
+    if (isIncome(transaction)) {
+      return (
+        transaction.destination_wallet?.name ||
+        transaction.destination_wallet_id ||
+        "Income"
+      );
+    }
+    if (transaction.type === "transfer") {
+      return `${transaction.source_wallet?.name || ""} → ${
+        transaction.destination_wallet?.name || ""
       }`;
     }
-    return transaction.source_wallet?.name || transaction.source_wallet_id || "Expense";
+    return (
+      transaction.source_wallet?.name ||
+      transaction.source_wallet_id ||
+      "Expense"
+    );
   };
 
-  // Helper function to get category style (icon + color)
   const getCategoryStyle = (categoryName: string | null | undefined) => {
     if (!categoryName) {
+      const txIsExpense = isExpense(transaction);
       return {
         icon: getTransactionIcon(),
         iconColor: getTransactionColor(),
-        bgColor: "bg-slate-800/50"
+        bgColor: txIsExpense ? "bg-rose-500/15" : "bg-emerald-500/15",
       };
     }
 
     const nameLower = categoryName.toLowerCase().trim();
-    
-    // Mapping kategori ke icon dan warna
-    const categoryMap: { [key: string]: { icon: any; iconColor: string; bgColor: string } } = {
-      'food': {
-        icon: Utensils,
-        iconColor: 'text-orange-500',
-        bgColor: 'bg-orange-500/10'
-      },
-      'shopping': {
-        icon: ShoppingBag,
-        iconColor: 'text-pink-500',
-        bgColor: 'bg-pink-500/10'
-      },
-      'transport': {
-        icon: Car,
-        iconColor: 'text-blue-500',
-        bgColor: 'bg-blue-500/10'
-      },
-      'bills': {
-        icon: Zap,
-        iconColor: 'text-yellow-500',
-        bgColor: 'bg-yellow-500/10'
-      },
-      'health': {
-        icon: HeartPulse,
-        iconColor: 'text-red-500',
-        bgColor: 'bg-red-500/10'
-      },
-      'entertainment': {
-        icon: Gamepad2,
-        iconColor: 'text-purple-500',
-        bgColor: 'bg-purple-500/10'
-      },
-      'education': {
-        icon: GraduationCap,
-        iconColor: 'text-indigo-500',
-        bgColor: 'bg-indigo-500/10'
-      },
-      'work': {
-        icon: Briefcase,
-        iconColor: 'text-cyan-500',
-        bgColor: 'bg-cyan-500/10'
-      },
-      'coffee': {
-        icon: Coffee,
-        iconColor: 'text-amber-600',
-        bgColor: 'bg-amber-600/10'
-      },
-      'travel': {
-        icon: Plane,
-        iconColor: 'text-sky-500',
-        bgColor: 'bg-sky-500/10'
-      },
+    const categoryMap: Record<
+      string,
+      { icon: typeof Utensils; iconColor: string; bgColor: string }
+    > = {
+      food: { icon: Utensils, iconColor: "text-orange-500", bgColor: "bg-orange-500/15" },
+      shopping: { icon: ShoppingBag, iconColor: "text-pink-500", bgColor: "bg-pink-500/15" },
+      transport: { icon: Car, iconColor: "text-blue-500", bgColor: "bg-blue-500/15" },
+      bills: { icon: Zap, iconColor: "text-yellow-500", bgColor: "bg-yellow-500/15" },
+      health: { icon: HeartPulse, iconColor: "text-red-500", bgColor: "bg-red-500/15" },
+      entertainment: { icon: Gamepad2, iconColor: "text-purple-500", bgColor: "bg-purple-500/15" },
+      education: { icon: GraduationCap, iconColor: "text-indigo-500", bgColor: "bg-indigo-500/15" },
+      work: { icon: Briefcase, iconColor: "text-cyan-500", bgColor: "bg-cyan-500/15" },
+      coffee: { icon: Coffee, iconColor: "text-amber-600", bgColor: "bg-amber-500/15" },
+      travel: { icon: Plane, iconColor: "text-sky-500", bgColor: "bg-sky-500/15" },
     };
 
-    // Exact match
-    if (categoryMap[nameLower]) {
-      return categoryMap[nameLower];
-    }
+    if (categoryMap[nameLower]) return categoryMap[nameLower];
+    if (nameLower.includes("food") || nameLower.includes("makanan")) return categoryMap.food;
+    if (nameLower.includes("shopping") || nameLower.includes("belanja")) return categoryMap.shopping;
+    if (nameLower.includes("transport")) return categoryMap.transport;
+    if (nameLower.includes("bills") || nameLower.includes("tagihan")) return categoryMap.bills;
+    if (nameLower.includes("health") || nameLower.includes("kesehatan")) return categoryMap.health;
+    if (nameLower.includes("entertainment")) return categoryMap.entertainment;
+    if (nameLower.includes("education")) return categoryMap.education;
+    if (nameLower.includes("work") || nameLower.includes("kerja")) return categoryMap.work;
+    if (nameLower.includes("coffee") || nameLower.includes("kopi")) return categoryMap.coffee;
+    if (nameLower.includes("travel")) return categoryMap.travel;
 
-    // Partial match
-    if (nameLower.includes('food') || nameLower.includes('makanan') || nameLower.includes('restaurant')) {
-      return categoryMap['food'];
-    }
-    if (nameLower.includes('shopping') || nameLower.includes('belanja')) {
-      return categoryMap['shopping'];
-    }
-    if (nameLower.includes('transport') || nameLower.includes('transportasi') || nameLower.includes('car')) {
-      return categoryMap['transport'];
-    }
-    if (nameLower.includes('bills') || nameLower.includes('tagihan') || nameLower.includes('utilities')) {
-      return categoryMap['bills'];
-    }
-    if (nameLower.includes('health') || nameLower.includes('kesehatan') || nameLower.includes('medical')) {
-      return categoryMap['health'];
-    }
-    if (nameLower.includes('entertainment') || nameLower.includes('hiburan') || nameLower.includes('game')) {
-      return categoryMap['entertainment'];
-    }
-    if (nameLower.includes('education') || nameLower.includes('pendidikan') || nameLower.includes('school')) {
-      return categoryMap['education'];
-    }
-    if (nameLower.includes('work') || nameLower.includes('kerja') || nameLower.includes('business')) {
-      return categoryMap['work'];
-    }
-    if (nameLower.includes('coffee') || nameLower.includes('kopi') || nameLower.includes('cafe')) {
-      return categoryMap['coffee'];
-    }
-    if (nameLower.includes('travel') || nameLower.includes('perjalanan') || nameLower.includes('trip')) {
-      return categoryMap['travel'];
-    }
-
-    // Default
-    return {
-      icon: Banknote,
-      iconColor: 'text-slate-500',
-      bgColor: 'bg-slate-500/10'
-    };
+    return { icon: Banknote, iconColor: "text-slate-400", bgColor: "bg-slate-500/15" };
   };
 
-  // Get category style or fallback to transaction style
   const categoryStyle = transaction.category?.name
     ? getCategoryStyle(transaction.category.name)
     : {
         icon: getTransactionIcon(),
         iconColor: getTransactionColor(),
-        bgColor: "bg-slate-800/50"
+        bgColor:
+          isExpense(transaction) ? "bg-rose-500/15" : "bg-emerald-500/15",
       };
 
   const CategoryIcon = categoryStyle.icon;
-  const iconColor = categoryStyle.iconColor;
-  const bgColor = categoryStyle.bgColor;
+  const title = transaction.description?.trim() || transaction.category?.name || getTransactionLabel();
+  const subtitle = `${formatDate(transaction.date)} · ${transaction.category?.name || getTransactionLabel()}`;
+
+  useEffect(() => {
+    if (menuOpen && menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      if (isLastItem) {
+        setMenuPosition({
+          top: rect.top - 8,
+          left: rect.right - 130,
+        });
+      } else {
+        setMenuPosition({
+          top: rect.bottom + 4,
+          left: rect.right - 130,
+        });
+      }
+    }
+  }, [menuOpen, isLastItem]);
+
+  const dropdownContent = menuOpen && (
+    <>
+      <div
+        className="fixed inset-0 z-[80]"
+        onClick={() => setMenuOpen(false)}
+      />
+      <div
+        className="fixed z-[90] fintech-card py-1 min-w-[130px] animate-fade-in"
+        style={{
+          top: menuPosition.top,
+          left: menuPosition.left,
+          transform: isLastItem ? "translateY(-100%)" : "none",
+        }}
+      >
+        <button
+          onClick={() => {
+            setMenuOpen(false);
+            setIsEditOpen(true);
+          }}
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+        >
+          <Pencil size={16} className="text-cyan-400" />
+          Edit
+        </button>
+        <button
+          onClick={() => {
+            setMenuOpen(false);
+            setIsDeleteOpen(true);
+          }}
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+        >
+          <Trash2 size={16} className="text-rose-400" />
+          Delete
+        </button>
+      </div>
+    </>
+  );
 
   return (
     <>
-      <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 border border-slate-800 p-4 hover:border-slate-700 transition-all">
-        <div className="flex items-center gap-4">
-          {/* Icon */}
-          <div className={`p-3 rounded-xl ${bgColor} border border-white/5`}>
-            <CategoryIcon className={iconColor} size={24} />
-          </div>
+      <div className="flex items-center gap-4 py-4 px-4">
+        {/* Squircle icon - rounded square with soft colored bg */}
+        <div
+          className={`flex-shrink-0 w-11 h-11 rounded-[12px] ${categoryStyle.bgColor} flex items-center justify-center`}
+        >
+          <CategoryIcon className={categoryStyle.iconColor} size={22} />
+        </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <h3 className="text-white font-semibold truncate">
-              {transaction.category?.name || getTransactionLabel()}
-            </h3>
-            <p className="text-sm text-slate-400 truncate">
-              {getTransactionLabel()}
-            </p>
-          </div>
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-white font-semibold truncate">{title}</h3>
+          <p className="text-sm text-white/50 truncate">{subtitle}</p>
+        </div>
 
-          {/* Amount */}
-          <div className="text-right">
-            <p className={`font-bold ${getTransactionColor()}`}>
-              {transaction.type === "expense" ? "-" : transaction.type === "income" ? "+" : ""}
-              {formatCurrency(transaction.amount)}
-            </p>
-          </div>
+        {/* Amount - right aligned */}
+        <p className={`font-bold ${getAmountColor()} flex-shrink-0`}>
+          {isExpense(transaction) ? "-" : isIncome(transaction) ? "+" : ""}
+          {formatCurrency(transaction.amount)}
+        </p>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={() => setIsEditOpen(true)}
-              className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              <Pencil className="text-cyan-400" size={16} />
-            </button>
-            <button
-              onClick={() => setIsDeleteOpen(true)}
-              className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              <Trash2 className="text-red-400" size={16} />
-            </button>
-          </div>
+        {/* Three-dot menu - always visible */}
+        <div className="relative flex-shrink-0">
+          <button
+            ref={menuButtonRef}
+            onClick={() => setMenuOpen((v) => !v)}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Menu"
+          >
+            <MoreVertical className="text-white/50" size={20} />
+          </button>
+
+          {typeof document !== "undefined" &&
+            createPortal(dropdownContent, document.body)}
         </div>
       </div>
 

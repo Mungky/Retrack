@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { X, Loader2 } from "lucide-react";
+import { revalidateTransactionPaths } from "@/app/actions";
+import { X, Loader2, Calendar } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { getCategoryIcon, getCategoryStyle } from "./AddTransactionSheet";
+import CurrencyInput from "./CurrencyInput";
+import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import type { Category, Transaction, Wallet } from "@/types";
 
 interface EditTransactionSheetProps {
@@ -25,15 +28,14 @@ export default function EditTransactionSheet({
   const { showToast } = useToast();
   const { user } = useAuth();
   const { setIsSheetOpen } = useSheet();
-  const [amount, setAmount] = useState(transaction.amount.toString());
+  const [amount, setAmount] = useState(transaction.amount);
+  const [description, setDescription] = useState(transaction.description || "");
   const [isIncome, setIsIncome] = useState(transaction.type === "income");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     transaction.category_id
   );
   const [selectedWallet, setSelectedWallet] = useState<string>(
-    transaction.type === "income"
-      ? transaction.destination_wallet_id || ""
-      : transaction.source_wallet_id || ""
+    transaction.source_wallet_id || ""
   );
   const [selectedDate, setSelectedDate] = useState(transaction.date);
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -42,15 +44,42 @@ export default function EditTransactionSheet({
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
+  // Dynamic theme based on current type toggle
+  const accent = getTransactionAccent(isIncome ? "income" : "expense");
+  const theme = formThemes[accent];
+
   useEffect(() => {
     if (isOpen && user?.id) {
       setIsSheetOpen(true);
+      setAmount(transaction.amount);
+      setDescription(transaction.description || "");
+      setIsIncome(transaction.type === "income");
+      setSelectedCategory(transaction.category_id);
+      setSelectedWallet(transaction.source_wallet_id || "");
+      setSelectedDate(transaction.date);
       fetchWallets();
       fetchCategories();
     } else {
       setIsSheetOpen(false);
     }
-  }, [isOpen, user?.id, setIsSheetOpen]);
+  }, [isOpen, user?.id, setIsSheetOpen, transaction.id]);
+
+  // Filter categories by transaction type. Treat null/empty type as 'expense' (legacy fallback).
+  const filteredCategories = useMemo(() => {
+    const targetType = isIncome ? "income" : "expense";
+    return categories.filter((cat) => {
+      const effectiveType = (cat.type || "expense").toLowerCase();
+      return effectiveType === targetType;
+    });
+  }, [categories, isIncome]);
+
+  // Clear selected category when it's not in the filtered list
+  useEffect(() => {
+    if (selectedCategory && filteredCategories.length > 0) {
+      const exists = filteredCategories.some((c) => c.id === selectedCategory);
+      if (!exists) setSelectedCategory(null);
+    }
+  }, [filteredCategories, selectedCategory]);
 
   const fetchWallets = async () => {
     if (!user?.id) return;
@@ -77,14 +106,23 @@ export default function EditTransactionSheet({
 
     try {
       setIsLoadingCategories(true);
-      const { data, error } = await supabaseClient
-        .from("categories")
-        .select("id, name, icon")
-        .eq("user_id", user.id)
-        .order("name", { ascending: true });
+      const [resPersonal, resGlobal] = await Promise.all([
+        supabaseClient
+          .from("categories")
+          .select("id, name, icon, type")
+          .eq("user_id", user.id)
+          .order("name", { ascending: true }),
+        supabaseClient
+          .from("categories")
+          .select("id, name, icon, type")
+          .is("user_id", null)
+          .order("name", { ascending: true }),
+      ]);
 
-      if (error) throw error;
-      if (data) setCategories(data as Category[]);
+      const personal = resPersonal.error ? [] : ((resPersonal.data as Category[]) || []);
+      const global = resGlobal.error ? [] : ((resGlobal.data as Category[]) || []);
+      const merged = [...global, ...personal].sort((a, b) => a.name.localeCompare(b.name));
+      setCategories(merged);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
@@ -95,8 +133,13 @@ export default function EditTransactionSheet({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!amount || !selectedWallet || (!selectedCategory && transaction.type !== "transfer")) {
+    if (!description?.trim() || !selectedWallet || !selectedCategory) {
       showToast("Mohon lengkapi semua field.", "error");
+      return;
+    }
+
+    if (amount <= 0) {
+      showToast("Nominal tidak valid.", "error");
       return;
     }
 
@@ -108,27 +151,16 @@ export default function EditTransactionSheet({
     setIsLoading(true);
 
     try {
-      const amountNum = parseInt(amount.replace(/\D/g, ""));
-      if (isNaN(amountNum) || amountNum <= 0) {
-        showToast("Nominal tidak valid.", "error");
-        return;
-      }
-
       const transactionData: any = {
-        amount: amountNum,
+        amount,
         type: isIncome ? "income" : "expense",
         date: selectedDate,
+        description: description.trim(),
         category_id: selectedCategory,
         user_id: user.id,
+        source_wallet_id: selectedWallet,
+        destination_wallet_id: null,
       };
-
-      if (isIncome) {
-        transactionData.destination_wallet_id = selectedWallet;
-        transactionData.source_wallet_id = null;
-      } else {
-        transactionData.source_wallet_id = selectedWallet;
-        transactionData.destination_wallet_id = null;
-      }
 
       const { error } = await supabaseClient
         .from("transactions")
@@ -137,11 +169,10 @@ export default function EditTransactionSheet({
 
       if (error) throw error;
 
+      await revalidateTransactionPaths();
       showToast("Transaksi berhasil diupdate!", "success");
       onClose();
-      setTimeout(() => {
-        router.refresh();
-      }, 500);
+      setTimeout(() => router.refresh(), 500);
     } catch (error: any) {
       console.error("Error updating transaction:", error);
       showToast(error?.message || "Gagal mengupdate transaksi.", "error");
@@ -155,9 +186,13 @@ export default function EditTransactionSheet({
   return (
     <div className="fixed inset-0 z-[60] flex items-end">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto">
+      <div className={`relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto ${theme.bgTint}`}>
+        {/* Header */}
         <div className="sticky top-0 bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Edit Transaksi</h2>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full ${isIncome ? 'bg-emerald-400' : 'bg-rose-400'} transition-colors`} />
+            <h2 className="text-xl font-bold text-white">Edit Transaksi</h2>
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-xl hover:bg-white/10 transition-colors"
@@ -167,54 +202,72 @@ export default function EditTransactionSheet({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Amount */}
+          {/* Amount - CurrencyInput */}
           <div>
             <label className="block text-sm font-semibold text-slate-300 mb-2">
               Nominal
             </label>
-            <input
-              type="text"
+            <CurrencyInput
               value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))}
-              placeholder="Rp 0"
-              className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white text-2xl font-bold placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              onChange={setAmount}
+              accent={accent}
             />
           </div>
 
-          {/* Type Toggle */}
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
+              Deskripsi
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Contoh: Makan siang, Gaji bulanan"
+              className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
+            />
+          </div>
+
+          {/* Type Toggle - themed */}
           <div className="flex gap-4">
             <button
               type="button"
-              onClick={() => setIsIncome(false)}
+              onClick={() => {
+                setIsIncome(false);
+                setSelectedCategory(null);
+              }}
               className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                 !isIncome
-                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                   : "bg-slate-900/50 text-slate-400 border border-slate-800"
               }`}
             >
-              Expense
+              Pengeluaran
             </button>
             <button
               type="button"
-              onClick={() => setIsIncome(true)}
+              onClick={() => {
+                setIsIncome(true);
+                setSelectedCategory(null);
+              }}
               className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                 isIncome
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   : "bg-slate-900/50 text-slate-400 border border-slate-800"
               }`}
             >
-              Income
+              Pemasukan
             </button>
           </div>
 
           {/* Category */}
-          {!isLoadingCategories && categories.length > 0 && (
+          {!isLoadingCategories && filteredCategories.length > 0 && (
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">
                 Kategori
               </label>
               <div className="grid grid-cols-4 gap-3">
-                {categories.map((category) => {
+                {filteredCategories.map((category) => {
                   const categoryStyle = getCategoryStyle(category.name);
                   const Icon = categoryStyle.icon;
                   const isSelected = selectedCategory === category.id;
@@ -225,7 +278,7 @@ export default function EditTransactionSheet({
                       onClick={() => setSelectedCategory(category.id)}
                       className={`p-4 rounded-2xl border transition-all ${
                         isSelected
-                          ? `${categoryStyle.bgColor} border-cyan-500/50`
+                          ? `${categoryStyle.bgColor} ${theme.selectedBorder}`
                           : "bg-slate-900/50 border-slate-800"
                       }`}
                     >
@@ -259,11 +312,12 @@ export default function EditTransactionSheet({
               <select
                 value={selectedWallet}
                 onChange={(e) => setSelectedWallet(e.target.value)}
-                className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
+                style={{ colorScheme: 'dark' }}
               >
                 <option value="">Pilih wallet</option>
                 {wallets.map((wallet) => (
-                  <option key={wallet.id} value={wallet.id}>
+                  <option key={wallet.id} value={wallet.id} className="bg-slate-900">
                     {wallet.name}
                   </option>
                 ))}
@@ -271,24 +325,37 @@ export default function EditTransactionSheet({
             </div>
           )}
 
-          {/* Date */}
+          {/* Date Picker - styled with Calendar icon */}
           <div>
             <label className="block text-sm font-semibold text-slate-300 mb-2">
               Tanggal
             </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
-            />
+            <div className="relative group">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" size={20} />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className={`w-full pl-12 pr-4 py-4 text-white bg-slate-900/50 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 transition-all ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
+                style={{ colorScheme: 'dark' }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-white/40">
+              {new Date(selectedDate).toLocaleDateString("id-ID", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
           </div>
 
-          {/* Submit */}
+          {/* Submit - themed */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+            style={{ boxShadow: theme.submitShadow }}
           >
             {isLoading ? (
               <>

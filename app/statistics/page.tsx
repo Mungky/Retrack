@@ -1,44 +1,55 @@
 import { getServerUserId } from "@/lib/auth-helpers";
 import { createClient } from "@/lib/supabase-server";
-import StatisticsClient from "@/components/StatisticsClient";
+import StatisticsTabs from "@/components/StatisticsTabs";
 import type { Category, Transaction } from "@/types";
 
-async function getMonthlyTransactions(userId: string | null) {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+async function getTransactionsThisYear(userId: string | null): Promise<Transaction[]> {
   if (!userId) return [];
 
   try {
     const supabase = await createClient();
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = `${now.getFullYear()}-01-01`;
+    const endOfYear = `${now.getFullYear()}-12-31`;
 
     const { data, error } = await supabase
       .from("transactions")
-      .select("*")
+      .select("id, amount, type, date, category_id, category:categories(id, name, icon)")
       .eq("user_id", userId)
-      .gte("date", startOfMonth.toISOString().split("T")[0])
-      .order("date", { ascending: false });
+      .gte("date", startOfYear)
+      .lte("date", endOfYear)
+      .order("date", { ascending: true });
 
-    if (error) throw error;
-    return (data as Transaction[]) || [];
+    if (error) {
+      console.error("Statistics page Supabase transactions error:", error);
+      return [];
+    }
+    return (data as unknown as Transaction[]) || [];
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return [];
   }
 }
 
-async function getCategories(userId: string | null) {
+async function getCategories(userId: string | null): Promise<Category[]> {
   if (!userId) return [];
 
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("user_id", userId)
-      .order("name", { ascending: true });
+    const [resPersonal, resGlobal] = await Promise.all([
+      supabase.from("categories").select("*").eq("user_id", userId).order("name", { ascending: true }),
+      supabase.from("categories").select("*").is("user_id", null).order("name", { ascending: true }),
+    ]);
 
-    if (error) throw error;
-    return (data as Category[]) || [];
+    if (resPersonal.error) throw resPersonal.error;
+    if (resGlobal.error) throw resGlobal.error;
+
+    const personal = (resPersonal.data as Category[]) || [];
+    const global = (resGlobal.data as Category[]) || [];
+    return [...global, ...personal].sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Error fetching categories:", error);
     return [];
@@ -47,17 +58,14 @@ async function getCategories(userId: string | null) {
 
 export default async function StatisticsPage() {
   const userId = await getServerUserId();
-  const transactions = await getMonthlyTransactions(userId);
-  const categories = await getCategories(userId);
+  const [transactions, categories] = await Promise.all([
+    getTransactionsThisYear(userId),
+    getCategories(userId),
+  ]);
 
   return (
     <main className="min-h-screen pb-32 px-4 py-8 relative z-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Statistics</h1>
-        <p className="text-slate-400 text-sm">Analisis keuangan Anda</p>
-      </div>
-
-      <StatisticsClient transactions={transactions} categories={categories} />
+      <StatisticsTabs transactions={transactions} categories={categories} />
     </main>
   );
 }

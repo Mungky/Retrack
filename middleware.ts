@@ -9,6 +9,7 @@ const PROTECTED_PATHS = [
   "/statistics",
   "/profile",
   "/categories",
+  "/budget",
 ];
 
 const AUTH_PATHS = ["/login", "/register"];
@@ -91,6 +92,7 @@ export const config = {
     "/statistics/:path*",
     "/profile/:path*",
     "/categories/:path*",
+    "/budget/:path*",
     "/login",
     "/register",
   ],

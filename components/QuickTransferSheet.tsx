@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { revalidateTransactionPaths } from "@/app/actions";
 import { X, ArrowRightLeft, Loader2 } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
+import { getTodayLocal } from "@/lib/date-range";
+import CurrencyInput from "./CurrencyInput";
+import { formThemes } from "@/lib/form-themes";
 import type { Wallet } from "@/types";
 
 interface QuickTransferSheetProps {
@@ -19,12 +23,15 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
   const { showToast } = useToast();
   const { user } = useAuth();
   const { setIsSheetOpen } = useSheet();
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
   const [fromWallet, setFromWallet] = useState<string>("");
   const [toWallet, setToWallet] = useState<string>("");
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
+
+  // Blue/indigo theme for transfers
+  const theme = formThemes.blue;
 
   useEffect(() => {
     if (isOpen) {
@@ -83,15 +90,22 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
   };
 
   const resetForm = () => {
-    setAmount("");
+    setAmount(0);
     setFromWallet(wallets[0]?.id || "");
     setToWallet("");
   };
 
+  const formatWalletBalance = (bal: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(bal);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!amount || !fromWallet || !toWallet) {
+    if (!fromWallet || !toWallet) {
       showToast("Mohon lengkapi semua field.", "error");
       return;
     }
@@ -101,14 +115,13 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       return;
     }
 
-    const amountNum = parseInt(amount.replace(/\D/g, ""));
-    if (isNaN(amountNum) || amountNum <= 0) {
+    if (amount <= 0) {
       showToast("Nominal tidak valid.", "error");
       return;
     }
 
     const fromWalletData = wallets.find((w) => w.id === fromWallet);
-    if (!fromWalletData || fromWalletData.balance < amountNum) {
+    if (!fromWalletData || fromWalletData.balance < amount) {
       showToast("Saldo tidak mencukupi.", "error");
       return;
     }
@@ -124,11 +137,10 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
     let sourceWalletUpdated = false;
 
     try {
-      // Create transfer transaction
       const transactionData = {
-        amount: amountNum,
+        amount,
         type: "transfer",
-        date: new Date().toISOString().split("T")[0],
+        date: getTodayLocal(),
         source_wallet_id: fromWallet,
         destination_wallet_id: toWallet,
         user_id: user.id,
@@ -143,10 +155,9 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       if (transactionError) throw transactionError;
       insertedTransactionId = insertedTransaction?.id || null;
 
-      // Update wallet balances
-      const fromNewBalance = fromWalletData.balance - amountNum;
+      const fromNewBalance = fromWalletData.balance - amount;
       const toWalletData = wallets.find((w) => w.id === toWallet);
-      const toNewBalance = (toWalletData?.balance || 0) + amountNum;
+      const toNewBalance = (toWalletData?.balance || 0) + amount;
 
       const { error: fromUpdateError } = await supabaseClient
         .from("wallets")
@@ -170,12 +181,11 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
         throw toUpdateError;
       }
 
+      await revalidateTransactionPaths();
       showToast("Transfer berhasil!", "success");
       onClose();
       resetForm();
-      setTimeout(() => {
-        router.refresh();
-      }, 500);
+      setTimeout(() => router.refresh(), 500);
     } catch (error: any) {
       if (user?.id) {
         if (sourceWalletUpdated && fromWalletData) {
@@ -226,11 +236,11 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       />
 
       {/* Sheet */}
-      <div className="relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto">
+      <div className={`relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto ${theme.bgTint}`}>
         <div className="sticky top-0 bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/20">
-              <ArrowRightLeft className="text-cyan-400" size={20} />
+            <div className="p-2 rounded-xl bg-blue-500/20">
+              <ArrowRightLeft className="text-blue-400" size={20} />
             </div>
             <h2 className="text-xl font-bold text-white">Quick Transfer</h2>
           </div>
@@ -243,30 +253,16 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Amount Input */}
+          {/* Amount - CurrencyInput */}
           <div>
             <label className="block text-sm font-semibold text-slate-300 mb-2">
               Nominal
             </label>
-            <input
-              type="text"
+            <CurrencyInput
               value={amount}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                setAmount(value);
-              }}
-              placeholder="Rp 0"
-              className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white text-2xl font-bold placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              onChange={setAmount}
+              accent="blue"
             />
-            {amount && (
-              <p className="mt-2 text-sm text-slate-400">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(parseInt(amount.replace(/\D/g, "")) || 0)}
-              </p>
-            )}
           </div>
 
           {/* From Wallet */}
@@ -276,7 +272,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
             </label>
             {isLoadingWallets ? (
               <div className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 flex items-center justify-center">
-                <Loader2 className="animate-spin text-cyan-400" size={20} />
+                <Loader2 className="animate-spin text-blue-400" size={20} />
               </div>
             ) : (
               <select
@@ -287,19 +283,23 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
                     setToWallet("");
                   }
                 }}
-                className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
+                style={{ colorScheme: 'dark' }}
               >
                 {wallets.map((wallet) => (
-                  <option key={wallet.id} value={wallet.id}>
-                    {wallet.name} - {new Intl.NumberFormat("id-ID", {
-                      style: "currency",
-                      currency: "IDR",
-                      minimumFractionDigits: 0,
-                    }).format(wallet.balance)}
+                  <option key={wallet.id} value={wallet.id} className="bg-slate-900">
+                    {wallet.name} - {formatWalletBalance(wallet.balance)}
                   </option>
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Arrow indicator */}
+          <div className="flex justify-center">
+            <div className="p-2 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <ArrowRightLeft className="text-blue-400" size={16} />
+            </div>
           </div>
 
           {/* To Wallet */}
@@ -310,27 +310,25 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
             <select
               value={toWallet}
               onChange={(e) => setToWallet(e.target.value)}
-              className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${theme.inputFocus}`}
+              style={{ colorScheme: 'dark' }}
               disabled={!fromWallet || availableToWallets.length === 0}
             >
-              <option value="">Pilih wallet tujuan</option>
+              <option value="" className="bg-slate-900">Pilih wallet tujuan</option>
               {availableToWallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id}>
-                  {wallet.name} - {new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    minimumFractionDigits: 0,
-                  }).format(wallet.balance)}
+                <option key={wallet.id} value={wallet.id} className="bg-slate-900">
+                  {wallet.name} - {formatWalletBalance(wallet.balance)}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit Button - blue themed */}
           <button
             type="submit"
             disabled={isLoading || isLoadingWallets}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+            style={{ boxShadow: theme.submitShadow }}
           >
             {isLoading ? (
               <>

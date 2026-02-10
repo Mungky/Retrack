@@ -19,6 +19,7 @@ async function getTransactions(userId: string | null): Promise<Transaction[]> {
         amount,
         type,
         date,
+        description,
         category_id,
         source_wallet_id,
         destination_wallet_id,
@@ -46,7 +47,7 @@ export default async function TransactionsPage() {
     <main className="min-h-screen pb-32 px-4 py-8 relative z-10">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Transactions</h1>
-        <p className="text-slate-400 text-sm">Riwayat transaksi Anda</p>
+        <p className="text-white/60 text-sm">Riwayat transaksi Anda</p>
       </div>
 
       <TransactionsList initialTransactions={transactions} />

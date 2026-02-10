@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import CategoryFormSheet from "./CategoryFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
@@ -21,17 +21,30 @@ export default function CategoryManagement({
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    setCategories(initialCategories);
+  }, [initialCategories]);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [filter, setFilter] = useState<"all" | "income" | "expense">("all");
 
   const filteredCategories = categories.filter((cat) => {
+    const effectiveType = (cat.type || "expense").toLowerCase();
     if (filter === "all") return true;
-    return cat.type === filter;
+    return effectiveType === filter;
   });
+
+  const isPersonalCategory = (cat: Category) =>
+    cat.user_id != null && cat.user_id === user?.id;
 
   const handleDelete = async (categoryId: string) => {
     if (!user?.id) return;
+    const cat = categories.find((c) => c.id === categoryId);
+    if (cat && cat.user_id !== user.id) {
+      showToast("Kategori global tidak dapat dihapus.", "error");
+      return;
+    }
 
     try {
       // Check if category has transactions
@@ -67,6 +80,80 @@ export default function CategoryManagement({
       console.error("Error deleting category:", error);
       showToast(error?.message || "Gagal menghapus kategori.", "error");
     }
+  };
+
+  const renderCategoryCard = (category: Category) => {
+    const Icon = getCategoryIcon(category.icon, category.name);
+    const effectiveType = (category.type || "expense").toLowerCase();
+    const isGlobal = category.user_id == null;
+    return (
+      <div
+        key={category.id}
+        className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 border border-slate-800 p-5 hover:border-slate-700 transition-all"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className="p-4 rounded-xl"
+            style={{
+              backgroundColor: category.color
+                ? `${category.color}20`
+                : "rgba(6, 182, 212, 0.2)",
+            }}
+          >
+            <Icon
+              size={32}
+              className="flex-shrink-0"
+              style={{
+                color: category.color || "#06b6d4",
+              }}
+            />
+          </div>
+          <h3 className="text-white font-semibold text-center">
+            {category.name}
+          </h3>
+          <div className="flex items-center gap-2">
+            <p
+              className={`text-xs font-semibold ${
+                effectiveType === "income"
+                  ? "text-emerald-400"
+                  : "text-red-400"
+              }`}
+            >
+              {effectiveType === "income" ? "Pemasukan" : "Pengeluaran"}
+            </p>
+            {isGlobal && (
+              <span className="text-[10px] font-medium text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
+                Global
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Actions - only for personal categories (user_id = current user) */}
+        {isPersonalCategory(category) && (
+          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => {
+                setSelectedCategory(category);
+                setIsFormOpen(true);
+              }}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            >
+              <Pencil className="text-cyan-400" size={16} />
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCategory(category);
+                setIsDeleteOpen(true);
+              }}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            >
+              <Trash2 className="text-red-400" size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -110,69 +197,44 @@ export default function CategoryManagement({
           <p className="text-slate-400">Belum ada kategori</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {filteredCategories.map((category) => {
-            const Icon = getCategoryIcon(category.icon, category.name);
-            return (
-              <div
-                key={category.id}
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 border border-slate-800 p-5 hover:border-slate-700 transition-all"
-              >
-                <div className="flex flex-col items-center gap-3">
-                  <div
-                    className="p-4 rounded-xl"
-                    style={{
-                      backgroundColor: category.color
-                        ? `${category.color}20`
-                        : "rgba(6, 182, 212, 0.2)",
-                    }}
-                  >
-                    <Icon
-                      size={32}
-                      className="flex-shrink-0"
-                      style={{
-                        color: category.color || "#06b6d4",
-                      }}
-                    />
-                  </div>
-                  <h3 className="text-white font-semibold text-center">
-                    {category.name}
+        <div className="space-y-6">
+          {/* When filter is "all", group by type with section headers */}
+          {filter === "all" ? (
+            <>
+              {/* Expense Section */}
+              {filteredCategories.filter((c) => (c.type || "expense") === "expense").length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-400" />
+                    Pengeluaran
                   </h3>
-                  <p
-                    className={`text-xs font-semibold ${
-                      category.type === "income"
-                        ? "text-emerald-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {category.type === "income" ? "Pemasukan" : "Pengeluaran"}
-                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {filteredCategories
+                      .filter((c) => (c.type || "expense") === "expense")
+                      .map((category) => renderCategoryCard(category))}
+                  </div>
                 </div>
-
-                {/* Actions */}
-                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(category);
-                      setIsFormOpen(true);
-                    }}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
-                  >
-                    <Pencil className="text-cyan-400" size={16} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(category);
-                      setIsDeleteOpen(true);
-                    }}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
-                  >
-                    <Trash2 className="text-red-400" size={16} />
-                  </button>
+              )}
+              {/* Income Section */}
+              {filteredCategories.filter((c) => (c.type || "expense") === "income").length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    Pemasukan
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {filteredCategories
+                      .filter((c) => (c.type || "expense") === "income")
+                      .map((category) => renderCategoryCard(category))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              )}
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {filteredCategories.map((category) => renderCategoryCard(category))}
+            </div>
+          )}
         </div>
       )}
 

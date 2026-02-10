@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import { SheetProvider } from "@/contexts/SheetContext";
@@ -9,6 +9,11 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +43,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: "#0f172a",
+  themeColor: "#0F111A",
 };
 
 export default function RootLayout({
@@ -49,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} antialiased min-h-screen relative bg-background text-foreground`}
+        className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-[#0F111A]`}
       >
         <AuthProvider>
           <ToastProvider>

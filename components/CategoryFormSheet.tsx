@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Loader2, ShoppingBag, Utensils, Car, Home, Heart, Gamepad2, GraduationCap, Briefcase, Coffee, Plane, Receipt } from "lucide-react";
+import { X, Loader2, ShoppingBag, Utensils, Car, Home, Heart, Gamepad2, GraduationCap, Briefcase, Coffee, Plane, Receipt, Banknote, Laptop, TrendingUp, Gift, Building2, PiggyBank, Store, HandCoins, BadgeDollarSign, Coins } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
+import { formThemes } from "@/lib/form-themes";
 import type { Category, CategoryType } from "@/types";
 
 interface CategoryFormSheetProps {
@@ -16,16 +17,29 @@ interface CategoryFormSheetProps {
 }
 
 const ICONS = [
-  { name: "shopping", component: ShoppingBag },
+  // Expense
   { name: "food", component: Utensils },
+  { name: "shopping", component: ShoppingBag },
   { name: "transport", component: Car },
   { name: "bills", component: Home },
   { name: "health", component: Heart },
   { name: "entertainment", component: Gamepad2 },
   { name: "education", component: GraduationCap },
-  { name: "work", component: Briefcase },
   { name: "coffee", component: Coffee },
   { name: "travel", component: Plane },
+  // Income
+  { name: "salary", component: Banknote },
+  { name: "freelance", component: Laptop },
+  { name: "investment", component: TrendingUp },
+  { name: "bonus", component: BadgeDollarSign },
+  { name: "gift", component: Gift },
+  { name: "business", component: Store },
+  { name: "rental", component: Building2 },
+  { name: "interest", component: PiggyBank },
+  { name: "dividend", component: Coins },
+  { name: "sidejob", component: HandCoins },
+  // General
+  { name: "work", component: Briefcase },
   { name: "receipt", component: Receipt },
 ];
 
@@ -53,14 +67,24 @@ export default function CategoryFormSheet({
   const [type, setType] = useState<CategoryType>(category?.type || "expense");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Dynamic theme based on selected category type
+  const theme = formThemes[type === "income" ? "emerald" : "rose"];
+
   useEffect(() => {
     if (isOpen) {
       setIsSheetOpen(true);
       if (category) {
+        // Editing existing category – populate fields
         setName(category.name);
         setSelectedIcon(category.icon || "receipt");
         setSelectedColor(category.color || COLORS[0]);
-        setType(category.type || 'expense');
+        setType(category.type || "expense");
+      } else {
+        // Adding new category – reset to defaults
+        setName("");
+        setSelectedIcon("receipt");
+        setSelectedColor(COLORS[0]);
+        setType("expense");
       }
     } else {
       setIsSheetOpen(false);
@@ -133,11 +157,14 @@ export default function CategoryFormSheet({
   return (
     <div className="fixed inset-0 z-[60] flex items-end">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto">
+      <div className={`relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto ${theme.bgTint}`}>
         <div className="sticky top-0 bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">
-            {category ? "Edit Kategori" : "Tambah Kategori"}
-          </h2>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full transition-colors ${type === "income" ? "bg-emerald-400" : "bg-rose-400"}`} />
+            <h2 className="text-xl font-bold text-white">
+              {category ? "Edit Kategori" : "Tambah Kategori"}
+            </h2>
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-xl hover:bg-white/10 transition-colors"
@@ -157,18 +184,18 @@ export default function CategoryFormSheet({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nama kategori"
-              className="w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
             />
           </div>
 
-          {/* Type */}
+          {/* Type Toggle - themed */}
           <div className="flex gap-4">
             <button
               type="button"
               onClick={() => setType("expense")}
               className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                 type === "expense"
-                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
                   : "bg-slate-900/50 text-slate-400 border border-slate-800"
               }`}
             >
@@ -187,7 +214,7 @@ export default function CategoryFormSheet({
             </button>
           </div>
 
-          {/* Icon */}
+          {/* Icon - themed selection */}
           <div>
             <label className="block text-sm font-semibold text-slate-300 mb-2">
               Icon
@@ -203,13 +230,15 @@ export default function CategoryFormSheet({
                     onClick={() => setSelectedIcon(icon.name)}
                     className={`p-4 rounded-2xl border transition-all ${
                       isSelected
-                        ? "bg-cyan-500/20 border-cyan-500/50"
+                        ? `${type === "income" ? "bg-emerald-500/20 border-emerald-500/50" : "bg-rose-500/20 border-rose-500/50"}`
                         : "bg-slate-900/50 border-slate-800"
                     }`}
                   >
                     <IconComponent
                       className={`mx-auto flex-shrink-0 ${
-                        isSelected ? "text-cyan-400" : "text-slate-400"
+                        isSelected
+                          ? type === "income" ? "text-emerald-400" : "text-rose-400"
+                          : "text-slate-400"
                       }`}
                       size={24}
                     />
@@ -241,11 +270,12 @@ export default function CategoryFormSheet({
             </div>
           </div>
 
-          {/* Submit */}
+          {/* Submit - dynamically themed based on category type */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+            style={{ boxShadow: theme.submitShadow }}
           >
             {isLoading ? (
               <>
