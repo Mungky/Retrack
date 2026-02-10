@@ -31,7 +31,7 @@ async function getTransactions(userId: string | null): Promise<Transaction[]> {
 
     if (error) throw error;
 
-    return (transactions as Transaction[]) || [];
+    return (transactions as unknown as Transaction[]) || [];
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return [];
