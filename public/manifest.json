@@ -1,20 +1,20 @@
 {
-  "name": "Remula Money",
-  "short_name": "Remula",
-  "description": "Aplikasi tracking keuangan pribadi",
+  "name": "Money Tracker",
+  "short_name": "MoneyTrack",
+  "description": "Premium Personal Finance Tracker",
   "start_url": "/",
   "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "orientation": "portrait",
-  "theme_color": "#0f172a",
-  "background_color": "#0f172a",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

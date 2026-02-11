@@ -17,23 +17,23 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Remula Money",
-  description: "Aplikasi tracking keuangan pribadi",
-  applicationName: "Remula Money",
+  title: "Money Tracker",
+  description: "Premium Personal Finance Tracker",
+  applicationName: "Money Tracker",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Remula Money",
+    title: "MoneyTrack",
   },
   formatDetection: {
     telephone: false,
   },
   icons: {
-    apple: "/icons/icon-192x192.png",
+    apple: "/icon-192x192.png",
     icon: [
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
   },
 };
@@ -41,9 +41,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: "#0F111A",
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({
