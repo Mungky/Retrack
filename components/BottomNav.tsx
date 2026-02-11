@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BarChart3, Wallet, User, PiggyBank } from "lucide-react";
+import { Home, BarChart3, PiggyBank, Wallet, User } from "lucide-react";
 import { useSheet } from "@/contexts/SheetContext";
+import { clsx } from "clsx";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -22,50 +23,36 @@ export default function BottomNav() {
 
   return (
     <nav
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${
-        isSheetOpen
-          ? "opacity-0 pointer-events-none translate-y-4"
-          : "opacity-100 pointer-events-auto translate-y-0"
-      }`}
+      className={clsx(
+        "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300",
+        "backdrop-blur-xl bg-black/80 border-t border-white/10",
+        "pb-[env(safe-area-inset-bottom)]",
+        isSheetOpen && "opacity-0 pointer-events-none translate-y-full"
+      )}
     >
-      {/* Floating Island - capsule, not touching edges */}
-      <div
-        className="px-6 py-3 rounded-full backdrop-blur-md"
-        style={{ backgroundColor: "rgba(24, 26, 37, 0.9)" }}
-      >
-        <div className="flex items-center justify-center gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative flex flex-col items-center justify-center gap-1 px-5 py-2 rounded-full transition-all duration-200 ${
-                  isActive ? "text-violet-400" : "text-white/50 hover:text-white/80"
-                }`}
-              >
-                {isActive && (
-                  <span className="absolute inset-0 rounded-full bg-violet-500/20" />
-                )}
-                <Icon
-                  size={22}
-                  className={`relative z-10 transition-all ${
-                    isActive ? "drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" : ""
-                  }`}
-                />
-                <span
-                  className={`relative z-10 text-xs font-semibold ${
-                    isActive ? "text-violet-400" : "text-white/50"
-                  }`}
-                >
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+      <div className="flex items-center justify-center gap-0.5 px-2 py-2 max-w-lg mx-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={clsx(
+                "relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-full min-w-[48px]",
+                isActive ? "text-violet-400" : "text-white/50 hover:text-white/80"
+              )}
+            >
+              {isActive && (
+                <span className="absolute inset-0 rounded-full bg-violet-500/20" />
+              )}
+              <Icon size={20} className="relative z-10" strokeWidth={2} />
+              <span className="relative z-10 text-[10px] font-semibold leading-tight">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

@@ -46,11 +46,23 @@ export function getTodayLocal(): string {
 }
 
 /** Format Date to YYYY-MM-DD using LOCAL timezone (not UTC) */
-function toLocalDateString(d: Date): string {
+export function toLocalDateString(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+/** Get all date strings (YYYY-MM-DD) in range, inclusive */
+export function getDatesInRange(range: DateRangeKey): string[] {
+  const { start, end } = getDateRange(range);
+  const dates: string[] = [];
+  const d = new Date(start);
+  while (d <= end) {
+    dates.push(toLocalDateString(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
 }
 
 /** Extract YYYY-MM-DD from date string (handles "2025-02-10" or "2025-02-10T00:00:00.000Z") */

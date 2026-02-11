@@ -83,6 +83,27 @@ export function aggregateByDate<T extends TransactionLike & { date: string }>(
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+export interface CumulativeNetPoint {
+  date: string;
+  cumulativeNet: number;
+}
+
+/**
+ * Build cumulative net flow series for chart (stock-style line).
+ * Given daily aggregates and sorted dates, returns points with running net.
+ */
+export function getCumulativeNetSeries(
+  dailyAggregates: DailyAggregate[],
+  dates: string[]
+): CumulativeNetPoint[] {
+  const dayMap = new Map(dailyAggregates.map((d) => [d.date, d.income - d.expense]));
+  let running = 0;
+  return dates.map((date) => {
+    running += dayMap.get(date) ?? 0;
+    return { date, cumulativeNet: running };
+  });
+}
+
 export interface CategoryPoint {
   name: string;
   value: number;

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { revalidateTransactionPaths } from "@/app/actions";
-import { X, ShoppingBag, Utensils, Car, Home, Heart, HeartPulse, Gamepad2, GraduationCap, Briefcase, Coffee, Plane, Loader2, Receipt, Zap, Banknote, Calendar, Laptop, TrendingUp, Gift, Building2, PiggyBank, Store, HandCoins, BadgeDollarSign, Coins } from "lucide-react";
+import { X, ShoppingBag, Utensils, Car, Home, Heart, HeartPulse, Gamepad2, GraduationCap, Briefcase, Coffee, Plane, Loader2, Receipt, Zap, Banknote, Calendar, Laptop, TrendingUp, Gift, Building2, PiggyBank, Store, HandCoins, Coins } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,11 +34,11 @@ export const ICON_MAP: { [key: string]: any } = {
   coffee: Coffee,
   travel: Plane,
   receipt: Receipt,
-  // Income icons
-  salary: Banknote,
+  // Income icons (bukan dollar)
+  salary: Briefcase,
   freelance: Laptop,
   investment: TrendingUp,
-  bonus: BadgeDollarSign,
+  bonus: Gift,
   gift: Gift,
   business: Store,
   rental: Building2,
@@ -65,10 +66,10 @@ const getIconByName = (categoryName: string): any => {
     'coffee': Coffee,
     'travel': Plane,
     // Income
-    'salary': Banknote,
+    'salary': Briefcase,
     'freelance': Laptop,
     'investment': TrendingUp,
-    'bonus': BadgeDollarSign,
+    'bonus': Gift,
     'gift': Gift,
     'business': Store,
     'rental': Building2,
@@ -113,7 +114,7 @@ const getIconByName = (categoryName: string): any => {
   }
   // Income categories
   if (nameLower.includes('salary') || nameLower.includes('gaji')) {
-    return Banknote;
+    return Briefcase;
   }
   if (nameLower.includes('freelance')) {
     return Laptop;
@@ -122,7 +123,7 @@ const getIconByName = (categoryName: string): any => {
     return TrendingUp;
   }
   if (nameLower.includes('bonus')) {
-    return BadgeDollarSign;
+    return Gift;
   }
   if (nameLower.includes('gift') || nameLower.includes('hadiah')) {
     return Gift;
@@ -231,7 +232,7 @@ export const getCategoryStyle = (categoryName: string | null | undefined) => {
     },
     // Income categories
     'salary': {
-      icon: Banknote,
+      icon: Briefcase,
       iconColor: 'text-emerald-500',
       bgColor: 'bg-emerald-500/10'
     },
@@ -246,7 +247,7 @@ export const getCategoryStyle = (categoryName: string | null | undefined) => {
       bgColor: 'bg-teal-500/10'
     },
     'bonus': {
-      icon: BadgeDollarSign,
+      icon: Gift,
       iconColor: 'text-amber-500',
       bgColor: 'bg-amber-500/10'
     },
@@ -599,23 +600,26 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-md z-[60] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Sheet */}
       <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
-        <div className={`mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-slate-900/95 backdrop-blur-xl border-t border-x border-white/10 shadow-2xl ${theme.bgTint}`}>
+        <div
+          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           {/* Handle */}
           <div className="flex justify-center pt-3 pb-2">
             <div className="w-12 h-1 bg-white/20 rounded-full" />
           </div>
 
-          {/* Header with accent dot */}
+          {/* Header */}
           <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10">
             <div className="flex items-center gap-3">
               <div className={`w-2 h-2 rounded-full ${isIncome ? 'bg-emerald-400' : 'bg-rose-400'}`} />
@@ -633,7 +637,14 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+          <form
+            onSubmit={handleSubmit}
+            className="p-6 space-y-6 overflow-y-auto"
+            style={{
+              maxHeight: "calc(90vh - 140px)",
+              paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+            }}
+          >
             {/* Amount - CurrencyInput */}
             <div>
               <label className="block text-sm font-medium text-slate-400 mb-2">
@@ -787,6 +798,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
           </form>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

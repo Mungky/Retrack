@@ -20,6 +20,14 @@ import {
   Coffee,
   Plane,
   Banknote,
+  Gift,
+  Laptop,
+  TrendingUp,
+  Building2,
+  PiggyBank,
+  Store,
+  Coins,
+  HandCoins,
 } from "lucide-react";
 import EditTransactionSheet from "./EditTransactionSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
@@ -117,6 +125,17 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
       work: { icon: Briefcase, iconColor: "text-cyan-500", bgColor: "bg-cyan-500/15" },
       coffee: { icon: Coffee, iconColor: "text-amber-600", bgColor: "bg-amber-500/15" },
       travel: { icon: Plane, iconColor: "text-sky-500", bgColor: "bg-sky-500/15" },
+      // Income categories (bukan dollar)
+      salary: { icon: Briefcase, iconColor: "text-emerald-500", bgColor: "bg-emerald-500/15" },
+      bonus: { icon: Gift, iconColor: "text-amber-500", bgColor: "bg-amber-500/15" },
+      investment: { icon: TrendingUp, iconColor: "text-teal-500", bgColor: "bg-teal-500/15" },
+      freelance: { icon: Laptop, iconColor: "text-violet-500", bgColor: "bg-violet-500/15" },
+      gift: { icon: Gift, iconColor: "text-rose-400", bgColor: "bg-rose-500/15" },
+      business: { icon: Store, iconColor: "text-cyan-600", bgColor: "bg-cyan-500/15" },
+      rental: { icon: Building2, iconColor: "text-blue-600", bgColor: "bg-blue-500/15" },
+      interest: { icon: PiggyBank, iconColor: "text-green-500", bgColor: "bg-green-500/15" },
+      dividend: { icon: Coins, iconColor: "text-indigo-500", bgColor: "bg-indigo-500/15" },
+      sidejob: { icon: HandCoins, iconColor: "text-lime-500", bgColor: "bg-lime-500/15" },
     };
 
     if (categoryMap[nameLower]) return categoryMap[nameLower];
@@ -130,6 +149,16 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
     if (nameLower.includes("work") || nameLower.includes("kerja")) return categoryMap.work;
     if (nameLower.includes("coffee") || nameLower.includes("kopi")) return categoryMap.coffee;
     if (nameLower.includes("travel")) return categoryMap.travel;
+    if (nameLower.includes("salary") || nameLower.includes("gaji")) return categoryMap.salary;
+    if (nameLower.includes("bonus")) return categoryMap.bonus;
+    if (nameLower.includes("invest") || nameLower.includes("investasi")) return categoryMap.investment;
+    if (nameLower.includes("freelance")) return categoryMap.freelance;
+    if (nameLower.includes("gift") || nameLower.includes("hadiah")) return categoryMap.gift;
+    if (nameLower.includes("business") || nameLower.includes("bisnis")) return categoryMap.business;
+    if (nameLower.includes("rental") || nameLower.includes("sewa")) return categoryMap.rental;
+    if (nameLower.includes("interest") || nameLower.includes("bunga")) return categoryMap.interest;
+    if (nameLower.includes("dividend") || nameLower.includes("dividen")) return categoryMap.dividend;
+    if (nameLower.includes("side") || nameLower.includes("sampingan")) return categoryMap.sidejob;
 
     return { icon: Banknote, iconColor: "text-slate-400", bgColor: "bg-slate-500/15" };
   };

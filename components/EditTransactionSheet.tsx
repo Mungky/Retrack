@@ -184,27 +184,42 @@ export default function EditTransactionSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative z-10 w-full max-h-[90vh] bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-t border-white/10 rounded-t-3xl overflow-y-auto ${theme.bgTint}`}>
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-br from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${isIncome ? 'bg-emerald-400' : 'bg-rose-400'} transition-colors`} />
-            <h2 className="text-xl font-bold text-white">Edit Transaksi</h2>
+    <>
+      <div
+        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300"
+        onClick={onClose}
+      />
+      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
+        <div
+          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-12 h-1 bg-white/20 rounded-full" />
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+          <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${isIncome ? 'bg-emerald-400' : 'bg-rose-400'} transition-colors`} />
+              <h2 className="text-xl font-bold text-white">Edit Transaksi</h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+            >
+              <X className="text-white/60" size={20} />
+            </button>
+          </div>
+          <form
+            onSubmit={handleSubmit}
+            className="p-6 space-y-6 overflow-y-auto"
+            style={{
+              maxHeight: "calc(90vh - 140px)",
+              paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+            }}
           >
-            <X className="text-slate-400" size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Amount - CurrencyInput */}
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-400 mb-2">
               Nominal
             </label>
             <CurrencyInput
@@ -216,7 +231,7 @@ export default function EditTransactionSheet({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-400 mb-2">
               Deskripsi
             </label>
             <input
@@ -224,7 +239,7 @@ export default function EditTransactionSheet({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Contoh: Makan siang, Gaji bulanan"
-              className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
+              className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
             />
           </div>
 
@@ -239,7 +254,7 @@ export default function EditTransactionSheet({
               className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                 !isIncome
                   ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                  : "bg-slate-900/50 text-slate-400 border border-slate-800"
+                  : "bg-white/5 text-slate-400 border border-white/10"
               }`}
             >
               Pengeluaran
@@ -253,7 +268,7 @@ export default function EditTransactionSheet({
               className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                 isIncome
                   ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                  : "bg-slate-900/50 text-slate-400 border border-slate-800"
+                  : "bg-white/5 text-slate-400 border border-white/10"
               }`}
             >
               Pemasukan
@@ -279,7 +294,7 @@ export default function EditTransactionSheet({
                       className={`p-4 rounded-2xl border transition-all ${
                         isSelected
                           ? `${categoryStyle.bgColor} ${theme.selectedBorder}`
-                          : "bg-slate-900/50 border-slate-800"
+                          : "bg-white/5 border-white/10"
                       }`}
                     >
                       <Icon
@@ -306,13 +321,13 @@ export default function EditTransactionSheet({
           {/* Wallet */}
           {!isLoadingWallets && (
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-400 mb-2">
                 Wallet
               </label>
               <select
                 value={selectedWallet}
                 onChange={(e) => setSelectedWallet(e.target.value)}
-                className={`w-full px-4 py-4 rounded-2xl bg-slate-900/50 border border-slate-800 text-white focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
+                className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
                 style={{ colorScheme: 'dark' }}
               >
                 <option value="">Pilih wallet</option>
@@ -325,9 +340,9 @@ export default function EditTransactionSheet({
             </div>
           )}
 
-          {/* Date Picker - styled with Calendar icon */}
+          {/* Date Picker */}
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-slate-400 mb-2">
               Tanggal
             </label>
             <div className="relative group">
@@ -336,7 +351,7 @@ export default function EditTransactionSheet({
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className={`w-full pl-12 pr-4 py-4 text-white bg-slate-900/50 border border-slate-800 rounded-2xl focus:outline-none focus:ring-2 transition-all ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
+                className={`w-full pl-12 pr-4 py-4 text-white bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 transition-all ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
                 style={{ colorScheme: 'dark' }}
               />
             </div>
@@ -367,7 +382,8 @@ export default function EditTransactionSheet({
             )}
           </button>
         </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

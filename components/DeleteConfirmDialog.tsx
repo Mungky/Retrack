@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { revalidateTransactionPaths } from "@/app/actions";
 import { X, Loader2, AlertTriangle } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
+import { useSheet } from "@/contexts/SheetContext";
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean;
@@ -22,7 +23,16 @@ export default function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
   const router = useRouter();
   const { showToast } = useToast();
+  const { setIsSheetOpen } = useSheet();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsSheetOpen(true);
+    } else {
+      setIsSheetOpen(false);
+    }
+  }, [isOpen, setIsSheetOpen]);
 
   const handleDelete = async () => {
     if (onConfirm) {

@@ -15,6 +15,17 @@ import {
   Banknote,
   ArrowUpCircle,
   ArrowDownCircle,
+  Gift,
+  Laptop,
+  Briefcase,
+  Building2,
+  PiggyBank,
+  Store,
+  Coins,
+  HandCoins,
+  Plane,
+  GraduationCap,
+  Coffee,
 } from "lucide-react";
 import DateRangeFilter from "./DateRangeFilter";
 import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/date-range";
@@ -52,6 +63,21 @@ const CATEGORY_ICONS: Record<string, typeof Utensils> = {
   bills: Zap,
   health: HeartPulse,
   entertainment: Gamepad2,
+  education: GraduationCap,
+  work: Briefcase,
+  coffee: Coffee,
+  travel: Plane,
+  // Income categories (bukan dollar)
+  salary: Briefcase,
+  bonus: Gift,
+  investment: TrendingUp,
+  freelance: Laptop,
+  gift: Gift,
+  business: Store,
+  rental: Building2,
+  interest: PiggyBank,
+  dividend: Coins,
+  sidejob: HandCoins,
 };
 
 function getCategoryIcon(name: string) {
@@ -60,17 +86,6 @@ function getCategoryIcon(name: string) {
     if (n.includes(key)) return Icon;
   }
   return Banknote;
-}
-
-function getExpenseCategoryColor(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes("food") || n.includes("makanan")) return "#10B981";
-  if (n.includes("transport")) return "#3B82F6";
-  if (n.includes("entertainment") || n.includes("hiburan")) return "#8B5CF6";
-  if (n.includes("bills") || n.includes("tagihan")) return "#F59E0B";
-  if (n.includes("shopping") || n.includes("belanja")) return "#EC4899";
-  if (n.includes("health")) return "#EF4444";
-  return "#94A3B8";
 }
 
 const TABS = [
@@ -257,17 +272,13 @@ export default function StatisticsTabs({
                   ) : (
                     stats.expenseReport.map((r) => {
                       const Icon = getCategoryIcon(r.name);
-                      const color = getExpenseCategoryColor(r.name);
                       return (
                         <div
                           key={r.name}
                           className="flex items-center gap-4 py-2 border-b border-white/5"
                         >
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center"
-                            style={{ backgroundColor: `${color}20` }}
-                          >
-                            <Icon size={20} style={{ color }} />
+                          <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
+                            <Icon className="text-rose-400" size={20} />
                           </div>
                           <span className="flex-1 text-white font-medium">{r.name}</span>
                           <span className="text-rose-400 font-semibold">{formatCurrency(r.value)}</span>
