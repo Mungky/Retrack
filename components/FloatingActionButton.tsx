@@ -6,23 +6,27 @@ import { useRouter } from "next/navigation";
 import AddTransactionSheet from "./AddTransactionSheet";
 import WalletFormSheet from "./WalletFormSheet";
 import { useSheet } from "@/contexts/SheetContext";
+import { useHaptic } from "@/hooks/useHaptic";
 import type { Wallet } from "@/types";
 
 export default function FloatingActionButton() {
   const router = useRouter();
   const { setIsSheetOpen } = useSheet();
+  const { lightTap, mediumClick } = useHaptic();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [isWalletOpen, setIsWalletOpen] = useState(false);
 
   const handleOpenIncome = () => {
+    lightTap();
     setIsMenuOpen(false);
     setIncomeOpen(true);
     setIsSheetOpen(true);
   };
 
   const handleOpenExpense = () => {
+    lightTap();
     setIsMenuOpen(false);
     setExpenseOpen(true);
     setIsSheetOpen(true);
@@ -39,6 +43,7 @@ export default function FloatingActionButton() {
   };
 
   const handleOpenWallet = () => {
+    lightTap();
     setIsMenuOpen(false);
     setIsWalletOpen(true);
     setIsSheetOpen(true);
@@ -98,7 +103,10 @@ export default function FloatingActionButton() {
       {/* Glass FAB with glow */}
       <div className="fixed bottom-28 right-4 z-40">
         <button
-          onClick={() => setIsMenuOpen((prev) => !prev)}
+          onClick={() => {
+            mediumClick();
+            setIsMenuOpen((prev) => !prev);
+          }}
           className="relative flex h-14 w-14 items-center justify-center rounded-full glass-card border-white/20 text-white hover:scale-105 transition-transform duration-200"
           style={{
             boxShadow:

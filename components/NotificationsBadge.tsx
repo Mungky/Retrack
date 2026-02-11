@@ -1,81 +1,108 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
-import { supabaseClient } from "@/lib/supabase-client";
-import { useAuth } from "@/contexts/AuthContext";
+import NotificationSheet from "./NotificationSheet";
+import { createBrowserClient } from "@supabase/ssr";
+
+export const REFRESH_NOTIFICATIONS_EVENT = "refresh-notifications";
 
 export default function NotificationsBadge() {
-  const { user } = useAuth();
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+  
+  // State visual untuk debugging (Bisa dihapus nanti)
+  const [debugStatus, setDebugStatus] = useState<string>(""); 
 
   useEffect(() => {
-    if (!user?.id) {
-      setNotificationCount(0);
-      return;
-    }
+    // 1. Buat Client Local (Wajib biar dapet cookie terbaru)
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    const fetchNotifications = async () => {
+    const checkUnread = async () => {
       try {
-        // Get recent transactions (last 7 days) as notifications
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const { data, error } = await supabaseClient
-          .from("transactions")
-          .select("id")
-          .eq("user_id", user.id)
-          .gte("date", sevenDaysAgo.toISOString().split("T")[0])
-          .order("date", { ascending: false })
-          .limit(10);
-
-        if (!error && data) {
-          setNotificationCount(data.length);
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.log("BADGE: User not ready yet...");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
+
+        const { count, error } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("is_read", false); // RLS otomatis filter user_id, tapi amannya gini
+
+        if (!error) {
+          const isUnread = (count ?? 0) > 0;
+          console.log(`BADGE: Found ${count} unread items. Status: ${isUnread}`);
+          setHasUnread(isUnread);
+          setDebugStatus(isUnread ? "Active" : "Inactive");
+        }
+      } catch (err) {
+        console.error("BADGE CHECK FAILED:", err);
       }
     };
 
-    fetchNotifications();
+    // 2. STRATEGI "TEMBAK BERTUBI-TUBI" (Polling)
+    // Cek sekarang (0ms)
+    checkUnread();
+    
+    // Cek lagi setelah 1 detik (1000ms) - buat jaga-jaga kalau auth telat
+    const timer1 = setTimeout(checkUnread, 1000);
+    
+    // Cek lagi setelah 3 detik (3000ms) - buat koneksi lemot
+    const timer2 = setTimeout(checkUnread, 3000);
 
-    // Subscribe to real-time updates
-    const channel = supabaseClient
-      .channel("notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "transactions",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
+    // 3. EVENT LISTENER (Tetap dipasang)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) checkUnread();
+    });
+
+    const onRefresh = () => checkUnread();
+    window.addEventListener(REFRESH_NOTIFICATIONS_EVENT, onRefresh);
 
     return () => {
-      supabaseClient.removeChannel(channel);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      subscription.unsubscribe();
+      window.removeEventListener(REFRESH_NOTIFICATIONS_EVENT, onRefresh);
     };
-  }, [user?.id]);
+  }, []);
 
   return (
-    <div className="relative group cursor-pointer">
-      <div className="relative p-3 rounded-2xl glass-card border-purple-500/30 hover:border-purple-500/50 transition-all hover:scale-105 active:scale-95">
-        <Sparkles className="relative z-10 text-purple-400 group-hover:text-purple-300 transition-colors" size={24} />
-        {notificationCount > 0 && (
-          <div className="absolute -top-1 -right-1 z-20 w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center border-2 border-[#0f172a] shadow-lg animate-pulse">
-            <span className="text-xs font-bold text-white">{notificationCount > 9 ? "9+" : notificationCount}</span>
-          </div>
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="relative p-3 rounded-2xl glass-card border-white/10 hover:border-purple-500/40 transition-all hover:scale-105 active:scale-95 group"
+        aria-label="Financial Highlights"
+      >
+        {/* ICON SPARKLES */}
+        <Sparkles
+          className={`relative z-10 transition-all duration-500 ${
+            hasUnread
+              ? "text-amber-400 animate-pulse drop-shadow-[0_0_10px_rgba(251,191,36,0.8)] fill-amber-400/20" 
+              : "text-zinc-400 group-hover:text-zinc-300"
+          }`}
+          size={24}
+        />
+        
+        {/* TITIK MERAH (VISUAL INDICATOR TAMBAHAN) */}
+        {hasUnread && (
+          <span className="absolute top-2 right-2 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border border-[#0f172a]"></span>
+          </span>
         )}
-      </div>
-      {notificationCount > 0 && (
-        <div className="absolute top-full right-0 mt-2 px-3 py-1.5 rounded-lg glass-card text-xs text-white/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
-          {notificationCount} transaksi baru
-        </div>
-      )}
-    </div>
+      </button>
+
+      <NotificationSheet
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onUnreadChange={setHasUnread}
+      />
+    </>
   );
 }

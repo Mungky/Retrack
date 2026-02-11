@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
+import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import type { Category, Wallet } from "@/types";
 
@@ -571,6 +572,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
       await revalidateTransactionPaths();
       router.refresh();
       showToast("Transaksi berhasil disimpan!", "success");
+      window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
       onClose();
       resetForm();
     } catch (error: any) {

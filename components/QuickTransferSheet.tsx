@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
+import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { formThemes } from "@/lib/form-themes";
 import type { Wallet } from "@/types";
 
@@ -184,6 +185,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
 
       await revalidateTransactionPaths();
       showToast("Transfer berhasil!", "success");
+      window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
       onClose();
       resetForm();
       setTimeout(() => router.refresh(), 500);

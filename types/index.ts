@@ -55,3 +55,15 @@ export interface Transaction {
 }
 
 export type User = SupabaseUser;
+
+export type NotificationType = "alert" | "info" | "success" | "reminder";
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string | null;
+  is_read: boolean;
+  created_at: string;
+}

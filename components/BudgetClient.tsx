@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
+import { useHaptic } from "@/hooks/useHaptic";
 import type { Budget, Category, Transaction } from "@/types";
 
 type BudgetWithCategory = Budget & { category: Category | null };
@@ -72,6 +73,7 @@ export default function BudgetClient({
   expensesThisMonth,
 }: BudgetClientProps) {
   const router = useRouter();
+  const { lightTap } = useHaptic();
   const [budgets, setBudgets] = useState<BudgetWithCategory[]>(initialBudgets);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<BudgetWithCategory | null>(null);
@@ -178,7 +180,15 @@ export default function BudgetClient({
                       <p className="text-sm text-white/60 mt-0.5">
                         {formatCurrency(item.spent)} / {formatCurrency(item.target)}
                       </p>
-                      <div className="mt-3 h-3 rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className="mt-3 h-3 rounded-full bg-slate-800 overflow-hidden cursor-pointer touch-manipulation"
+                        onClick={lightTap}
+                        onTouchStart={lightTap}
+                        role="progressbar"
+                        aria-valuenow={item.percentage}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
                         <div
                           className={`h-full rounded-full transition-all duration-500 ease-out ${barColor}`}
                           style={{ width: `${Math.min(item.percentage, 100)}%` }}
