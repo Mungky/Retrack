@@ -136,7 +136,6 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
     setIsLoading(true);
 
     let insertedTransactionId: string | null = null;
-    let sourceWalletUpdated = false;
 
     try {
       const transactionData = {
@@ -157,32 +156,6 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       if (transactionError) throw transactionError;
       insertedTransactionId = insertedTransaction?.id || null;
 
-      const fromNewBalance = fromWalletData.balance - amount;
-      const toWalletData = wallets.find((w) => w.id === toWallet);
-      const toNewBalance = (toWalletData?.balance || 0) + amount;
-
-      const { error: fromUpdateError } = await supabaseClient
-        .from("wallets")
-        .update({ balance: fromNewBalance })
-        .eq("id", fromWallet)
-        .eq("user_id", user.id);
-
-      if (fromUpdateError) {
-        throw fromUpdateError;
-      }
-
-      sourceWalletUpdated = true;
-
-      const { error: toUpdateError } = await supabaseClient
-        .from("wallets")
-        .update({ balance: toNewBalance })
-        .eq("id", toWallet)
-        .eq("user_id", user.id);
-
-      if (toUpdateError) {
-        throw toUpdateError;
-      }
-
       await revalidateTransactionPaths();
       showToast("Transfer berhasil!", "success");
       window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
@@ -190,29 +163,15 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       resetForm();
       setTimeout(() => router.refresh(), 500);
     } catch (error: any) {
-      if (user?.id) {
-        if (sourceWalletUpdated && fromWalletData) {
-          const { error: rollbackSourceError } = await supabaseClient
-            .from("wallets")
-            .update({ balance: fromWalletData.balance })
-            .eq("id", fromWallet)
-            .eq("user_id", user.id);
+      if (user?.id && insertedTransactionId) {
+        const { error: rollbackError } = await supabaseClient
+          .from("transactions")
+          .delete()
+          .eq("id", insertedTransactionId)
+          .eq("user_id", user.id);
 
-          if (rollbackSourceError) {
-            console.error("Rollback source wallet failed:", rollbackSourceError);
-          }
-        }
-
-        if (insertedTransactionId) {
-          const { error: rollbackTransactionError } = await supabaseClient
-            .from("transactions")
-            .delete()
-            .eq("id", insertedTransactionId)
-            .eq("user_id", user.id);
-
-          if (rollbackTransactionError) {
-            console.error("Rollback transaction delete failed:", rollbackTransactionError);
-          }
+        if (rollbackError) {
+          console.error("Rollback transaction delete failed:", rollbackError);
         }
       }
 

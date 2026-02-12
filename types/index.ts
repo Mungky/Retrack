@@ -8,6 +8,8 @@ export interface Wallet {
   id: string;
   name: string;
   balance: number;
+  /** Saldo awal (user-editable). Saldo saat ini dihitung dari initial_balance + transaksi. */
+  initial_balance?: number;
   type: WalletType;
   user_id?: string;
 }

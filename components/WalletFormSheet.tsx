@@ -34,7 +34,9 @@ export default function WalletFormSheet({
   const { user } = useAuth();
   const { setIsSheetOpen } = useSheet();
   const [name, setName] = useState(wallet?.name || "");
-  const [balance, setBalance] = useState(wallet?.balance || 0);
+  const [initialBalance, setInitialBalance] = useState(
+    wallet ? (wallet.initial_balance ?? wallet.balance) : 0
+  );
   const [type, setType] = useState<WalletType>(wallet?.type || "bank");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,14 +47,12 @@ export default function WalletFormSheet({
     if (isOpen) {
       setIsSheetOpen(true);
       if (wallet) {
-        // Editing – populate fields
         setName(wallet.name);
-        setBalance(wallet.balance);
+        setInitialBalance(wallet.initial_balance ?? wallet.balance);
         setType(wallet.type);
       } else {
-        // Adding new – reset to defaults
         setName("");
-        setBalance(0);
+        setInitialBalance(0);
         setType("bank");
       }
     } else {
@@ -76,18 +76,16 @@ export default function WalletFormSheet({
     setIsLoading(true);
 
     try {
-      const walletData = {
-        name: name.trim(),
-        balance,
-        type,
-        user_id: user.id,
-      };
-
       let result;
       if (wallet) {
         const { data, error } = await supabaseClient
           .from("wallets")
-          .update(walletData)
+          .update({
+            name: name.trim(),
+            initial_balance: initialBalance,
+            type,
+            user_id: user.id,
+          })
           .eq("id", wallet.id)
           .eq("user_id", user.id)
           .select()
@@ -98,7 +96,15 @@ export default function WalletFormSheet({
       } else {
         const { data, error } = await supabaseClient
           .from("wallets")
-          .insert([walletData])
+          .insert([
+            {
+              name: name.trim(),
+              initial_balance: initialBalance,
+              balance: initialBalance,
+              type,
+              user_id: user.id,
+            },
+          ])
           .select()
           .single();
 
@@ -211,16 +217,27 @@ export default function WalletFormSheet({
             </div>
           </div>
 
-          {/* Initial Balance - CurrencyInput */}
+          {/* Balance - CurrencyInput */}
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">
-              Saldo Awal
+            <label
+              className={`block text-sm mb-2 ${
+                wallet
+                  ? "text-amber-400 font-medium"
+                  : "text-slate-400 font-medium"
+              }`}
+            >
+              {wallet ? "⚠ Koreksi Saldo Awal (Recalculate)" : "Saldo Awal"}
             </label>
             <CurrencyInput
-              value={balance}
-              onChange={setBalance}
+              value={initialBalance}
+              onChange={setInitialBalance}
               accent="violet"
             />
+            {wallet && (
+              <p className="text-xs text-white/50 mt-1">
+                Mengubah saldo awal akan memicu perhitungan ulang. Saldo saat ini = saldo awal + transaksi.
+              </p>
+            )}
           </div>
 
           {/* Submit - violet themed */}
