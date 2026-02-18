@@ -8,7 +8,8 @@ import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
-import { getCategoryIcon, getCategoryStyle } from "./AddTransactionSheet";
+import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
+import { CategoryIconDisplay } from "./AddTransactionSheet";
 import CurrencyInput from "./CurrencyInput";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import type { Category, Transaction, Wallet } from "@/types";
@@ -64,11 +65,20 @@ export default function EditTransactionSheet({
     }
   }, [isOpen, user?.id, setIsSheetOpen, transaction.id]);
 
-  // Filter categories by transaction type. Treat null/empty type as 'expense' (legacy fallback).
+  // Refetch categories when user adds/updates one elsewhere
+  useEffect(() => {
+    const onRefresh = () => {
+      if (isOpen && user?.id) fetchCategories();
+    };
+    window.addEventListener(REFRESH_CATEGORIES_EVENT, onRefresh);
+    return () => window.removeEventListener(REFRESH_CATEGORIES_EVENT, onRefresh);
+  }, [isOpen, user?.id]);
+
+  // Filter categories by transaction type. Treat null/empty/whitespace as 'expense'.
   const filteredCategories = useMemo(() => {
     const targetType = isIncome ? "income" : "expense";
     return categories.filter((cat) => {
-      const effectiveType = (cat.type || "expense").toLowerCase();
+      const effectiveType = (cat.type || "expense").toString().trim().toLowerCase();
       return effectiveType === targetType;
     });
   }, [categories, isIncome]);
@@ -106,23 +116,15 @@ export default function EditTransactionSheet({
 
     try {
       setIsLoadingCategories(true);
-      const [resPersonal, resGlobal] = await Promise.all([
-        supabaseClient
-          .from("categories")
-          .select("id, name, icon, type")
-          .eq("user_id", user.id)
-          .order("name", { ascending: true }),
-        supabaseClient
-          .from("categories")
-          .select("id, name, icon, type")
-          .is("user_id", null)
-          .order("name", { ascending: true }),
-      ]);
+      const { data, error } = await supabaseClient
+        .from("categories")
+        .select("id, name, icon, type, color")
+        .eq("user_id", user.id)
+        .order("name", { ascending: true });
 
-      const personal = resPersonal.error ? [] : ((resPersonal.data as Category[]) || []);
-      const global = resGlobal.error ? [] : ((resGlobal.data as Category[]) || []);
-      const merged = [...global, ...personal].sort((a, b) => a.name.localeCompare(b.name));
-      setCategories(merged);
+      if (error) throw error;
+      const list = ((data as Category[]) || []).sort((a, b) => a.name.localeCompare(b.name));
+      setCategories(list);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
@@ -283,8 +285,8 @@ export default function EditTransactionSheet({
               </label>
               <div className="grid grid-cols-4 gap-3">
                 {filteredCategories.map((category) => {
-                  const categoryStyle = getCategoryStyle(category.name);
-                  const Icon = categoryStyle.icon;
+                  const catColor = category.color || "#06b6d4";
+                  const bgColor = `${catColor}20`;
                   const isSelected = selectedCategory === category.id;
                   return (
                     <button
@@ -293,15 +295,19 @@ export default function EditTransactionSheet({
                       onClick={() => setSelectedCategory(category.id)}
                       className={`p-4 rounded-2xl border transition-all ${
                         isSelected
-                          ? `${categoryStyle.bgColor} ${theme.selectedBorder}`
+                          ? `${theme.selectedBorder}`
                           : "bg-white/5 border-white/10"
                       }`}
+                      style={isSelected ? { backgroundColor: bgColor } : undefined}
                     >
-                      <Icon
-                        className={`mx-auto mb-2 flex-shrink-0 ${
-                          isSelected ? categoryStyle.iconColor : "text-slate-400"
-                        }`}
+                      <CategoryIconDisplay
+                        icon={category.icon}
+                        name={category.name}
                         size={24}
+                        className={`mx-auto mb-2 flex-shrink-0 ${
+                          isSelected ? "" : "text-slate-400"
+                        }`}
+                        style={{ color: isSelected ? catColor : undefined }}
                       />
                       <p
                         className={`text-xs font-semibold truncate w-full text-center ${

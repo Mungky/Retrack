@@ -35,7 +35,7 @@ async function getTransactionsThisYear(userId: string | null): Promise<Transacti
       .split("T")[0];
     const { data, error } = await supabase
       .from("transactions")
-      .select("*, category:categories(id, name, icon)")
+      .select("*, category:categories(id, name, icon, color)")
       .eq("user_id", userId)
       .gte("date", startOfYear)
       .order("date", { ascending: false });

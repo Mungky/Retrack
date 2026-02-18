@@ -1,22 +1,17 @@
 "use client";
 
-import { Plus, ReceiptText, Wallet as WalletIcon, X } from "lucide-react";
+import { Plus, ReceiptText, X } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import AddTransactionSheet from "./AddTransactionSheet";
-import WalletFormSheet from "./WalletFormSheet";
 import { useSheet } from "@/contexts/SheetContext";
 import { useHaptic } from "@/hooks/useHaptic";
-import type { Wallet } from "@/types";
 
 export default function FloatingActionButton() {
-  const router = useRouter();
   const { setIsSheetOpen } = useSheet();
   const { lightTap, mediumClick } = useHaptic();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
-  const [isWalletOpen, setIsWalletOpen] = useState(false);
 
   const handleOpenIncome = () => {
     lightTap();
@@ -39,18 +34,6 @@ export default function FloatingActionButton() {
 
   const handleCloseExpense = () => {
     setExpenseOpen(false);
-    setIsSheetOpen(false);
-  };
-
-  const handleOpenWallet = () => {
-    lightTap();
-    setIsMenuOpen(false);
-    setIsWalletOpen(true);
-    setIsSheetOpen(true);
-  };
-
-  const handleCloseWallet = () => {
-    setIsWalletOpen(false);
     setIsSheetOpen(false);
   };
 
@@ -85,16 +68,6 @@ export default function FloatingActionButton() {
                 </div>
                 <span className="text-sm font-medium text-white">Tambah Pengeluaran</span>
               </button>
-
-              <button
-                onClick={handleOpenWallet}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-white/10 transition-colors text-left"
-              >
-                <div className="p-2 rounded-xl bg-amber-500/20">
-                  <WalletIcon size={18} className="text-amber-400" />
-                </div>
-                <span className="text-sm font-medium text-white">Add Wallet</span>
-              </button>
             </div>
           </div>
         </>
@@ -125,16 +98,6 @@ export default function FloatingActionButton() {
 
       <AddTransactionSheet isOpen={incomeOpen} onClose={handleCloseIncome} transactionType="income" />
       <AddTransactionSheet isOpen={expenseOpen} onClose={handleCloseExpense} transactionType="expense" />
-
-      <WalletFormSheet
-        isOpen={isWalletOpen}
-        onClose={handleCloseWallet}
-        wallet={null}
-        onSuccess={(_wallet: Wallet) => {
-          handleCloseWallet();
-          router.refresh();
-        }}
-      />
     </>
   );
 }

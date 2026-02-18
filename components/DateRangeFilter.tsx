@@ -9,7 +9,7 @@ interface DateRangeFilterProps {
 }
 
 export default function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
-  const currentLabel = DATE_RANGE_OPTIONS.find((o) => o.value === value)?.label ?? "This Month";
+  const currentLabel = DATE_RANGE_OPTIONS.find((o) => o.value === value)?.label ?? "Today";
 
   return (
     <div className="relative group">

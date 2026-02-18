@@ -29,6 +29,7 @@ import {
   Coins,
   HandCoins,
 } from "lucide-react";
+import { CategoryIconDisplay } from "./AddTransactionSheet";
 import EditTransactionSheet from "./EditTransactionSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { isIncome, isExpense } from "@/lib/transaction-calc";
@@ -100,79 +101,8 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
     );
   };
 
-  const getCategoryStyle = (categoryName: string | null | undefined) => {
-    if (!categoryName) {
-      const txIsExpense = isExpense(transaction);
-      return {
-        icon: getTransactionIcon(),
-        iconColor: getTransactionColor(),
-        bgColor: txIsExpense ? "bg-rose-500/15" : "bg-emerald-500/15",
-      };
-    }
-
-    const nameLower = categoryName.toLowerCase().trim();
-    const categoryMap: Record<
-      string,
-      { icon: typeof Utensils; iconColor: string; bgColor: string }
-    > = {
-      food: { icon: Utensils, iconColor: "text-orange-500", bgColor: "bg-orange-500/15" },
-      shopping: { icon: ShoppingBag, iconColor: "text-pink-500", bgColor: "bg-pink-500/15" },
-      transport: { icon: Car, iconColor: "text-blue-500", bgColor: "bg-blue-500/15" },
-      bills: { icon: Zap, iconColor: "text-yellow-500", bgColor: "bg-yellow-500/15" },
-      health: { icon: HeartPulse, iconColor: "text-red-500", bgColor: "bg-red-500/15" },
-      entertainment: { icon: Gamepad2, iconColor: "text-purple-500", bgColor: "bg-purple-500/15" },
-      education: { icon: GraduationCap, iconColor: "text-indigo-500", bgColor: "bg-indigo-500/15" },
-      work: { icon: Briefcase, iconColor: "text-cyan-500", bgColor: "bg-cyan-500/15" },
-      coffee: { icon: Coffee, iconColor: "text-amber-600", bgColor: "bg-amber-500/15" },
-      travel: { icon: Plane, iconColor: "text-sky-500", bgColor: "bg-sky-500/15" },
-      // Income categories (bukan dollar)
-      salary: { icon: Briefcase, iconColor: "text-emerald-500", bgColor: "bg-emerald-500/15" },
-      bonus: { icon: Gift, iconColor: "text-amber-500", bgColor: "bg-amber-500/15" },
-      investment: { icon: TrendingUp, iconColor: "text-teal-500", bgColor: "bg-teal-500/15" },
-      freelance: { icon: Laptop, iconColor: "text-violet-500", bgColor: "bg-violet-500/15" },
-      gift: { icon: Gift, iconColor: "text-rose-400", bgColor: "bg-rose-500/15" },
-      business: { icon: Store, iconColor: "text-cyan-600", bgColor: "bg-cyan-500/15" },
-      rental: { icon: Building2, iconColor: "text-blue-600", bgColor: "bg-blue-500/15" },
-      interest: { icon: PiggyBank, iconColor: "text-green-500", bgColor: "bg-green-500/15" },
-      dividend: { icon: Coins, iconColor: "text-indigo-500", bgColor: "bg-indigo-500/15" },
-      sidejob: { icon: HandCoins, iconColor: "text-lime-500", bgColor: "bg-lime-500/15" },
-    };
-
-    if (categoryMap[nameLower]) return categoryMap[nameLower];
-    if (nameLower.includes("food") || nameLower.includes("makanan")) return categoryMap.food;
-    if (nameLower.includes("shopping") || nameLower.includes("belanja")) return categoryMap.shopping;
-    if (nameLower.includes("transport")) return categoryMap.transport;
-    if (nameLower.includes("bills") || nameLower.includes("tagihan")) return categoryMap.bills;
-    if (nameLower.includes("health") || nameLower.includes("kesehatan")) return categoryMap.health;
-    if (nameLower.includes("entertainment")) return categoryMap.entertainment;
-    if (nameLower.includes("education")) return categoryMap.education;
-    if (nameLower.includes("work") || nameLower.includes("kerja")) return categoryMap.work;
-    if (nameLower.includes("coffee") || nameLower.includes("kopi")) return categoryMap.coffee;
-    if (nameLower.includes("travel")) return categoryMap.travel;
-    if (nameLower.includes("salary") || nameLower.includes("gaji")) return categoryMap.salary;
-    if (nameLower.includes("bonus")) return categoryMap.bonus;
-    if (nameLower.includes("invest") || nameLower.includes("investasi")) return categoryMap.investment;
-    if (nameLower.includes("freelance")) return categoryMap.freelance;
-    if (nameLower.includes("gift") || nameLower.includes("hadiah")) return categoryMap.gift;
-    if (nameLower.includes("business") || nameLower.includes("bisnis")) return categoryMap.business;
-    if (nameLower.includes("rental") || nameLower.includes("sewa")) return categoryMap.rental;
-    if (nameLower.includes("interest") || nameLower.includes("bunga")) return categoryMap.interest;
-    if (nameLower.includes("dividend") || nameLower.includes("dividen")) return categoryMap.dividend;
-    if (nameLower.includes("side") || nameLower.includes("sampingan")) return categoryMap.sidejob;
-
-    return { icon: Banknote, iconColor: "text-slate-400", bgColor: "bg-slate-500/15" };
-  };
-
-  const categoryStyle = transaction.category?.name
-    ? getCategoryStyle(transaction.category.name)
-    : {
-        icon: getTransactionIcon(),
-        iconColor: getTransactionColor(),
-        bgColor:
-          isExpense(transaction) ? "bg-rose-500/15" : "bg-emerald-500/15",
-      };
-
-  const CategoryIcon = categoryStyle.icon;
+  const cat = transaction.category;
+  const catColor = cat?.color || "#06b6d4";
   const title = transaction.description?.trim() || transaction.category?.name || getTransactionLabel();
   const subtitle = `${formatDate(transaction.date)} · ${transaction.category?.name || getTransactionLabel()}`;
 
@@ -234,11 +164,26 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
   return (
     <>
       <div className="flex items-center gap-4 py-4 px-4">
-        {/* Squircle icon - rounded square with soft colored bg */}
+        {/* Squircle icon - use category icon+color from DB when available */}
         <div
-          className={`flex-shrink-0 w-11 h-11 rounded-[12px] ${categoryStyle.bgColor} flex items-center justify-center`}
+          className={`flex-shrink-0 w-11 h-11 rounded-[12px] flex items-center justify-center ${
+            cat ? "" : isExpense(transaction) ? "bg-rose-500/15" : "bg-emerald-500/15"
+          }`}
+          style={cat ? { backgroundColor: `${catColor}20` } : undefined}
         >
-          <CategoryIcon className={categoryStyle.iconColor} size={22} />
+          {cat ? (
+            <CategoryIconDisplay
+              icon={cat.icon}
+              name={cat.name}
+              size={22}
+              style={{ color: catColor }}
+            />
+          ) : (
+            (() => {
+              const DefaultIcon = getTransactionIcon();
+              return <DefaultIcon className={getTransactionColor()} size={22} />;
+            })()
+          )}
         </div>
 
         {/* Text */}

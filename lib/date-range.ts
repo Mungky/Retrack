@@ -1,6 +1,8 @@
-export type DateRangeKey = "this_month" | "last_month" | "last_3_months" | "this_year";
+export type DateRangeKey = "today" | "this_week" | "this_month" | "last_month" | "last_3_months" | "this_year";
 
 export const DATE_RANGE_OPTIONS: { value: DateRangeKey; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "this_week", label: "This Week" },
   { value: "this_month", label: "This Month" },
   { value: "last_month", label: "Last Month" },
   { value: "last_3_months", label: "Last 3 Months" },
@@ -13,6 +15,15 @@ export function getDateRange(range: DateRangeKey): { start: Date; end: Date } {
   let start: Date;
 
   switch (range) {
+    case "today":
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      break;
+    case "this_week": {
+      const dayOfWeek = now.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
+      break;
+    }
     case "this_month":
       start = new Date(now.getFullYear(), now.getMonth(), 1);
       break;

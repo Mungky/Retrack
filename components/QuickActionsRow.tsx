@@ -1,13 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Plus, Minus, ArrowRightLeft, Wallet as WalletIcon } from "lucide-react";
+import { Plus, Minus, ArrowRightLeft } from "lucide-react";
 import AddTransactionSheet from "./AddTransactionSheet";
-import WalletFormSheet from "./WalletFormSheet";
 import QuickTransferSheet from "./QuickTransferSheet";
 import { useSheet } from "@/contexts/SheetContext";
 import { useState } from "react";
-import type { Wallet } from "@/types";
 
 const actions = [
   {
@@ -28,28 +25,19 @@ const actions = [
     color: "bg-blue-500/20 text-blue-400",
     handler: "transfer",
   },
-  {
-    label: "Add Wallet",
-    icon: WalletIcon,
-    color: "bg-slate-500/20 text-slate-400",
-    handler: "wallet",
-  },
 ];
 
 export default function QuickActionsRow() {
-  const router = useRouter();
   const { setIsSheetOpen } = useSheet();
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
 
   const handleClick = (handler: string) => {
     setIsSheetOpen(true);
     if (handler === "income") setIncomeOpen(true);
     else if (handler === "expense") setExpenseOpen(true);
     else if (handler === "transfer") setTransferOpen(true);
-    else if (handler === "wallet") setWalletOpen(true);
   };
 
   const closeSheet = () => {
@@ -57,7 +45,6 @@ export default function QuickActionsRow() {
     setIncomeOpen(false);
     setExpenseOpen(false);
     setTransferOpen(false);
-    setWalletOpen(false);
   };
 
   return (
@@ -90,15 +77,6 @@ export default function QuickActionsRow() {
         transactionType="expense"
       />
       <QuickTransferSheet isOpen={transferOpen} onClose={closeSheet} />
-      <WalletFormSheet
-        isOpen={walletOpen}
-        onClose={closeSheet}
-        wallet={null}
-        onSuccess={(_w: Wallet) => {
-          closeSheet();
-          router.refresh();
-        }}
-      />
     </>
   );
 }

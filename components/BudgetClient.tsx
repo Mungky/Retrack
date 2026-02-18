@@ -2,21 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Utensils,
-  ShoppingBag,
-  Car,
-  Zap,
-  HeartPulse,
-  Gamepad2,
-  GraduationCap,
-  Briefcase,
-  Coffee,
-  Plane,
-  Banknote,
-  Pencil,
-} from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
+import { CategoryIconDisplay } from "./AddTransactionSheet";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -28,29 +15,6 @@ interface BudgetClientProps {
   initialBudgets: BudgetWithCategory[];
   categories: Category[];
   expensesThisMonth: Transaction[];
-}
-
-function getCategoryStyle(categoryName: string | null | undefined) {
-  if (!categoryName) {
-    return { icon: Banknote, iconColor: "text-slate-400", bgColor: "bg-slate-500/15" };
-  }
-  const n = categoryName.toLowerCase().trim();
-  const map: Record<string, { icon: typeof Banknote; iconColor: string; bgColor: string }> = {
-    food: { icon: Utensils, iconColor: "text-orange-500", bgColor: "bg-orange-500/15" },
-    shopping: { icon: ShoppingBag, iconColor: "text-pink-500", bgColor: "bg-pink-500/15" },
-    transport: { icon: Car, iconColor: "text-blue-500", bgColor: "bg-blue-500/15" },
-    bills: { icon: Zap, iconColor: "text-yellow-500", bgColor: "bg-yellow-500/15" },
-    health: { icon: HeartPulse, iconColor: "text-red-500", bgColor: "bg-red-500/15" },
-    entertainment: { icon: Gamepad2, iconColor: "text-purple-500", bgColor: "bg-purple-500/15" },
-    education: { icon: GraduationCap, iconColor: "text-indigo-500", bgColor: "bg-indigo-500/15" },
-    work: { icon: Briefcase, iconColor: "text-cyan-500", bgColor: "bg-cyan-500/15" },
-    coffee: { icon: Coffee, iconColor: "text-amber-600", bgColor: "bg-amber-500/15" },
-    travel: { icon: Plane, iconColor: "text-sky-500", bgColor: "bg-sky-500/15" },
-  };
-  for (const [key, val] of Object.entries(map)) {
-    if (n.includes(key) || (key === "bills" && n.includes("tagihan"))) return val;
-  }
-  return { icon: Banknote, iconColor: "text-slate-400", bgColor: "bg-slate-500/15" };
 }
 
 function formatCurrency(amount: number) {
@@ -157,8 +121,8 @@ export default function BudgetClient({
       ) : (
         <div className="space-y-4">
           {computed.map((item) => {
-            const style = getCategoryStyle(item.category?.name);
-            const Icon = style.icon;
+            const cat = item.category;
+            const catColor = cat?.color || "#06b6d4";
             const barColor = getProgressColor(item.percentage);
 
             return (
@@ -169,9 +133,19 @@ export default function BudgetClient({
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div
-                      className={`flex-shrink-0 w-12 h-12 rounded-xl ${style.bgColor} flex items-center justify-center`}
+                      className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: cat ? `${catColor}20` : "rgba(148, 163, 184, 0.15)" }}
                     >
-                      <Icon className={style.iconColor} size={24} />
+                      {cat ? (
+                        <CategoryIconDisplay
+                          icon={cat.icon}
+                          name={cat.name}
+                          size={24}
+                          style={{ color: catColor }}
+                        />
+                      ) : (
+                        <CategoryIconDisplay icon={null} name="" size={24} style={{ color: "#94a3b8" }} />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="text-white font-semibold truncate">

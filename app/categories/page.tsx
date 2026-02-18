@@ -5,17 +5,15 @@ import type { Category } from "@/types";
 
 async function getCategories(userId: string | null): Promise<Category[]> {
   if (!userId) return [];
-
   try {
     const supabase = await createClient();
-    const [resPersonal, resGlobal] = await Promise.all([
-      supabase.from("categories").select("*").eq("user_id", userId).order("name", { ascending: true }),
-      supabase.from("categories").select("*").is("user_id", null).order("name", { ascending: true }),
-    ]);
-
-    const personal = resPersonal.error ? [] : ((resPersonal.data as Category[]) || []);
-    const global = resGlobal.error ? [] : ((resGlobal.data as Category[]) || []);
-    return [...global, ...personal].sort((a, b) => a.name.localeCompare(b.name));
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return ((data as Category[]) || []).sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Error fetching categories:", error);
     return [];

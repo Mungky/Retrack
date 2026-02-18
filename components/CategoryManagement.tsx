@@ -35,16 +35,8 @@ export default function CategoryManagement({
     return effectiveType === filter;
   });
 
-  const isPersonalCategory = (cat: Category) =>
-    cat.user_id != null && cat.user_id === user?.id;
-
   const handleDelete = async (categoryId: string) => {
     if (!user?.id) return;
-    const cat = categories.find((c) => c.id === categoryId);
-    if (cat && cat.user_id !== user.id) {
-      showToast("Kategori global tidak dapat dihapus.", "error");
-      return;
-    }
 
     try {
       // Check if category has transactions
@@ -85,7 +77,6 @@ export default function CategoryManagement({
   const renderCategoryCard = (category: Category) => {
     const Icon = getCategoryIcon(category.icon, category.name);
     const effectiveType = (category.type || "expense").toLowerCase();
-    const isGlobal = category.user_id == null;
     return (
       <div
         key={category.id}
@@ -121,17 +112,10 @@ export default function CategoryManagement({
             >
               {effectiveType === "income" ? "Pemasukan" : "Pengeluaran"}
             </p>
-            {isGlobal && (
-              <span className="text-[10px] font-medium text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
-                Global
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Actions - only for personal categories (user_id = current user) */}
-        {isPersonalCategory(category) && (
-          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => {
                 setSelectedCategory(category);
@@ -151,7 +135,6 @@ export default function CategoryManagement({
               <Trash2 className="text-red-400" size={16} />
             </button>
           </div>
-        )}
       </div>
     );
   };

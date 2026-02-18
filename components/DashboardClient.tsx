@@ -5,7 +5,6 @@ import DateRangeFilter from "./DateRangeFilter";
 import BalanceCard from "./BalanceCard";
 import DashboardSummary from "./DashboardSummary";
 import QuickActionsRow from "./QuickActionsRow";
-import WalletManagement from "./WalletManagement";
 import NotificationsBadge from "./NotificationsBadge";
 import type { DateRangeKey } from "@/lib/date-range";
 import type { Transaction, Wallet } from "@/types";
@@ -49,10 +48,6 @@ export default function DashboardClient({
         />
 
         <QuickActionsRow />
-
-        <div className="mt-8">
-          <WalletManagement initialWallets={wallets} />
-        </div>
       </div>
     </div>
   );

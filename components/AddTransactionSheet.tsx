@@ -12,6 +12,7 @@ import { useSheet } from "@/contexts/SheetContext";
 import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
 import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
+import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import type { Category, Wallet } from "@/types";
 
@@ -149,7 +150,7 @@ const getIconByName = (categoryName: string): any => {
 };
 
 export const getCategoryIcon = (iconName: string | null, categoryName?: string) => {
-  // First try to use icon from database
+  // First try to use icon from database (Lucide names only)
   if (iconName) {
     const iconKey = iconName.toLowerCase().trim();
     const icon = ICON_MAP[iconKey];
@@ -166,6 +167,38 @@ export const getCategoryIcon = (iconName: string | null, categoryName?: string) 
   // Last resort: default icon
   return Receipt;
 };
+
+/** Returns true if icon string is custom emoji (not a Lucide name) */
+export const isEmojiIcon = (icon: string | null) =>
+  icon != null && icon.length <= 4 && !/^[a-z0-9_-]+$/i.test(icon.trim());
+
+/** Renders category icon (Lucide or emoji) for display in lists/previews */
+export function CategoryIconDisplay({
+  icon,
+  name,
+  size = 24,
+  className,
+  style,
+}: {
+  icon: string | null;
+  name?: string;
+  size?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  if (isEmojiIcon(icon)) {
+    return (
+      <span
+        className={className}
+        style={{ fontSize: size, lineHeight: 1, ...style }}
+      >
+        {icon}
+      </span>
+    );
+  }
+  const Icon = getCategoryIcon(icon, name);
+  return <Icon size={size} className={className} style={style} />;
+}
 
 // Helper function to get category style (icon + color) for UI display
 export const getCategoryStyle = (categoryName: string | null | undefined) => {
@@ -381,20 +414,11 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
   const accent = getTransactionAccent(transactionType);
   const theme = formThemes[accent];
 
-  // Memoize category styles to prevent recalculation on every render
-  const categoryStylesMap = useMemo(() => {
-    const map = new Map<string, { icon: any; iconColor: string; bgColor: string }>();
-    categories.forEach((category) => {
-      map.set(category.id, getCategoryStyle(category.name));
-    });
-    return map;
-  }, [categories]);
-
-  // Filter categories by transaction type. Treat null/empty type as 'expense' (legacy fallback).
+  // Filter categories by transaction type. Treat null/empty/whitespace as 'expense'.
   const filteredCategories = useMemo(() => {
     const targetType = isIncome ? "income" : "expense";
     return categories.filter((cat) => {
-      const effectiveType = (cat.type || "expense").toLowerCase();
+      const effectiveType = (cat.type || "expense").toString().trim().toLowerCase();
       return effectiveType === targetType;
     });
   }, [categories, isIncome]);
@@ -410,6 +434,15 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
       setIsSheetOpen(false);
     }
   }, [isOpen, user?.id, setIsSheetOpen]);
+
+  // Refetch categories when user adds/updates one (e.g. from Profile > Manage Categories)
+  useEffect(() => {
+    const onRefresh = () => {
+      if (isOpen && user?.id) fetchCategories();
+    };
+    window.addEventListener(REFRESH_CATEGORIES_EVENT, onRefresh);
+    return () => window.removeEventListener(REFRESH_CATEGORIES_EVENT, onRefresh);
+  }, [isOpen, user?.id]);
 
   useEffect(() => {
     return () => {
@@ -463,33 +496,15 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
 
     try {
       setIsLoadingCategories(true);
-      const [resPersonal, resGlobal] = await Promise.all([
-        supabaseClient
-          .from("categories")
-          .select("id, name, icon, type")
-          .eq("user_id", user.id)
-          .order("name", { ascending: true }),
-        supabaseClient
-          .from("categories")
-          .select("id, name, icon, type")
-          .is("user_id", null)
-          .order("name", { ascending: true }),
-      ]);
+      const { data, error } = await supabaseClient
+        .from("categories")
+        .select("id, name, icon, type, color")
+        .eq("user_id", user.id)
+        .order("name", { ascending: true });
 
-      const personal = resPersonal.error ? [] : (resPersonal.data || []);
-      const global = resGlobal.error ? [] : (resGlobal.data || []);
-
-      if (resPersonal.error) {
-        console.warn("Categories (personal) fetch:", resPersonal.error.message);
-      }
-      if (resGlobal.error) {
-        console.warn("Categories (global) fetch:", resGlobal.error.message);
-      }
-
-      const merged = [...global, ...personal].sort((a: Category, b: Category) =>
-        a.name.localeCompare(b.name)
-      );
-      setCategories(merged);
+      if (error) throw error;
+      const list = ((data as Category[]) || []).sort((a, b) => a.name.localeCompare(b.name));
+      setCategories(list);
     } catch (error) {
       console.error("Error fetching categories:", error);
       setCategories([]);
@@ -696,8 +711,8 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
               ) : (
                 <div className="grid grid-cols-5 gap-2">
                   {filteredCategories.map((category) => {
-                    const categoryStyle = categoryStylesMap.get(category.id) || getCategoryStyle(category.name);
-                    const Icon = categoryStyle.icon;
+                    const catColor = category.color || "#06b6d4";
+                    const bgColor = `${catColor}20`;
                     const isSelected = selectedCategory === category.id;
                     return (
                       <button
@@ -707,14 +722,18 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
                         disabled={isLoading}
                         className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all disabled:opacity-50 ${
                           isSelected
-                            ? `${categoryStyle.bgColor} ${theme.selectedBorder}`
+                            ? `${theme.selectedBorder}`
                             : "bg-white/5 border-white/10 hover:border-white/20"
                         }`}
+                        style={isSelected ? { backgroundColor: bgColor } : undefined}
                         title={category.name}
                       >
-                        <Icon 
-                          className={isSelected ? categoryStyle.iconColor : "text-slate-400"} 
-                          size={24} 
+                        <CategoryIconDisplay
+                          icon={category.icon}
+                          name={category.name}
+                          size={24}
+                          className={isSelected ? "" : "text-slate-400"}
+                          style={{ color: isSelected ? catColor : undefined }}
                         />
                         <span className={`text-xs font-medium truncate w-full text-center ${isSelected ? "text-white" : "text-white/60"}`}>
                           {category.name}

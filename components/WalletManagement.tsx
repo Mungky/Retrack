@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletIcon } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletIcon, Plus } from "lucide-react";
 import WalletFormSheet from "./WalletFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
@@ -12,6 +12,7 @@ import type { Wallet } from "@/types";
 
 interface WalletManagementProps {
   initialWallets: Wallet[];
+  onWalletsChange?: (wallets: Wallet[]) => void;
 }
 
 const getWalletIcon = (type: string) => {
@@ -74,7 +75,7 @@ function formatCurrencyCompact(amount: number): string {
   return `${prefix}${absAmount.toLocaleString("id-ID")}`;
 }
 
-export default function WalletManagement({ initialWallets }: WalletManagementProps) {
+export default function WalletManagement({ initialWallets, onWalletsChange }: WalletManagementProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [wallets, setWallets] = useState<Wallet[]>(initialWallets);
@@ -141,7 +142,9 @@ export default function WalletManagement({ initialWallets }: WalletManagementPro
 
       if (error) throw error;
 
-      setWallets(wallets.filter((w) => w.id !== walletId));
+      const next = wallets.filter((w) => w.id !== walletId);
+      setWallets(next);
+      onWalletsChange?.(next);
       showToast("Wallet berhasil dihapus!", "success");
       setIsDeleteOpen(false);
     } catch (error: unknown) {
@@ -160,10 +163,23 @@ export default function WalletManagement({ initialWallets }: WalletManagementPro
         </p>
       </div>
 
+      {/* Add Wallet Button */}
+      <button
+        onClick={() => {
+          setSelectedWallet(null);
+          setIsFormOpen(true);
+        }}
+        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+      >
+        <Plus size={18} />
+        Tambah Dompet
+      </button>
+
       {/* Row 2: Wallet cards - rata kiri kanan (justify-between) */}
       {wallets.length === 0 ? (
-        <div className="glass-card p-12 text-center">
+        <div className="glass-card p-10 text-center">
           <p className="text-white/60">Belum ada wallet</p>
+          <p className="text-white/40 text-sm mt-1">Tap &quot;Tambah Dompet&quot; di atas</p>
         </div>
       ) : (
         <div className="flex flex-wrap justify-between gap-3">
@@ -277,15 +293,11 @@ export default function WalletManagement({ initialWallets }: WalletManagementPro
         }}
         wallet={selectedWallet}
         onSuccess={(newWallet) => {
-          if (selectedWallet) {
-            setWallets(
-              wallets.map((w) =>
-                w.id === selectedWallet.id ? newWallet : w
-              )
-            );
-          } else {
-            setWallets([...wallets, newWallet]);
-          }
+          const next = selectedWallet
+            ? wallets.map((w) => (w.id === selectedWallet.id ? newWallet : w))
+            : [...wallets, newWallet];
+          setWallets(next);
+          onWalletsChange?.(next);
           setIsFormOpen(false);
           setSelectedWallet(null);
         }}

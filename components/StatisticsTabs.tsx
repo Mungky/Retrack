@@ -2,34 +2,11 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import {
-  FileText,
-  TrendingUp,
-  BarChart3,
-  Utensils,
-  ShoppingBag,
-  Car,
-  Zap,
-  HeartPulse,
-  Gamepad2,
-  Banknote,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Gift,
-  Laptop,
-  Briefcase,
-  Building2,
-  PiggyBank,
-  Store,
-  Coins,
-  HandCoins,
-  Plane,
-  GraduationCap,
-  Coffee,
-} from "lucide-react";
+import { FileText, TrendingUp, BarChart3, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import DateRangeFilter from "./DateRangeFilter";
 import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/date-range";
 import { normalizeTransactionType } from "@/lib/transaction-calc";
+import { CategoryIconDisplay } from "./AddTransactionSheet";
 import type { Category, Transaction } from "@/types";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
@@ -54,38 +31,6 @@ function formatCurrency(amount: number) {
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(amount);
-}
-
-const CATEGORY_ICONS: Record<string, typeof Utensils> = {
-  food: Utensils,
-  shopping: ShoppingBag,
-  transport: Car,
-  bills: Zap,
-  health: HeartPulse,
-  entertainment: Gamepad2,
-  education: GraduationCap,
-  work: Briefcase,
-  coffee: Coffee,
-  travel: Plane,
-  // Income categories (bukan dollar)
-  salary: Briefcase,
-  bonus: Gift,
-  investment: TrendingUp,
-  freelance: Laptop,
-  gift: Gift,
-  business: Store,
-  rental: Building2,
-  interest: PiggyBank,
-  dividend: Coins,
-  sidejob: HandCoins,
-};
-
-function getCategoryIcon(name: string) {
-  const n = name.toLowerCase();
-  for (const [key, Icon] of Object.entries(CATEGORY_ICONS)) {
-    if (n.includes(key)) return Icon;
-  }
-  return Banknote;
 }
 
 const TABS = [
@@ -118,8 +63,7 @@ export default function StatisticsTabs({
     const incomeByCat: Record<string, number> = {};
     const expenseByCat: Record<string, number> = {};
     filtered.forEach((t) => {
-      const cat = categories.find((c) => c.id === t.category_id);
-      const name = cat?.name || "Lainnya";
+      const name = t.category?.name || categories.find((c) => c.id === t.category_id)?.name || "Other";
       if (normalizeTransactionType(t.type) === "income") {
         incomeByCat[name] = (incomeByCat[name] || 0) + Number(t.amount || 0);
       }
@@ -179,7 +123,7 @@ export default function StatisticsTabs({
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="font-playfair text-3xl font-bold text-white mb-2">Statistics</h1>
-          <p className="text-white/60 text-sm">Analisis keuangan Anda</p>
+          <p className="text-white/60 text-sm">Your financial analysis</p>
         </div>
         <div className="flex items-center gap-3">
           <DateRangeFilter value={dateRange} onChange={setDateRange} />
@@ -244,14 +188,23 @@ export default function StatisticsTabs({
                     <p className="text-white/40 text-sm">No income data</p>
                   ) : (
                     stats.incomeReport.map((r) => {
-                      const Icon = getCategoryIcon(r.name);
+                      const cat = categories.find((c) => c.name === r.name);
+                      const catColor = cat?.color || "#10b981";
                       return (
                         <div
                           key={r.name}
                           className="flex items-center gap-4 py-2 border-b border-white/5"
                         >
-                          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                            <Icon className="text-emerald-400" size={20} />
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: `${catColor}20` }}
+                          >
+                            <CategoryIconDisplay
+                              icon={cat?.icon ?? null}
+                              name={r.name}
+                              size={20}
+                              style={{ color: catColor }}
+                            />
                           </div>
                           <span className="flex-1 text-white font-medium">{r.name}</span>
                           <span className="text-emerald-400 font-semibold">{formatCurrency(r.value)}</span>
@@ -271,14 +224,23 @@ export default function StatisticsTabs({
                     <p className="text-white/40 text-sm">No expense data</p>
                   ) : (
                     stats.expenseReport.map((r) => {
-                      const Icon = getCategoryIcon(r.name);
+                      const cat = categories.find((c) => c.name === r.name);
+                      const catColor = cat?.color || "#f43f5e";
                       return (
                         <div
                           key={r.name}
                           className="flex items-center gap-4 py-2 border-b border-white/5"
                         >
-                          <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
-                            <Icon className="text-rose-400" size={20} />
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: `${catColor}20` }}
+                          >
+                            <CategoryIconDisplay
+                              icon={cat?.icon ?? null}
+                              name={r.name}
+                              size={20}
+                              style={{ color: catColor }}
+                            />
                           </div>
                           <span className="flex-1 text-white font-medium">{r.name}</span>
                           <span className="text-rose-400 font-semibold">{formatCurrency(r.value)}</span>

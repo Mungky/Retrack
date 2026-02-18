@@ -20,7 +20,8 @@ export interface Category {
   icon: string | null;
   color?: string | null;
   type?: CategoryType;
-  user_id?: string;
+  user_id?: string | null;
+  is_custom?: boolean;
 }
 
 export interface Budget {
@@ -39,6 +40,7 @@ export interface CategoryReference {
   id: string;
   name: string;
   icon: string | null;
+  color?: string | null;
 }
 
 export interface Transaction {

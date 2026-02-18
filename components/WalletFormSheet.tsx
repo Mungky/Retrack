@@ -131,10 +131,10 @@ export default function WalletFormSheet({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/80 z-[80] transition-opacity duration-300"
         onClick={onClose}
       />
-      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
+      <div className="fixed bottom-0 left-0 right-0 z-[80] animate-in">
         <div
           className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}

@@ -23,7 +23,7 @@ async function getTransactions(userId: string | null): Promise<Transaction[]> {
         category_id,
         source_wallet_id,
         destination_wallet_id,
-        category:categories(id, name, icon),
+        category:categories(id, name, icon, color),
         source_wallet:wallets!source_wallet_id(id, name),
         destination_wallet:wallets!destination_wallet_id(id, name)
       `)
