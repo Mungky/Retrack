@@ -235,7 +235,7 @@ export default function StatisticsClient({
                 axisLine={false}
                 tickFormatter={(v) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : v)}
               />
-              <Tooltip content={(props) => <ChartTooltip {...props} formatCurrency={formatCurrency} />} />
+              <Tooltip content={(props) => <ChartTooltip {...props as any} formatCurrency={formatCurrency} />} />
               <Area
                 type="natural"
                 dataKey="amount"
