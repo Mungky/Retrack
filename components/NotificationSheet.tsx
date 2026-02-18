@@ -13,6 +13,8 @@ import {
   Inbox,
 } from "lucide-react";
 import { useSheet } from "@/contexts/SheetContext";
+import { Z_INDEX } from "@/lib/z-index";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { useToast } from "@/contexts/ToastContext";
 import {
   getNotifications,
@@ -147,7 +149,7 @@ export default function NotificationSheet({
     const res = await markNotificationRead(id);
     if (!res.success) {
       setItems(prev);
-      showToast(res.error ?? "Failed to update", "error");
+      showToast(res.error ?? TOAST_MESSAGES.ERROR.FAILED_TO_UPDATE, "error");
     }
   };
 
@@ -155,33 +157,33 @@ export default function NotificationSheet({
     e.stopPropagation();
     const prev = items;
     setItems((p) => p.filter((i) => i.id !== id));
-    showToast("Notification removed", "success");
+    showToast(TOAST_MESSAGES.SUCCESS.NOTIFICATION_REMOVED, "success");
     const res = await deleteNotification(id);
     if (!res.success) {
       setItems(prev);
-      showToast(res.error ?? "Failed to delete", "error");
+      showToast(res.error ?? TOAST_MESSAGES.ERROR.FAILED_TO_DELETE, "error");
     }
   };
 
   const handleMarkAllRead = async () => {
     const prev = items;
     setItems((p) => p.map((i) => ({ ...i, read: true })));
-    showToast("All caught up!", "success");
+    showToast(TOAST_MESSAGES.SUCCESS.ALL_CAUGHT_UP, "success");
     const res = await markAllNotificationsRead();
     if (!res.success) {
       setItems(prev);
-      showToast(res.error ?? "Failed to update", "error");
+      showToast(res.error ?? TOAST_MESSAGES.ERROR.FAILED_TO_UPDATE, "error");
     }
   };
 
   const handleClearAll = async () => {
     const prev = items;
     setItems([]);
-    showToast("All notifications cleared", "success");
+    showToast(TOAST_MESSAGES.SUCCESS.ALL_NOTIFICATIONS_CLEARED, "success");
     const res = await clearAllNotifications();
     if (!res.success) {
       setItems(prev);
-      showToast(res.error ?? "Failed to clear", "error");
+      showToast(res.error ?? TOAST_MESSAGES.ERROR.FAILED_TO_CLEAR, "error");
     }
   };
 
@@ -191,15 +193,16 @@ export default function NotificationSheet({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/80 transition-opacity duration-300 backdrop-blur-sm"
+        style={{ zIndex: Z_INDEX.backdrop }}
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
+      <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl max-h-[85vh] rounded-t-3xl rounded-b-none bg-[#181A25]/95 border-t border-x border-white/10 shadow-2xl backdrop-blur-xl flex flex-col"
+          className="mx-auto max-w-2xl max-h-[85vh] rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl backdrop-blur-xl flex flex-col"
         >
           {/* Handle */}
           <div className="flex justify-center pt-3 pb-2">
@@ -310,7 +313,7 @@ export default function NotificationSheet({
 
           {/* Sticky footer */}
           <div
-            className="flex-shrink-0 px-4 py-4 border-t border-white/10 bg-[#181A25]/95 backdrop-blur-xl"
+            className="flex-shrink-0 px-4 py-4 border-t border-white/10 sheet-bg-dark backdrop-blur-xl"
             style={{
               paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
             }}

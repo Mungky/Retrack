@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X,
   Loader2,
   ShoppingBag,
   Utensils,
@@ -31,8 +30,11 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { formThemes } from "@/lib/form-themes";
+import { BaseSheet } from "@/components/shared/BaseSheet";
+import { Button, Input } from "@/components/ui";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
-import { CategoryIconDisplay } from "./AddTransactionSheet";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import type { Category, CategoryType } from "@/types";
 
 interface CategoryFormSheetProps {
@@ -153,11 +155,11 @@ export default function CategoryFormSheet({
 
   const onSubmit = async (data: FormValues) => {
     if (!data.name.trim()) {
-      showToast("Nama kategori tidak boleh kosong.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_CATEGORY_NAME, "error");
       return;
     }
     if (!user?.id) {
-      showToast("User tidak ditemukan.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND, "error");
       return;
     }
 
@@ -193,7 +195,7 @@ export default function CategoryFormSheet({
       }
 
       showToast(
-        `Kategori berhasil ${category ? "diupdate" : "ditambahkan"}!`,
+        category ? TOAST_MESSAGES.SUCCESS.CATEGORY_UPDATED : TOAST_MESSAGES.SUCCESS.CATEGORY_ADDED,
         "success"
       );
       window.dispatchEvent(new CustomEvent(REFRESH_CATEGORIES_EVENT));
@@ -202,48 +204,27 @@ export default function CategoryFormSheet({
     } catch (error: unknown) {
       console.error("Error saving category:", error);
       showToast(
-        (error as { message?: string })?.message || "Gagal menyimpan kategori.",
+        (error as { message?: string })?.message || TOAST_MESSAGES.ERROR.CATEGORY_SAVE_FAILED,
         "error"
       );
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <>
-      <div
-        className="fixed inset-0 bg-black/80 z-[80] transition-opacity duration-300"
-        onClick={onClose}
-      />
-      <div className="fixed bottom-0 left-0 right-0 z-[80] animate-in">
+    <BaseSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={category ? "Edit Kategori" : "Tambah Kategori"}
+      titleAccent={
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="w-12 h-1 bg-white/20 rounded-full" />
-          </div>
-          <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  type === "income" ? "bg-emerald-400" : "bg-rose-400"
-                }`}
-              />
-              <h2 className="text-xl font-bold text-white">
-                {category ? "Edit Kategori" : "Tambah Kategori"}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl hover:bg-white/10 transition-colors"
-            >
-              <X className="text-white/60" size={20} />
-            </button>
-          </div>
-
-          <form
+          className={`w-2 h-2 rounded-full transition-colors ${
+            type === "income" ? "bg-emerald-400" : "bg-rose-400"
+          }`}
+        />
+      }
+      nested
+    >
+      <form
             onSubmit={handleSubmit(onSubmit)}
             className="p-6 space-y-6 overflow-y-auto"
             style={{
@@ -291,7 +272,7 @@ export default function CategoryFormSheet({
                 {...register("name", { required: "Nama harus diisi" })}
                 type="text"
                 placeholder="Nama kategori"
-                className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
+                className="rounded-2xl w-full"
               />
               {errors.name && (
                 <p className="text-rose-400 text-sm mt-1">{errors.name.message}</p>
@@ -498,16 +479,14 @@ export default function CategoryFormSheet({
             </div>
 
             {/* Submit */}
-            <button
+            <Button
               type="submit"
-              className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ boxShadow: theme.submitShadow }}
+              size="lg"
+              className="w-full"
             >
               {category ? "Update Kategori" : "Tambah Kategori"}
-            </button>
+            </Button>
           </form>
-        </div>
-      </div>
-    </>
+    </BaseSheet>
   );
 }

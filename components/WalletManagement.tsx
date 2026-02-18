@@ -6,6 +6,9 @@ import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletI
 import WalletFormSheet from "./WalletFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
+import { Z_INDEX } from "@/lib/z-index";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Wallet } from "@/types";
@@ -57,24 +60,6 @@ const getWalletConfig = (type: string) => {
   }
 };
 
-function formatCurrencyCompact(amount: number): string {
-  const absAmount = Math.abs(amount);
-  const prefix = amount < 0 ? "-Rp " : "Rp ";
-  if (absAmount >= 1_000_000_000) {
-    const val = (absAmount / 1_000_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} M`;
-  }
-  if (absAmount >= 1_000_000) {
-    const val = (absAmount / 1_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Jt`;
-  }
-  if (absAmount >= 1_000) {
-    const val = (absAmount / 1_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Rb`;
-  }
-  return `${prefix}${absAmount.toLocaleString("id-ID")}`;
-}
-
 export default function WalletManagement({ initialWallets, onWalletsChange }: WalletManagementProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -104,14 +89,6 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
       }
     }
   }, [menuOpenId, isLastWallet]);
-
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const handleDelete = async (walletId: string) => {
     if (!user?.id) return;
@@ -145,11 +122,11 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
       const next = wallets.filter((w) => w.id !== walletId);
       setWallets(next);
       onWalletsChange?.(next);
-      showToast("Wallet berhasil dihapus!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.WALLET_DELETED, "success");
       setIsDeleteOpen(false);
     } catch (error: unknown) {
       console.error("Error deleting wallet:", error);
-      showToast((error as { message?: string })?.message || "Gagal menghapus wallet.", "error");
+      showToast((error as { message?: string })?.message || TOAST_MESSAGES.ERROR.WALLET_DELETE_FAILED, "error");
     }
   };
 
@@ -240,12 +217,14 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                       createPortal(
                         <>
                           <div
-                            className="fixed inset-0 z-[80]"
+                            className="fixed inset-0"
+                            style={{ zIndex: Z_INDEX.sheetNested }}
                             onClick={() => setMenuOpenId(null)}
                           />
                           <div
-                            className="fixed z-[90] fintech-card py-1 min-w-[130px] animate-fade-in"
+                            className="fixed fintech-card py-1 min-w-[130px] animate-fade-in"
                             style={{
+                              zIndex: Z_INDEX.dropdown,
                               top: menuPosition.top,
                               left: menuPosition.left,
                               transform: isLastWallet ? "translateY(-100%)" : "none",

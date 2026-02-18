@@ -3,10 +3,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil } from "lucide-react";
-import { CategoryIconDisplay } from "./AddTransactionSheet";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
 import { useHaptic } from "@/hooks/useHaptic";
+import { formatCurrency } from "@/lib/currency";
 import type { Budget, Category, Transaction } from "@/types";
 
 type BudgetWithCategory = Budget & { category: Category | null };
@@ -15,14 +16,6 @@ interface BudgetClientProps {
   initialBudgets: BudgetWithCategory[];
   categories: Category[];
   expensesThisMonth: Transaction[];
-}
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
 }
 
 function getProgressColor(percentage: number) {
@@ -96,7 +89,7 @@ export default function BudgetClient({
               setEditingBudget(null);
               setIsFormOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-violet-500/30 to-purple-600/30 border border-violet-500/30 text-violet-300 font-semibold hover:from-violet-500/40 hover:to-purple-600/40 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary/20 border border-primary/40 text-primary font-semibold hover:bg-primary/30 transition-all"
           >
             <Plus size={20} />
             Create Budget
@@ -113,7 +106,7 @@ export default function BudgetClient({
               setEditingBudget(null);
               setIsFormOpen(true);
             }}
-            className="px-5 py-2.5 rounded-xl bg-violet-500/20 text-violet-300 font-medium hover:bg-violet-500/30 transition-colors"
+            className="px-5 py-2.5 rounded-xl bg-primary/20 text-primary font-medium hover:bg-primary/30 transition-colors"
           >
             Tambah Budget Pertama
           </button>

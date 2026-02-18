@@ -1,0 +1,70 @@
+"use client";
+
+import { forwardRef } from "react";
+import { cn } from "@/lib/cn";
+
+const Card = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    /** Use glass/fintech style (dark card with subtle border) */
+    variant?: "default" | "glass";
+  }
+>(({ className, variant = "default", ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "rounded-[1.5rem] border",
+        variant === "glass"
+          ? "fintech-card bg-card border-border"
+          : "bg-card border-border",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+
+Card.displayName = "Card";
+
+const CardHeader = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+));
+
+CardHeader.displayName = "CardHeader";
+
+const CardTitle = forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn("text-xl font-bold text-card-foreground", className)}
+    {...props}
+  />
+));
+
+CardTitle.displayName = "CardTitle";
+
+const CardContent = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+));
+
+CardContent.displayName = "CardContent";
+
+const CardFooter = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+));
+
+CardFooter.displayName = "CardFooter";
+
+export { Card, CardHeader, CardTitle, CardContent, CardFooter };

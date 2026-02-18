@@ -1,17 +1,11 @@
 "use client";
 
+import { formatCurrency } from "@/lib/currency";
+
 interface StatsCardsProps {
   income: number;
   expense: number;
   netCash: number;
-}
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
 }
 
 export default function StatsCards({ income, expense, netCash }: StatsCardsProps) {

@@ -6,6 +6,7 @@ import { supabaseClient } from "@/lib/supabase-client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isRateLimited, getRemainingTime } from "@/lib/rate-limiter";
 import Link from "next/link";
+import { Button, Input } from "@/components/ui";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -129,7 +130,7 @@ export default function RegisterPage() {
 
   if (loading && !emailSent) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#0F111A]">
+      <main className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-white/50">Memuat...</div>
       </main>
     );
@@ -137,7 +138,7 @@ export default function RegisterPage() {
 
   if (emailSent) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#0F111A]">
+      <main className="min-h-screen flex items-center justify-center px-4 py-8 bg-background">
         <div className="w-full max-w-md">
           <div className="fintech-card p-8 border border-white/5 shadow-2xl text-center">
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
@@ -156,10 +157,11 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <button
+            <Button
+              variant="outline"
               onClick={handleResend}
               disabled={resendLoading}
-              className="w-full py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full"
             >
               {resendLoading ? (
                 <>
@@ -169,7 +171,7 @@ export default function RegisterPage() {
               ) : (
                 "Kirim Ulang Email"
               )}
-            </button>
+            </Button>
 
             <p className="mt-6 text-white/50 text-sm">
               Sudah verifikasi?{" "}
@@ -184,7 +186,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#0F111A]">
+    <main className="min-h-screen flex items-center justify-center px-4 py-8 bg-background">
       <div className="w-full max-w-md">
         <div className="fintech-card p-8 border border-white/5 shadow-2xl">
           <div className="mb-8 text-center">
@@ -203,13 +205,13 @@ export default function RegisterPage() {
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2">Nama</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={20} />
-                <input
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" size={20} />
+                <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nama Anda"
-                  className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="pl-12 rounded-2xl h-12"
                   disabled={isLoading}
                 />
               </div>
@@ -218,14 +220,14 @@ export default function RegisterPage() {
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2">Email</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={20} />
-                <input
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" size={20} />
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@email.com"
                   required
-                  className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="pl-12 rounded-2xl h-12"
                   disabled={isLoading}
                 />
               </div>
@@ -234,15 +236,15 @@ export default function RegisterPage() {
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={20} />
-                <input
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" size={20} />
+                <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimal 6 karakter"
                   required
                   minLength={6}
-                  className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="pl-12 rounded-2xl h-12"
                   disabled={isLoading}
                 />
               </div>
@@ -279,15 +281,15 @@ export default function RegisterPage() {
                 Konfirmasi Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={20} />
-                <input
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" size={20} />
+                <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Ulangi password"
                   required
                   minLength={6}
-                  className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 transition-all"
+                  className="pl-12 rounded-2xl h-12"
                   disabled={isLoading}
                 />
               </div>
@@ -296,10 +298,11 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold hover:opacity-95 active:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              size="lg"
+              className="w-full"
             >
               {isLoading ? (
                 <>
@@ -309,7 +312,7 @@ export default function RegisterPage() {
               ) : (
                 "Daftar"
               )}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-white/50 text-sm">

@@ -13,6 +13,8 @@ import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
 import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { formThemes } from "@/lib/form-themes";
+import { Z_INDEX } from "@/lib/z-index";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import type { Wallet } from "@/types";
 
 interface QuickTransferSheetProps {
@@ -61,7 +63,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
 
   const fetchWallets = async () => {
     if (!user?.id) {
-      showToast("User tidak ditemukan. Silakan login terlebih dahulu.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND_LOGIN, "error");
       return;
     }
 
@@ -81,11 +83,11 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
           setFromWallet(data[0].id);
         }
       } else {
-        showToast("Belum ada wallet. Silakan tambahkan wallet terlebih dahulu.", "error");
+        showToast(TOAST_MESSAGES.ERROR.NO_WALLETS, "error");
       }
     } catch (error: any) {
       console.error("Error fetching wallets:", error);
-      showToast("Gagal memuat data wallet. Silakan coba lagi.", "error");
+      showToast(TOAST_MESSAGES.ERROR.WALLETS_LOAD_FAILED, "error");
     } finally {
       setIsLoadingWallets(false);
     }
@@ -108,28 +110,28 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
     e.preventDefault();
 
     if (!fromWallet || !toWallet) {
-      showToast("Mohon lengkapi semua field.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_ALL_FIELDS, "error");
       return;
     }
 
     if (fromWallet === toWallet) {
-      showToast("Wallet sumber dan tujuan harus berbeda.", "error");
+      showToast(TOAST_MESSAGES.ERROR.SAME_WALLET_TRANSFER, "error");
       return;
     }
 
     if (amount <= 0) {
-      showToast("Nominal tidak valid.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_AMOUNT_ALT, "error");
       return;
     }
 
     const fromWalletData = wallets.find((w) => w.id === fromWallet);
     if (!fromWalletData || fromWalletData.balance < amount) {
-      showToast("Saldo tidak mencukupi.", "error");
+      showToast(TOAST_MESSAGES.ERROR.INSUFFICIENT_BALANCE, "error");
       return;
     }
 
     if (!user?.id) {
-      showToast("User tidak ditemukan. Silakan login terlebih dahulu.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND_LOGIN, "error");
       return;
     }
 
@@ -157,7 +159,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       insertedTransactionId = insertedTransaction?.id || null;
 
       await revalidateTransactionPaths();
-      showToast("Transfer berhasil!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.TRANSFER_SUCCESS, "success");
       window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
       onClose();
       resetForm();
@@ -177,7 +179,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
 
       console.error("Error transferring:", error);
       showToast(
-        error?.message || "Gagal melakukan transfer. Silakan coba lagi.",
+        error?.message || TOAST_MESSAGES.ERROR.TRANSFER_FAILED,
         "error"
       );
     } finally {
@@ -192,12 +194,13 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
   return createPortal(
     <>
       <div
-        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/80 transition-opacity duration-300"
+        style={{ zIndex: Z_INDEX.backdrop }}
         onClick={onClose}
       />
-      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
+      <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
+          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex justify-center pt-3 pb-2">

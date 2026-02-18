@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
@@ -6,6 +7,7 @@ import { AuroraBackground } from "@/components/ui/aurora-background";
 import { SheetProvider } from "@/contexts/SheetContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,10 +57,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="dark" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning>
+      <Script
+        id="theme-init"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem('remula-theme');if(t&&['default','sultan','forest'].includes(t)){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.setAttribute('data-theme','default')}}catch(e){document.documentElement.setAttribute('data-theme','default')}})();`,
+        }}
+      />
       <body
-        className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-[#09090b]`}
+        className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-background`}
       >
+        <ThemeProvider attribute="data-theme" defaultTheme="default">
         <AuroraBackground />
         <AuthProvider>
           <ToastProvider>
@@ -70,6 +80,7 @@ export default function RootLayout({
             </SheetProvider>
           </ToastProvider>
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

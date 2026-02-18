@@ -25,7 +25,7 @@ export default function BottomNav() {
     <nav
       className={clsx(
         "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300",
-        "backdrop-blur-xl bg-black/80 border-t border-white/10",
+        "backdrop-blur-xl bg-black/80 border-t border-white/10 nav-backdrop",
         "pb-[env(safe-area-inset-bottom)]",
         isSheetOpen && "opacity-0 pointer-events-none translate-y-full"
       )}
@@ -40,11 +40,11 @@ export default function BottomNav() {
               href={item.href}
               className={clsx(
                 "relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-full min-w-[48px]",
-                isActive ? "text-violet-400" : "text-white/50 hover:text-white/80"
+                isActive ? "text-primary" : "text-white/50 hover:text-white/80"
               )}
             >
               {isActive && (
-                <span className="absolute inset-0 rounded-full bg-violet-500/20" />
+                <span className="absolute inset-0 rounded-full bg-primary/20" />
               )}
               <Icon size={20} className="relative z-10" strokeWidth={2} />
               <span className="relative z-10 text-[10px] font-semibold leading-tight">

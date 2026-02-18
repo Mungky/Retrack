@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { formatCurrency } from "@/lib/currency";
 
 const PieChart = dynamic(() => import("recharts").then((mod) => mod.PieChart), { ssr: false });
 const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie), { ssr: false });
@@ -23,14 +24,6 @@ interface CategoryChartProps {
 
 const EXPENSE_COLORS = ["#F43F5E", "#FB7185", "#E11D48", "#BE123C", "#9F1239", "#881337"];
 const INCOME_COLORS = ["#10B981", "#34d399", "#6ee7b7", "#a7f3d0", "#059669", "#047857"];
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
 
 export default function CategoryChart({
   data,

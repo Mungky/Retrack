@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { revalidateTransactionPaths } from "@/app/actions";
-import { X, ShoppingBag, Utensils, Car, Home, Heart, HeartPulse, Gamepad2, GraduationCap, Briefcase, Coffee, Plane, Loader2, Receipt, Zap, Banknote, Calendar, Laptop, TrendingUp, Gift, Building2, PiggyBank, Store, HandCoins, Coins } from "lucide-react";
+import { Loader2, Receipt, Banknote, Calendar } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +13,11 @@ import CurrencyInput from "./CurrencyInput";
 import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
+import { BaseSheet } from "@/components/shared/BaseSheet";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
+import { getCategoryStyle } from "@/lib/category-icons";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
+import { Button, Input } from "@/components/ui";
 import type { Category, Wallet } from "@/types";
 
 interface AddTransactionSheetProps {
@@ -22,376 +26,6 @@ interface AddTransactionSheetProps {
   /** Fixed type - no toggle, form is either Income or Expense */
   transactionType: "income" | "expense";
 }
-
-// Icon mapping for database categories
-export const ICON_MAP: { [key: string]: any } = {
-  shopping: ShoppingBag,
-  food: Utensils,
-  transport: Car,
-  bills: Home,
-  health: Heart,
-  entertainment: Gamepad2,
-  education: GraduationCap,
-  work: Briefcase,
-  coffee: Coffee,
-  travel: Plane,
-  receipt: Receipt,
-  // Income icons (bukan dollar)
-  salary: Briefcase,
-  freelance: Laptop,
-  investment: TrendingUp,
-  bonus: Gift,
-  gift: Gift,
-  business: Store,
-  rental: Building2,
-  interest: PiggyBank,
-  dividend: Coins,
-  sidejob: HandCoins,
-};
-
-// Helper to get icon by category name as fallback
-const getIconByName = (categoryName: string): any => {
-  if (!categoryName) return Receipt;
-  
-  const nameLower = categoryName.toLowerCase().trim();
-  
-  // Exact match first (case-insensitive)
-  const exactMatchMap: { [key: string]: any } = {
-    'food': Utensils,
-    'shopping': ShoppingBag,
-    'transport': Car,
-    'bills': Home,
-    'health': Heart,
-    'entertainment': Gamepad2,
-    'education': GraduationCap,
-    'work': Briefcase,
-    'coffee': Coffee,
-    'travel': Plane,
-    // Income
-    'salary': Briefcase,
-    'freelance': Laptop,
-    'investment': TrendingUp,
-    'bonus': Gift,
-    'gift': Gift,
-    'business': Store,
-    'rental': Building2,
-    'interest': PiggyBank,
-    'dividend': Coins,
-  };
-  
-  if (exactMatchMap[nameLower]) {
-    return exactMatchMap[nameLower];
-  }
-  
-  // Partial match
-  if (nameLower.includes('food') || nameLower.includes('makanan') || nameLower.includes('restaurant')) {
-    return Utensils;
-  }
-  if (nameLower.includes('shopping') || nameLower.includes('belanja')) {
-    return ShoppingBag;
-  }
-  if (nameLower.includes('transport') || nameLower.includes('transportasi') || nameLower.includes('car')) {
-    return Car;
-  }
-  if (nameLower.includes('bills') || nameLower.includes('tagihan') || nameLower.includes('utilities')) {
-    return Home;
-  }
-  if (nameLower.includes('health') || nameLower.includes('kesehatan') || nameLower.includes('medical')) {
-    return Heart;
-  }
-  if (nameLower.includes('entertainment') || nameLower.includes('hiburan') || nameLower.includes('game')) {
-    return Gamepad2;
-  }
-  if (nameLower.includes('education') || nameLower.includes('pendidikan') || nameLower.includes('school')) {
-    return GraduationCap;
-  }
-  if (nameLower.includes('work') || nameLower.includes('kerja') || nameLower.includes('business')) {
-    return Briefcase;
-  }
-  if (nameLower.includes('coffee') || nameLower.includes('kopi') || nameLower.includes('cafe')) {
-    return Coffee;
-  }
-  if (nameLower.includes('travel') || nameLower.includes('perjalanan') || nameLower.includes('trip')) {
-    return Plane;
-  }
-  // Income categories
-  if (nameLower.includes('salary') || nameLower.includes('gaji')) {
-    return Briefcase;
-  }
-  if (nameLower.includes('freelance')) {
-    return Laptop;
-  }
-  if (nameLower.includes('invest') || nameLower.includes('investasi') || nameLower.includes('saham')) {
-    return TrendingUp;
-  }
-  if (nameLower.includes('bonus')) {
-    return Gift;
-  }
-  if (nameLower.includes('gift') || nameLower.includes('hadiah')) {
-    return Gift;
-  }
-  if (nameLower.includes('business') || nameLower.includes('bisnis') || nameLower.includes('usaha')) {
-    return Store;
-  }
-  if (nameLower.includes('rental') || nameLower.includes('sewa') || nameLower.includes('kos')) {
-    return Building2;
-  }
-  if (nameLower.includes('interest') || nameLower.includes('bunga') || nameLower.includes('tabungan')) {
-    return PiggyBank;
-  }
-  if (nameLower.includes('dividend') || nameLower.includes('dividen')) {
-    return Coins;
-  }
-  if (nameLower.includes('side') || nameLower.includes('sampingan') || nameLower.includes('komisi')) {
-    return HandCoins;
-  }
-  
-  return Receipt; // Default
-};
-
-export const getCategoryIcon = (iconName: string | null, categoryName?: string) => {
-  // First try to use icon from database (Lucide names only)
-  if (iconName) {
-    const iconKey = iconName.toLowerCase().trim();
-    const icon = ICON_MAP[iconKey];
-    if (icon) {
-      return icon;
-    }
-  }
-  
-  // Fallback: use category name to determine icon
-  if (categoryName) {
-    return getIconByName(categoryName);
-  }
-  
-  // Last resort: default icon
-  return Receipt;
-};
-
-/** Returns true if icon string is custom emoji (not a Lucide name) */
-export const isEmojiIcon = (icon: string | null) =>
-  icon != null && icon.length <= 4 && !/^[a-z0-9_-]+$/i.test(icon.trim());
-
-/** Renders category icon (Lucide or emoji) for display in lists/previews */
-export function CategoryIconDisplay({
-  icon,
-  name,
-  size = 24,
-  className,
-  style,
-}: {
-  icon: string | null;
-  name?: string;
-  size?: number;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  if (isEmojiIcon(icon)) {
-    return (
-      <span
-        className={className}
-        style={{ fontSize: size, lineHeight: 1, ...style }}
-      >
-        {icon}
-      </span>
-    );
-  }
-  const Icon = getCategoryIcon(icon, name);
-  return <Icon size={size} className={className} style={style} />;
-}
-
-// Helper function to get category style (icon + color) for UI display
-export const getCategoryStyle = (categoryName: string | null | undefined) => {
-  if (!categoryName) {
-    return {
-      icon: Receipt,
-      iconColor: 'text-slate-400',
-      bgColor: 'bg-slate-500/10'
-    };
-  }
-
-  const nameLower = categoryName.toLowerCase().trim();
-  
-  // Mapping kategori ke icon dan warna
-  const categoryMap: { [key: string]: { icon: any; iconColor: string; bgColor: string } } = {
-    'food': {
-      icon: Utensils,
-      iconColor: 'text-orange-500',
-      bgColor: 'bg-orange-500/10'
-    },
-    'shopping': {
-      icon: ShoppingBag,
-      iconColor: 'text-pink-500',
-      bgColor: 'bg-pink-500/10'
-    },
-    'transport': {
-      icon: Car,
-      iconColor: 'text-blue-500',
-      bgColor: 'bg-blue-500/10'
-    },
-    'bills': {
-      icon: Zap,
-      iconColor: 'text-yellow-500',
-      bgColor: 'bg-yellow-500/10'
-    },
-    'health': {
-      icon: HeartPulse,
-      iconColor: 'text-red-500',
-      bgColor: 'bg-red-500/10'
-    },
-    'entertainment': {
-      icon: Gamepad2,
-      iconColor: 'text-purple-500',
-      bgColor: 'bg-purple-500/10'
-    },
-    'education': {
-      icon: GraduationCap,
-      iconColor: 'text-indigo-500',
-      bgColor: 'bg-indigo-500/10'
-    },
-    'work': {
-      icon: Briefcase,
-      iconColor: 'text-cyan-500',
-      bgColor: 'bg-cyan-500/10'
-    },
-    'coffee': {
-      icon: Coffee,
-      iconColor: 'text-amber-600',
-      bgColor: 'bg-amber-600/10'
-    },
-    'travel': {
-      icon: Plane,
-      iconColor: 'text-sky-500',
-      bgColor: 'bg-sky-500/10'
-    },
-    // Income categories
-    'salary': {
-      icon: Briefcase,
-      iconColor: 'text-emerald-500',
-      bgColor: 'bg-emerald-500/10'
-    },
-    'freelance': {
-      icon: Laptop,
-      iconColor: 'text-violet-500',
-      bgColor: 'bg-violet-500/10'
-    },
-    'investment': {
-      icon: TrendingUp,
-      iconColor: 'text-teal-500',
-      bgColor: 'bg-teal-500/10'
-    },
-    'bonus': {
-      icon: Gift,
-      iconColor: 'text-amber-500',
-      bgColor: 'bg-amber-500/10'
-    },
-    'gift': {
-      icon: Gift,
-      iconColor: 'text-rose-400',
-      bgColor: 'bg-rose-400/10'
-    },
-    'business': {
-      icon: Store,
-      iconColor: 'text-cyan-600',
-      bgColor: 'bg-cyan-600/10'
-    },
-    'rental': {
-      icon: Building2,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-600/10'
-    },
-    'interest': {
-      icon: PiggyBank,
-      iconColor: 'text-green-500',
-      bgColor: 'bg-green-500/10'
-    },
-    'dividend': {
-      icon: Coins,
-      iconColor: 'text-indigo-500',
-      bgColor: 'bg-indigo-500/10'
-    },
-    'side job': {
-      icon: HandCoins,
-      iconColor: 'text-lime-500',
-      bgColor: 'bg-lime-500/10'
-    },
-  };
-
-  // Exact match
-  if (categoryMap[nameLower]) {
-    return categoryMap[nameLower];
-  }
-
-  // Partial match
-  if (nameLower.includes('food') || nameLower.includes('makanan') || nameLower.includes('restaurant')) {
-    return categoryMap['food'];
-  }
-  if (nameLower.includes('shopping') || nameLower.includes('belanja')) {
-    return categoryMap['shopping'];
-  }
-  if (nameLower.includes('transport') || nameLower.includes('transportasi') || nameLower.includes('car')) {
-    return categoryMap['transport'];
-  }
-  if (nameLower.includes('bills') || nameLower.includes('tagihan') || nameLower.includes('utilities')) {
-    return categoryMap['bills'];
-  }
-  if (nameLower.includes('health') || nameLower.includes('kesehatan') || nameLower.includes('medical')) {
-    return categoryMap['health'];
-  }
-  if (nameLower.includes('entertainment') || nameLower.includes('hiburan') || nameLower.includes('game')) {
-    return categoryMap['entertainment'];
-  }
-  if (nameLower.includes('education') || nameLower.includes('pendidikan') || nameLower.includes('school')) {
-    return categoryMap['education'];
-  }
-  if (nameLower.includes('work') || nameLower.includes('kerja') || nameLower.includes('business')) {
-    return categoryMap['work'];
-  }
-  if (nameLower.includes('coffee') || nameLower.includes('kopi') || nameLower.includes('cafe')) {
-    return categoryMap['coffee'];
-  }
-  if (nameLower.includes('travel') || nameLower.includes('perjalanan') || nameLower.includes('trip')) {
-    return categoryMap['travel'];
-  }
-  // Income categories
-  if (nameLower.includes('salary') || nameLower.includes('gaji')) {
-    return categoryMap['salary'];
-  }
-  if (nameLower.includes('freelance')) {
-    return categoryMap['freelance'];
-  }
-  if (nameLower.includes('invest') || nameLower.includes('investasi') || nameLower.includes('saham')) {
-    return categoryMap['investment'];
-  }
-  if (nameLower.includes('bonus')) {
-    return categoryMap['bonus'];
-  }
-  if (nameLower.includes('gift') || nameLower.includes('hadiah')) {
-    return categoryMap['gift'];
-  }
-  if (nameLower.includes('business') || nameLower.includes('bisnis') || nameLower.includes('usaha')) {
-    return categoryMap['business'];
-  }
-  if (nameLower.includes('rental') || nameLower.includes('sewa') || nameLower.includes('kos')) {
-    return categoryMap['rental'];
-  }
-  if (nameLower.includes('interest') || nameLower.includes('bunga') || nameLower.includes('tabungan')) {
-    return categoryMap['interest'];
-  }
-  if (nameLower.includes('dividend') || nameLower.includes('dividen')) {
-    return categoryMap['dividend'];
-  }
-  if (nameLower.includes('side') || nameLower.includes('sampingan') || nameLower.includes('komisi')) {
-    return categoryMap['side job'];
-  }
-
-  // Default
-  return {
-    icon: Banknote,
-    iconColor: 'text-slate-500',
-    bgColor: 'bg-slate-500/10'
-  };
-};
 
 export default function AddTransactionSheet({ isOpen, onClose, transactionType }: AddTransactionSheetProps) {
   const router = useRouter();
@@ -460,7 +94,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
 
   const fetchWallets = async () => {
     if (!user?.id) {
-      showToast("User tidak ditemukan. Silakan login terlebih dahulu.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND_LOGIN, "error");
       return;
     }
 
@@ -482,7 +116,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
       }
     } catch (error) {
       console.error("Error fetching wallets:", error);
-      showToast("Gagal memuat data wallet. Silakan coba lagi.", "error");
+      showToast(TOAST_MESSAGES.ERROR.WALLETS_LOAD_FAILED, "error");
     } finally {
       setIsLoadingWallets(false);
     }
@@ -517,27 +151,27 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
     e.preventDefault();
 
     if (!user?.id) {
-      showToast("User tidak ditemukan. Silakan login terlebih dahulu.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND_LOGIN, "error");
       return;
     }
 
     if (amount <= 0) {
-      showToast("Mohon masukkan nominal yang valid", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_AMOUNT, "error");
       return;
     }
 
     if (!description?.trim()) {
-      showToast("Mohon masukkan deskripsi", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_DESCRIPTION, "error");
       return;
     }
 
     if (!selectedCategory) {
-      showToast("Mohon pilih kategori", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_CATEGORY, "error");
       return;
     }
 
     if (!selectedWallet) {
-      showToast("Mohon pilih wallet", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_WALLET, "error");
       return;
     }
 
@@ -586,7 +220,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
 
       await revalidateTransactionPaths();
       router.refresh();
-      showToast("Transaksi berhasil disimpan!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.TRANSACTION_SAVED, "success");
       window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
       onClose();
       resetForm();
@@ -615,46 +249,17 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
     setSelectedDate(getTodayLocal());
   };
 
-  if (!isOpen) return null;
-
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300"
-        onClick={onClose}
-      />
-
-      {/* Sheet */}
-      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
-        <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
-          {/* Handle */}
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="w-12 h-1 bg-white/20 rounded-full" />
-          </div>
-
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className={`w-2 h-2 rounded-full ${isIncome ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-              <h2 className="text-xl font-bold text-white">
-                {isIncome ? "Tambah Pemasukan" : "Tambah Pengeluaran"}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="p-2 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-50"
-            >
-              <X className="text-white/60" size={20} />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form
+  return (
+    <BaseSheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isIncome ? "Tambah Pemasukan" : "Tambah Pengeluaran"}
+      titleAccent={
+        <div className={`w-2 h-2 rounded-full ${isIncome ? "bg-emerald-400" : "bg-rose-400"}`} />
+      }
+      disabled={isLoading}
+    >
+      <form
             onSubmit={handleSubmit}
             className="p-6 space-y-6 overflow-y-auto"
             style={{
@@ -680,13 +285,13 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
               <label className="block text-sm font-medium text-slate-400 mb-2">
                 Deskripsi
               </label>
-              <input
+              <Input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Contoh: Makan siang, Gaji bulanan"
                 disabled={isLoading}
-                className={`w-full px-4 py-3 text-white bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 transition-all placeholder:text-white/30 disabled:opacity-50 ${theme.inputFocus}`}
+                className="rounded-2xl"
               />
             </div>
 
@@ -800,12 +405,12 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
               </p>
             </div>
 
-            {/* Submit Button - themed */}
-            <button
+            {/* Submit Button */}
+            <Button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-              style={{ boxShadow: theme.submitShadow }}
+              size="lg"
+              className="w-full"
             >
               {isLoading ? (
                 <>
@@ -815,11 +420,8 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
               ) : (
                 isIncome ? "Simpan Pemasukan" : "Simpan Pengeluaran"
               )}
-            </button>
+            </Button>
           </form>
-        </div>
-      </div>
-    </>,
-    document.body
+    </BaseSheet>
   );
 }

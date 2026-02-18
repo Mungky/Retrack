@@ -6,7 +6,8 @@ import { FileText, TrendingUp, BarChart3, ArrowUpCircle, ArrowDownCircle } from 
 import DateRangeFilter from "./DateRangeFilter";
 import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/date-range";
 import { normalizeTransactionType } from "@/lib/transaction-calc";
-import { CategoryIconDisplay } from "./AddTransactionSheet";
+import { formatCurrency } from "@/lib/currency";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import type { Category, Transaction } from "@/types";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
@@ -23,14 +24,6 @@ const Legend = dynamic(() => import("recharts").then((mod) => mod.Legend), { ssr
 interface StatisticsTabsProps {
   transactions: Transaction[];
   categories: Category[];
-}
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
 }
 
 const TABS = [
@@ -138,7 +131,7 @@ export default function StatisticsTabs({
             onClick={() => setActiveTab(id)}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
               activeTab === id
-                ? "bg-violet-500/30 text-violet-300"
+                ? "bg-primary/20 text-primary"
                 : "text-white/60 hover:text-white/80"
             }`}
           >
@@ -150,20 +143,20 @@ export default function StatisticsTabs({
 
       {/* Tab Content */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="card">
-          <p className="text-sm text-slate-400 mb-1">Income</p>
+        <div className="fintech-card p-4">
+          <p className="text-sm text-muted-foreground mb-1">Income</p>
           <p className="text-xl font-semibold text-emerald-400">
             {formatCurrency(stats.totalIncome)}
           </p>
         </div>
-        <div className="card">
-          <p className="text-sm text-slate-400 mb-1">Expense</p>
+        <div className="fintech-card p-4">
+          <p className="text-sm text-muted-foreground mb-1">Expense</p>
           <p className="text-xl font-semibold text-rose-400">
             {formatCurrency(stats.totalExpense)}
           </p>
         </div>
-        <div className="card">
-          <p className="text-sm text-slate-400 mb-1">Net Cash</p>
+        <div className="fintech-card p-4">
+          <p className="text-sm text-muted-foreground mb-1">Net Cash</p>
           <p
             className={`text-xl font-semibold ${
               stats.netCash >= 0 ? "text-emerald-400" : "text-rose-400"

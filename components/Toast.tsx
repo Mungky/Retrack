@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { X, CheckCircle2, AlertCircle } from "lucide-react";
+import { Z_INDEX } from "@/lib/z-index";
 
 interface ToastProps {
   message: string;
@@ -31,7 +32,7 @@ export default function Toast({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-300">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 animate-in slide-in-from-top duration-300" style={{ zIndex: Z_INDEX.toast }}>
       <div
         className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm ${
           type === "success"

@@ -1,0 +1,38 @@
+---
+description: Arsitektur theming (CSS vars, Tailwind v4, next-themes)
+globs: app/globals.css,components/theme-provider.tsx,app/layout.tsx
+alwaysApply: false
+---
+
+# Theme Architecture
+
+## 1. CSS Variables (globals.css)
+
+- **:root** = default theme
+- **[data-theme="nama"]** = override (sultan, forest, default)
+- Format: HSL **tanpa** wrapper: `--primary: 45 93% 47%;`
+- @theme inline map ke Tailwind: `--color-background: hsl(var(--background) / <alpha-value>);`
+
+## 2. Tailwind v4
+
+- Warna semantic **tidak** didefinisikan di tailwind.config.ts
+- Semua di **globals.css** via @theme inline
+- Utilitas: `bg-background`, `text-foreground`, `border-border`, `text-primary`
+
+## 3. ThemeProvider (next-themes)
+
+- `attribute="data-theme"` (bukan `class`)
+- `themes=["default","sultan","forest"]`, `enableSystem={false}`
+- Atribut diset ke **html** (document.documentElement)
+
+## 4. Layout
+
+- Script beforeInteractive baca localStorage & set `data-theme` sebelum paint
+- Body: `bg-background text-foreground`
+
+## 5. Komponen Baru
+
+Gunakan token tema, jangan hardcode:
+- `text-foreground` (bukan `text-white`)
+- `bg-card` (bukan `bg-[#...]`)
+- `text-muted-foreground` untuk teks sekunder

@@ -1,28 +1,7 @@
+import { formatCurrencyCompact, formatCurrencyFull } from "@/lib/currency";
+
 interface DashboardCardProps {
   totalBalance: number;
-}
-
-/**
- * Format large numbers compactly - NEVER overflow the card.
- * Rp 1.2M, Rp 12,5 Jt, etc.
- */
-function formatCurrencyCompact(amount: number): string {
-  const absAmount = Math.abs(amount);
-  const prefix = amount < 0 ? "-Rp " : "Rp ";
-
-  if (absAmount >= 1_000_000_000) {
-    const val = (absAmount / 1_000_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val}M`;
-  }
-  if (absAmount >= 1_000_000) {
-    const val = (absAmount / 1_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Jt`;
-  }
-  if (absAmount >= 1_000) {
-    const val = (absAmount / 1_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Rb`;
-  }
-  return `${prefix}${absAmount.toLocaleString("id-ID")}`;
 }
 
 export default function DashboardCard({ totalBalance }: DashboardCardProps) {
@@ -44,11 +23,7 @@ export default function DashboardCard({ totalBalance }: DashboardCardProps) {
         <p
           className={`${fontSize} font-bold text-white leading-tight truncate`}
           style={{ maxWidth: "100%" }}
-          title={new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-          }).format(totalBalance)}
+          title={formatCurrencyFull(totalBalance)}
         >
           {formatted}
         </p>

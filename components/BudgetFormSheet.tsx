@@ -6,6 +6,8 @@ import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
+import { Z_INDEX } from "@/lib/z-index";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import CurrencyInput from "./CurrencyInput";
 import { formThemes } from "@/lib/form-themes";
 import type { Budget, Category } from "@/types";
@@ -63,17 +65,17 @@ export default function BudgetFormSheet({
     e.preventDefault();
 
     if (!categoryId) {
-      showToast("Pilih kategori terlebih dahulu.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_CATEGORY_FIRST, "error");
       return;
     }
 
     if (amount <= 0) {
-      showToast("Jumlah budget harus lebih dari 0.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_BUDGET_AMOUNT, "error");
       return;
     }
 
     if (!user?.id) {
-      showToast("User tidak ditemukan.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND, "error");
       return;
     }
 
@@ -94,7 +96,7 @@ export default function BudgetFormSheet({
           .eq("user_id", user.id);
 
         if (error) throw error;
-        showToast("Budget berhasil diupdate!", "success");
+        showToast(TOAST_MESSAGES.SUCCESS.BUDGET_UPDATED, "success");
       } else {
         const existing = await supabaseClient
           .from("budgets")
@@ -111,14 +113,14 @@ export default function BudgetFormSheet({
             .eq("user_id", user.id);
 
           if (error) throw error;
-          showToast("Budget berhasil diupdate!", "success");
+          showToast(TOAST_MESSAGES.SUCCESS.BUDGET_UPDATED, "success");
         } else {
           const { error } = await supabaseClient
             .from("budgets")
             .insert([budgetData]);
 
           if (error) throw error;
-          showToast("Budget berhasil ditambahkan!", "success");
+          showToast(TOAST_MESSAGES.SUCCESS.BUDGET_ADDED, "success");
         }
       }
 
@@ -127,7 +129,7 @@ export default function BudgetFormSheet({
     } catch (error: unknown) {
       console.error("Error saving budget:", error);
       showToast(
-        (error as { message?: string })?.message || "Gagal menyimpan budget.",
+        (error as { message?: string })?.message || TOAST_MESSAGES.ERROR.BUDGET_SAVE_FAILED,
         "error"
       );
     } finally {
@@ -140,12 +142,13 @@ export default function BudgetFormSheet({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-md z-[60] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-300"
+        style={{ zIndex: Z_INDEX.backdrop }}
         onClick={onClose}
       />
-      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
+      <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
+          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex justify-center pt-3 pb-2">
@@ -153,7 +156,7 @@ export default function BudgetFormSheet({
           </div>
           <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-violet-400" />
+              <div className="w-2 h-2 rounded-full bg-primary" />
               <h2 className="text-xl font-bold text-white">
                 {budget ? "Edit Budget" : "Tambah Budget"}
               </h2>
@@ -187,7 +190,7 @@ export default function BudgetFormSheet({
             >
               <option value="">Pilih kategori</option>
               {availableCategories.map((cat) => (
-                <option key={cat.id} value={cat.id} className="bg-[#181A25]">
+                <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
@@ -215,8 +218,8 @@ export default function BudgetFormSheet({
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
-            style={{ boxShadow: theme.submitShadow }}
+            className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{ boxShadow: "0 4px 14px hsl(var(--primary) / 0.35)" }}
           >
             {isLoading ? (
               <>

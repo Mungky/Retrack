@@ -2,6 +2,7 @@
 
 import { User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatCurrency, formatCurrencyFull } from "@/lib/currency";
 
 interface BalanceCardProps {
   totalBalance: number;
@@ -9,12 +10,7 @@ interface BalanceCardProps {
 
 export default function BalanceCard({ totalBalance }: BalanceCardProps) {
   const { user } = useAuth();
-  const formatted = new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(totalBalance);
+  const formatted = formatCurrency(totalBalance);
   const charCount = formatted.length;
   const fontSize =
     charCount > 14 ? "text-2xl" : charCount > 10 ? "text-3xl" : "text-4xl";
@@ -27,7 +23,7 @@ export default function BalanceCard({ totalBalance }: BalanceCardProps) {
   const avatarUrl = user?.user_metadata?.avatar_url;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-violet-700 to-indigo-900 p-6 min-h-[180px] flex flex-col justify-between">
+    <div className="balance-card-gradient relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-violet-700 to-indigo-900 p-6 min-h-[180px] flex flex-col justify-between">
       {/* Abstract decoration - subtle circles */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-400/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -62,6 +58,7 @@ export default function BalanceCard({ totalBalance }: BalanceCardProps) {
         <p
           className={`${fontSize} font-bold text-white leading-tight truncate`}
           style={{ maxWidth: "100%" }}
+          title={formatCurrencyFull(totalBalance)}
         >
           {formatted}
         </p>

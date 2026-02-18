@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import CategoryFormSheet from "./CategoryFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
-import { getCategoryIcon } from "./AddTransactionSheet";
+import { getCategoryIcon } from "@/lib/category-icons";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,10 +51,7 @@ export default function CategoryManagement({
       if (checkError) throw checkError;
 
       if (transactions && transactions.length > 0) {
-        showToast(
-          "Kategori ini memiliki transaksi. Tidak dapat dihapus.",
-          "error"
-        );
+        showToast(TOAST_MESSAGES.ERROR.CATEGORY_HAS_TRANSACTIONS, "error");
         return;
       }
 
@@ -66,11 +64,11 @@ export default function CategoryManagement({
       if (error) throw error;
 
       setCategories(categories.filter((c) => c.id !== categoryId));
-      showToast("Kategori berhasil dihapus!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.CATEGORY_DELETED, "success");
       setIsDeleteOpen(false);
     } catch (error: any) {
       console.error("Error deleting category:", error);
-      showToast(error?.message || "Gagal menghapus kategori.", "error");
+      showToast(error?.message || TOAST_MESSAGES.ERROR.CATEGORY_DELETE_FAILED, "error");
     }
   };
 

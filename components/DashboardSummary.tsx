@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { filterTransactionsByRange, getDatesInRange, type DateRangeKey } from "@/lib/date-range";
 import { calculateTotals, aggregateByDate, getCumulativeNetSeries } from "@/lib/transaction-calc";
+import { formatCurrency, formatCurrencyCompact, formatCurrencyFull } from "@/lib/currency";
 import type { Transaction } from "@/types";
 
 const LineChart = dynamic(() => import("recharts").then((mod) => mod.LineChart), { ssr: false });
@@ -19,32 +20,6 @@ interface DashboardSummaryProps {
   dateRange: DateRangeKey;
 }
 
-function formatCurrencyFull(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatCurrencyCompact(amount: number): string {
-  const absAmount = Math.abs(amount);
-  const prefix = amount < 0 ? "-Rp " : "Rp ";
-  if (absAmount >= 1_000_000_000) {
-    const val = (absAmount / 1_000_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} M`;
-  }
-  if (absAmount >= 1_000_000) {
-    const val = (absAmount / 1_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Jt`;
-  }
-  if (absAmount >= 1_000) {
-    const val = (absAmount / 1_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Rb`;
-  }
-  return `${prefix}${absAmount.toLocaleString("id-ID")}`;
-}
-
 function formatChartDate(isoDate: string): string {
   try {
     const [y, m, d] = isoDate.split("-");
@@ -55,15 +30,6 @@ function formatChartDate(isoDate: string): string {
   } catch {
     return isoDate;
   }
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 export default function DashboardSummary({

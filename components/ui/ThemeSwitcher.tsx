@@ -1,0 +1,87 @@
+"use client";
+
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/cn";
+
+type ThemeId = "default" | "sultan" | "forest";
+
+const THEMES: {
+  id: ThemeId;
+  label: string;
+  preview: string;
+  icon: string;
+}[] = [
+  {
+    id: "default",
+    label: "Default",
+    preview: "from-violet-600 to-violet-800",
+    icon: "◆",
+  },
+  {
+    id: "sultan",
+    label: "Sultan",
+    preview: "from-black via-amber-900/80 to-amber-700",
+    icon: "👑",
+  },
+  {
+    id: "forest",
+    label: "Forest",
+    preview: "from-emerald-200 via-green-100 to-teal-100",
+    icon: "🌲",
+  },
+];
+
+export function ThemeSwitcher() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const currentTheme = (theme || resolvedTheme || "default") as ThemeId;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium text-muted-foreground">
+        Pilih tema aplikasi
+      </p>
+      <div className="grid grid-cols-3 gap-3">
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTheme(t.id)}
+            className={cn(
+              "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+              "hover:scale-[1.02] active:scale-[0.98]",
+              currentTheme === t.id
+                ? "border-primary bg-primary/10"
+                : "border-border/50 bg-card hover:border-primary/50"
+            )}
+          >
+            <div
+              className={cn(
+                "w-full aspect-[4/3] rounded-lg bg-gradient-to-br",
+                t.preview
+              )}
+            />
+            <span
+              className={cn(
+                "text-lg leading-none",
+                currentTheme === t.id ? "opacity-100" : "opacity-70"
+              )}
+            >
+              {t.icon}
+            </span>
+            <span
+              className={cn(
+                "text-xs font-semibold",
+                currentTheme === t.id ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {t.label}
+            </span>
+            {currentTheme === t.id && (
+              <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

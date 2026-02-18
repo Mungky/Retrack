@@ -29,10 +29,12 @@ import {
   Coins,
   HandCoins,
 } from "lucide-react";
-import { CategoryIconDisplay } from "./AddTransactionSheet";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import EditTransactionSheet from "./EditTransactionSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { isIncome, isExpense } from "@/lib/transaction-calc";
+import { formatCurrency } from "@/lib/currency";
+import { Z_INDEX } from "@/lib/z-index";
 import type { Transaction } from "@/types";
 
 interface TransactionItemProps {
@@ -47,14 +49,6 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("id-ID", {
@@ -126,12 +120,14 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
   const dropdownContent = menuOpen && (
     <>
       <div
-        className="fixed inset-0 z-[80]"
+        className="fixed inset-0"
+        style={{ zIndex: Z_INDEX.sheetNested }}
         onClick={() => setMenuOpen(false)}
       />
       <div
-        className="fixed z-[90] fintech-card py-1 min-w-[130px] animate-fade-in"
+        className="fixed fintech-card py-1 min-w-[130px] animate-fade-in"
         style={{
+          zIndex: Z_INDEX.dropdown,
           top: menuPosition.top,
           left: menuPosition.left,
           transform: isLastItem ? "translateY(-100%)" : "none",

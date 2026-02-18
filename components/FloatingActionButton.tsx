@@ -4,6 +4,7 @@ import { Plus, ReceiptText, X } from "lucide-react";
 import { useState } from "react";
 import AddTransactionSheet from "./AddTransactionSheet";
 import { useSheet } from "@/contexts/SheetContext";
+import { Z_INDEX } from "@/lib/z-index";
 import { useHaptic } from "@/hooks/useHaptic";
 
 export default function FloatingActionButton() {
@@ -43,11 +44,12 @@ export default function FloatingActionButton() {
       {isMenuOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-md z-[55] animate-fade-in"
+            className="fixed inset-0 bg-black/40 backdrop-blur-md animate-fade-in"
+            style={{ zIndex: Z_INDEX.fabOverlay }}
             onClick={() => setIsMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed bottom-36 left-1/2 -translate-x-1/2 z-[56] w-[calc(100%-2rem)] max-w-sm animate-in">
+          <div className="fixed bottom-36 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm animate-in" style={{ zIndex: Z_INDEX.fabMenu }}>
             <div className="glass-card p-3 flex flex-col gap-1">
               <button
                 onClick={handleOpenIncome}

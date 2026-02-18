@@ -17,9 +17,12 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import WalletManagement from "./WalletManagement";
 import CategoryManager from "./CategoryManager";
+import { APP_VERSION } from "@/lib/constants";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
+import { Z_INDEX } from "@/lib/z-index";
+import { Button } from "@/components/ui";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import type { Wallet, Category } from "@/types";
-
-const APP_VERSION = "v1.0.0 (Beta)";
 
 interface ProfileClientProps {
   initialWallets: Wallet[];
@@ -50,17 +53,17 @@ export default function ProfileClient({
   const handleLogout = async () => {
     try {
       await signOut();
-      showToast("Logged out successfully!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.LOGGED_OUT, "success");
       await new Promise((resolve) => setTimeout(resolve, 500));
       window.location.href = "/login";
     } catch (error: unknown) {
       console.error("Logout error:", error);
-      showToast("Failed to logout. Please try again.", "error");
+      showToast(TOAST_MESSAGES.ERROR.LOGOUT_FAILED, "error");
     }
   };
 
   const handleExportData = () => {
-    showToast("Export Data feature coming soon!", "success");
+    showToast(TOAST_MESSAGES.SUCCESS.EXPORT_COMING_SOON, "success");
   };
 
   if (loading) {
@@ -155,10 +158,11 @@ export default function ProfileClient({
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button
+            <Button
               key={item.label}
+              variant="ghost"
               onClick={item.onClick}
-              className="w-full glass-card p-4 flex items-center gap-4 hover:border-white/20 transition-all text-left group"
+              className="w-full glass-card p-4 flex items-center gap-4 hover:border-white/20 transition-all text-left group h-auto justify-start"
             >
               <div className="p-2.5 rounded-xl bg-white/5 group-hover:bg-white/10 transition-colors">
                 <Icon className="text-cyan-400" size={22} />
@@ -168,20 +172,31 @@ export default function ProfileClient({
                 <p className="text-sm text-white/50 truncate">{item.subtitle}</p>
               </div>
               <ChevronRight className="text-white/40 flex-shrink-0" size={20} />
-            </button>
+            </Button>
           );
         })}
       </div>
 
+      {/* Pengaturan Aplikasi */}
+      <div className="mt-8">
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
+          Pengaturan Aplikasi
+        </h3>
+        <div className="glass-card p-4 mb-4">
+          <ThemeSwitcher />
+        </div>
+      </div>
+
       {/* Logout */}
       <div className="mt-8">
-        <button
+        <Button
+          variant="outline"
           onClick={handleLogout}
-          className="w-full py-4 rounded-2xl glass-card border-rose-500/30 text-rose-400 font-bold text-lg hover:border-rose-500/50 hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-2xl glass-card border-rose-500/30 text-rose-400 font-bold text-lg hover:border-rose-500/50 hover:bg-white/5 transition-all"
         >
           <LogOut size={20} />
           <span>Sign Out</span>
-        </button>
+        </Button>
       </div>
 
       {/* App Version Footer */}
@@ -243,7 +258,8 @@ function WalletManagementSheet({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[70]"
+          className="fixed inset-0"
+          style={{ zIndex: Z_INDEX.sheet }}
         >
           <motion.div
             initial={{ opacity: 0 }}
@@ -257,7 +273,7 @@ function WalletManagementSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={sheetTransition}
-            className="absolute inset-x-0 bottom-0 top-1/4 rounded-t-3xl bg-[#181A25] border-t border-x border-white/10 overflow-hidden flex flex-col"
+            className="absolute inset-x-0 bottom-0 top-1/4 rounded-t-3xl sheet-bg-dark border-t border-x overflow-hidden flex flex-col"
           >
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-12 h-1 bg-white/20 rounded-full" />
@@ -301,7 +317,8 @@ function CategoryManagerSheet({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[70]"
+          className="fixed inset-0"
+          style={{ zIndex: Z_INDEX.sheet }}
         >
           <motion.div
             initial={{ opacity: 0 }}
@@ -315,7 +332,7 @@ function CategoryManagerSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={sheetTransition}
-            className="absolute inset-x-0 bottom-0 top-[10%] rounded-t-3xl bg-[#181A25] border-t border-x border-white/10 overflow-hidden flex flex-col"
+            className="absolute inset-x-0 bottom-0 top-[10%] rounded-t-3xl sheet-bg-dark border-t border-x overflow-hidden flex flex-col"
           >
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-12 h-1 bg-white/20 rounded-full" />

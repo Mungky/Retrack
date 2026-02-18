@@ -4,8 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CategoryIconDisplay } from "./AddTransactionSheet";
-import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import { Z_INDEX } from "@/lib/z-index";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { Button } from "@/components/ui";
 import CategoryFormSheet from "./CategoryFormSheet";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
@@ -31,6 +34,7 @@ export default function CategoryManager({
   const [activeTab, setActiveTab] = useState<TabType>("expense");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -63,6 +67,7 @@ export default function CategoryManager({
   const handleDelete = async (categoryId: string) => {
     if (!user?.id) return;
 
+    setIsDeleting(true);
     try {
       const { data: transactions, error: checkError } = await supabaseClient
         .from("transactions")
@@ -74,10 +79,7 @@ export default function CategoryManager({
       if (checkError) throw checkError;
 
       if (transactions && transactions.length > 0) {
-        showToast(
-          "Kategori ini memiliki transaksi. Tidak dapat dihapus.",
-          "error"
-        );
+        showToast(TOAST_MESSAGES.ERROR.CATEGORY_HAS_TRANSACTIONS, "error");
         return;
       }
 
@@ -92,14 +94,16 @@ export default function CategoryManager({
       const next = categories.filter((c) => c.id !== categoryId);
       setCategories(next);
       onCategoriesChange?.(next);
-      showToast("Kategori berhasil dihapus!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.CATEGORY_DELETED, "success");
       setIsDeleteOpen(false);
     } catch (error: unknown) {
       console.error("Error deleting category:", error);
       showToast(
-        (error as { message?: string })?.message || "Gagal menghapus kategori.",
+        (error as { message?: string })?.message || TOAST_MESSAGES.ERROR.CATEGORY_DELETE_FAILED,
         "error"
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -145,12 +149,14 @@ export default function CategoryManager({
             createPortal(
               <>
                 <div
-                  className="fixed inset-0 z-[80]"
+                  className="fixed inset-0"
+                  style={{ zIndex: Z_INDEX.sheetNested }}
                   onClick={() => setMenuOpenId(null)}
                 />
                 <div
-                  className="fixed z-[90] fintech-card py-1 min-w-[130px] animate-fade-in"
+                  className="fixed fintech-card py-1 min-w-[130px] animate-fade-in"
                   style={{
+                    zIndex: Z_INDEX.dropdown,
                     top: menuPosition.top,
                     left: menuPosition.left,
                     transform: isLastCategory ? "translateY(-100%)" : "none",
@@ -209,16 +215,16 @@ export default function CategoryManager({
       </div>
 
       {/* Add Category Button - same style as Add Wallet */}
-      <button
+      <Button
         onClick={() => {
           setSelectedCategory(null);
           setIsFormOpen(true);
         }}
-        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-semibold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+        className="w-full"
       >
         <Plus size={18} />
         Add Category
-      </button>
+      </Button>
 
       {/* Category List */}
       {filteredCategories.length === 0 ? (
@@ -258,14 +264,18 @@ export default function CategoryManager({
       />
 
       {selectedCategory && (
-        <DeleteConfirmDialog
+        <ConfirmDialog
           isOpen={isDeleteOpen}
           onClose={() => {
             setIsDeleteOpen(false);
             setSelectedCategory(null);
           }}
-          transactionId={selectedCategory.id}
+          title="Hapus Kategori"
+          description="Apakah Anda yakin ingin menghapus kategori ini? Tindakan ini tidak dapat dibatalkan."
           onConfirm={() => handleDelete(selectedCategory.id)}
+          isLoading={isDeleting}
+          variant="danger"
+          confirmLabel="Hapus"
         />
       )}
     </div>

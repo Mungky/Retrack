@@ -9,9 +9,11 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
-import { CategoryIconDisplay } from "./AddTransactionSheet";
+import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import CurrencyInput from "./CurrencyInput";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
+import { Z_INDEX } from "@/lib/z-index";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import type { Category, Transaction, Wallet } from "@/types";
 
 interface EditTransactionSheetProps {
@@ -136,17 +138,17 @@ export default function EditTransactionSheet({
     e.preventDefault();
 
     if (!description?.trim() || !selectedWallet || !selectedCategory) {
-      showToast("Mohon lengkapi semua field.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_ALL_FIELDS, "error");
       return;
     }
 
     if (amount <= 0) {
-      showToast("Nominal tidak valid.", "error");
+      showToast(TOAST_MESSAGES.ERROR.VALIDATE_AMOUNT_ALT, "error");
       return;
     }
 
     if (!user?.id) {
-      showToast("User tidak ditemukan.", "error");
+      showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND, "error");
       return;
     }
 
@@ -172,12 +174,12 @@ export default function EditTransactionSheet({
       if (error) throw error;
 
       await revalidateTransactionPaths();
-      showToast("Transaksi berhasil diupdate!", "success");
+      showToast(TOAST_MESSAGES.SUCCESS.TRANSACTION_UPDATED, "success");
       onClose();
       setTimeout(() => router.refresh(), 500);
     } catch (error: any) {
       console.error("Error updating transaction:", error);
-      showToast(error?.message || "Gagal mengupdate transaksi.", "error");
+      showToast(error?.message || TOAST_MESSAGES.ERROR.TRANSACTION_UPDATE_FAILED, "error");
     } finally {
       setIsLoading(false);
     }
@@ -188,12 +190,13 @@ export default function EditTransactionSheet({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/80 z-[60] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/80 transition-opacity duration-300"
+        style={{ zIndex: Z_INDEX.backdrop }}
         onClick={onClose}
       />
-      <div className="fixed bottom-0 left-0 right-0 z-[60] animate-in">
+      <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-[#181A25] border-t border-x border-white/10 shadow-2xl"
+          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex justify-center pt-3 pb-2">
@@ -338,7 +341,7 @@ export default function EditTransactionSheet({
               >
                 <option value="">Pilih wallet</option>
                 {wallets.map((wallet) => (
-                  <option key={wallet.id} value={wallet.id} className="bg-slate-900">
+                  <option key={wallet.id} value={wallet.id}>
                     {wallet.name}
                   </option>
                 ))}

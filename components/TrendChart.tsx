@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { formatCurrency } from "@/lib/currency";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
 const Area = dynamic(() => import("recharts").then((mod) => mod.Area), { ssr: false });
@@ -19,14 +20,6 @@ export interface TrendPoint {
 
 interface TrendChartProps {
   data: TrendPoint[];
-}
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
 }
 
 function formatChartDate(isoDate: string): string {

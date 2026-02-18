@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { calculateTotals, isExpense, isIncome } from "@/lib/transaction-calc";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
 import type { Category, Transaction } from "@/types";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
@@ -23,33 +24,6 @@ interface StatisticsClientProps {
 
 const EMERALD = "#10B981";
 const EMERALD_400 = "#34d399";
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-}
-
-/** Compact format for stats cards - avoids truncation */
-function formatCurrencyCompact(amount: number): string {
-  const absAmount = Math.abs(amount);
-  const prefix = amount < 0 ? "-Rp " : "Rp ";
-  if (absAmount >= 1_000_000_000) {
-    const val = (absAmount / 1_000_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} M`;
-  }
-  if (absAmount >= 1_000_000) {
-    const val = (absAmount / 1_000_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Jt`;
-  }
-  if (absAmount >= 1_000) {
-    const val = (absAmount / 1_000).toFixed(1).replace(".", ",");
-    return `${prefix}${val} Rb`;
-  }
-  return `${prefix}${absAmount.toLocaleString("id-ID")}`;
-}
 
 /** Expense category -> warm/vivid colors (untuk pengeluaran — no green!) */
 function getExpenseCategoryColor(categoryName: string): string {
@@ -74,7 +48,7 @@ const INCOME_COLORS = ["#10B981", "#34d399", "#6ee7b7", "#a7f3d0", "#d1fae5", "#
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="px-4 py-3 rounded-xl bg-[#181A25]/95 backdrop-blur-xl border border-white/10 shadow-xl">
+    <div className="chart-tooltip-bg px-4 py-3 rounded-xl bg-[#181A25]/95 backdrop-blur-xl border border-white/10 shadow-xl">
       {label && <p className="text-white/60 text-xs mb-1">{label}</p>}
       <p className="text-white font-semibold">{formatCurrency(payload[0]?.value ?? 0)}</p>
     </div>
@@ -97,7 +71,7 @@ function CategoryTooltip({
   const item = payload[0];
   const percent = (item.value / total) * 100;
   return (
-    <div className="px-4 py-3 rounded-xl bg-[#181A25]/95 backdrop-blur-xl border border-white/10 shadow-xl">
+    <div className="chart-tooltip-bg px-4 py-3 rounded-xl bg-[#181A25]/95 backdrop-blur-xl border border-white/10 shadow-xl">
       <p className="text-white font-semibold">{item.name}</p>
       <p className={`text-sm ${isIncome ? "text-emerald-400" : "text-rose-400"}`}>
         {percent.toFixed(1)}% · {formatCurrency(item.value)}
