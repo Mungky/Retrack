@@ -76,7 +76,7 @@ export function BaseSheet({
               paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
-        <div className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none bg-card border-t border-x border-border shadow-2xl">
+        <div className="sheet-panel mx-auto max-w-2xl rounded-t-3xl rounded-b-none overflow-hidden bg-card border-t border-x border-border shadow-2xl">
           {/* Handle */}
           <div className="flex justify-center pt-3 pb-2">
             <div className="w-12 h-1 bg-white/20 rounded-full" />

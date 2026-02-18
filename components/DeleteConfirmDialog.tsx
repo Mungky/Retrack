@@ -70,12 +70,12 @@ export default function DeleteConfirmDialog({
     <ConfirmDialog
       isOpen={isOpen}
       onClose={onClose}
-      title="Hapus Transaksi"
-      description="Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan."
+      title="Delete Transaction"
+      description="Are you sure you want to delete this transaction? This action cannot be undone."
       onConfirm={handleDelete}
       isLoading={isLoading}
       variant="danger"
-      confirmLabel="Hapus"
+      confirmLabel="Delete"
     />
   );
 }

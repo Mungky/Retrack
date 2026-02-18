@@ -132,7 +132,7 @@ export default function WalletFormSheet({
     <BaseSheet
       isOpen={isOpen}
       onClose={onClose}
-      title={wallet ? "Edit Wallet" : "Tambah Wallet"}
+      title={wallet ? "Edit Wallet" : "Add Wallet"}
       titleAccent={<div className="w-2 h-2 rounded-full bg-primary" />}
       nested
       disabled={isLoading}
@@ -147,7 +147,7 @@ export default function WalletFormSheet({
           >
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Nama Wallet
             </label>
             <Input
@@ -155,13 +155,12 @@ export default function WalletFormSheet({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: BCA, Gopay, Cash"
-              className="rounded-2xl"
             />
           </div>
 
           {/* Wallet Type - visual cards */}
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Tipe Wallet
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -176,18 +175,18 @@ export default function WalletFormSheet({
                     className={`p-4 rounded-2xl border transition-all ${
                       isSelected
                         ? "bg-primary/20 border-primary/50"
-                        : "bg-white/5 border-white/10"
+                        : "bg-muted/50 border-border"
                     }`}
                   >
                     <Icon
                       className={`mx-auto mb-2 ${
-                        isSelected ? "text-primary" : "text-slate-400"
+                        isSelected ? "text-primary" : "text-muted-foreground"
                       }`}
                       size={24}
                     />
                     <p
                       className={`text-xs font-semibold text-center ${
-                        isSelected ? "text-primary" : "text-slate-400"
+                        isSelected ? "text-primary" : "text-muted-foreground"
                       }`}
                     >
                       {walletType.label}
@@ -204,10 +203,10 @@ export default function WalletFormSheet({
               className={`block text-sm mb-2 ${
                 wallet
                   ? "text-amber-400 font-medium"
-                  : "text-slate-400 font-medium"
+                  : "text-muted-foreground font-medium"
               }`}
             >
-              {wallet ? "⚠ Koreksi Saldo Awal (Recalculate)" : "Saldo Awal"}
+              {wallet ? "⚠ Adjust Initial Balance (Recalculate)" : "Initial Balance"}
             </label>
             <CurrencyInput
               value={initialBalance}
@@ -215,8 +214,8 @@ export default function WalletFormSheet({
               accent="violet"
             />
             {wallet && (
-              <p className="text-xs text-white/50 mt-1">
-                Mengubah saldo awal akan memicu perhitungan ulang. Saldo saat ini = saldo awal + transaksi.
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                Changing initial balance will trigger recalculation. Current balance = initial balance + transactions.
               </p>
             )}
           </div>
@@ -234,7 +233,7 @@ export default function WalletFormSheet({
                 <span>Memproses...</span>
               </>
             ) : (
-              wallet ? "Update Wallet" : "Tambah Wallet"
+              wallet ? "Update Wallet" : "Add Wallet"
             )}
           </Button>
         </form>

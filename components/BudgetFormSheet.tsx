@@ -9,6 +9,7 @@ import { useSheet } from "@/contexts/SheetContext";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import CurrencyInput from "./CurrencyInput";
+import { Select } from "@/components/ui";
 import { formThemes } from "@/lib/form-themes";
 import type { Budget, Category } from "@/types";
 
@@ -39,12 +40,10 @@ export default function BudgetFormSheet({
   // Violet theme for budget forms
   const theme = formThemes.violet;
 
-  const expenseCategories = categories.filter(
-    (c) => c.type === "expense" || !c.type
-  );
+  const allCategories = categories.filter((c) => c.type === "expense" || c.type === "income" || !c.type);
   const availableCategories = budget
-    ? expenseCategories
-    : expenseCategories.filter((c) => !existingBudgetCategoryIds.includes(c.id));
+    ? allCategories
+    : allCategories.filter((c) => !existingBudgetCategoryIds.includes(c.id));
 
   useEffect(() => {
     if (isOpen) {
@@ -148,7 +147,7 @@ export default function BudgetFormSheet({
       />
       <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl"
+          className="sheet-panel mx-auto max-w-2xl rounded-t-3xl rounded-b-none overflow-hidden sheet-bg-dark border-t border-x border-border shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex justify-center pt-3 pb-2">
@@ -158,7 +157,7 @@ export default function BudgetFormSheet({
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-primary" />
               <h2 className="text-xl font-bold text-white">
-                {budget ? "Edit Budget" : "Tambah Budget"}
+                {budget ? "Edit Budget" : "Add Budget"}
               </h2>
             </div>
             <button
@@ -179,25 +178,24 @@ export default function BudgetFormSheet({
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-2">
-              Kategori
+              Category
             </label>
-            <select
+            <Select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               disabled={!!budget}
-              className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${theme.inputFocus}`}
-              style={{ colorScheme: "dark" }}
+              className={`text-foreground disabled:opacity-60 ${theme.inputFocus}`}
             >
-              <option value="">Pilih kategori</option>
+              <option value="">Select category</option>
               {availableCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
-            </select>
+            </Select>
             {availableCategories.length === 0 && !budget && (
               <p className="mt-2 text-sm text-amber-400">
-                Semua kategori sudah memiliki budget. Edit dari daftar budget.
+                All categories already have budgets. Edit from the budget list.
               </p>
             )}
           </div>
@@ -205,7 +203,9 @@ export default function BudgetFormSheet({
           {/* Amount - CurrencyInput */}
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-2">
-              Target Budget
+              {categoryId && availableCategories.find((c) => c.id === categoryId)?.type === "income"
+                ? "Savings Target"
+                : "Target Budget"}
             </label>
             <CurrencyInput
               value={amount}
@@ -224,12 +224,12 @@ export default function BudgetFormSheet({
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
-                <span>Memproses...</span>
+                <span>Processing...</span>
               </>
             ) : budget ? (
               "Update Budget"
             ) : (
-              "Tambah Budget"
+              "Add Budget"
             )}
           </button>
         </form>

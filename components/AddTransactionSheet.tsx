@@ -17,7 +17,7 @@ import { BaseSheet } from "@/components/shared/BaseSheet";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { getCategoryStyle } from "@/lib/category-icons";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, Select } from "@/components/ui";
 import type { Category, Wallet } from "@/types";
 
 interface AddTransactionSheetProps {
@@ -69,7 +69,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
     }
   }, [isOpen, user?.id, setIsSheetOpen]);
 
-  // Refetch categories when user adds/updates one (e.g. from Profile > Manage Categories)
+  // Refetch categories when user adds/updates one (e.g. from Settings > Manage Categories)
   useEffect(() => {
     const onRefresh = () => {
       if (isOpen && user?.id) fetchCategories();
@@ -181,7 +181,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
       const selectedWalletData = wallets.find(w => w.id === selectedWallet);
       
       if (!selectedWalletData) {
-        throw new Error("Wallet tidak ditemukan");
+        throw new Error("Wallet not found");
       }
 
       let categoryId: string | null = null;
@@ -227,12 +227,12 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
     } catch (error: any) {
       console.error("Error saving transaction:", error);
       
-      let errorMessage = error?.message || "Gagal menyimpan transaksi. Silakan coba lagi.";
+      let errorMessage = error?.message || "Failed to save transaction. Please try again.";
       
       if (error?.message?.toLowerCase().includes("rate limit") || 
           error?.message?.toLowerCase().includes("too many requests") ||
           error?.status === 429) {
-        errorMessage = "Terlalu banyak request. Silakan tunggu beberapa saat dan coba lagi.";
+        errorMessage = "Too many requests. Please wait a moment and try again.";
       }
       
       showToast(errorMessage, "error");
@@ -253,7 +253,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
     <BaseSheet
       isOpen={isOpen}
       onClose={onClose}
-      title={isIncome ? "Tambah Pemasukan" : "Tambah Pengeluaran"}
+      title={isIncome ? "Add Income" : "Add Expense"}
       titleAccent={
         <div className={`w-2 h-2 rounded-full ${isIncome ? "bg-emerald-400" : "bg-rose-400"}`} />
       }
@@ -269,8 +269,8 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
           >
             {/* Amount - CurrencyInput */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Nominal
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Amount
               </label>
               <CurrencyInput
                 value={amount}
@@ -282,35 +282,34 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Deskripsi
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Description
               </label>
               <Input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Contoh: Makan siang, Gaji bulanan"
+                placeholder="e.g. Lunch, Monthly salary"
                 disabled={isLoading}
-                className="rounded-2xl"
               />
             </div>
 
             {/* Category Selector */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-3">
-                Kategori
+              <label className="block text-sm font-medium text-muted-foreground mb-3">
+                Category
               </label>
               {isLoadingCategories ? (
-                <div className="w-full px-4 py-3 text-white/60 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-2">
+                <div className="w-full px-4 py-3 text-muted-foreground bg-muted/50 border border-border rounded-2xl flex items-center gap-2">
                   <Loader2 className="animate-spin" size={16} />
                   <span>Loading categories...</span>
                 </div>
               ) : filteredCategories.length === 0 ? (
-                <div className="w-full px-4 py-3 text-white/60 bg-white/5 border border-white/10 rounded-2xl text-center">
+                <div className="w-full px-4 py-3 text-muted-foreground bg-muted/50 border border-border rounded-2xl text-center">
                   <p className="text-sm">
                     {categories.length === 0
-                      ? "Belum ada kategori. Silakan tambahkan kategori terlebih dahulu."
-                      : `Belum ada kategori ${isIncome ? "pemasukan" : "pengeluaran"}. Tambahkan di halaman Categories.`}
+                      ? "No categories yet. Please add categories first."
+                      : `No ${isIncome ? "income" : "expense"} categories yet. Add them in Settings > Manage Categories.`}
                   </p>
                 </div>
               ) : (
@@ -328,7 +327,7 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
                         className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all disabled:opacity-50 ${
                           isSelected
                             ? `${theme.selectedBorder}`
-                            : "bg-white/5 border-white/10 hover:border-white/20"
+                            : "bg-muted/50 border-border hover:border-primary/50"
                         }`}
                         style={isSelected ? { backgroundColor: bgColor } : undefined}
                         title={category.name}
@@ -337,10 +336,10 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
                           icon={category.icon}
                           name={category.name}
                           size={24}
-                          className={isSelected ? "" : "text-slate-400"}
+                          className={isSelected ? "" : "text-muted-foreground"}
                           style={{ color: isSelected ? catColor : undefined }}
                         />
-                        <span className={`text-xs font-medium truncate w-full text-center ${isSelected ? "text-white" : "text-white/60"}`}>
+                        <span className={`text-xs font-medium truncate w-full text-center ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
                           {category.name}
                         </span>
                       </button>
@@ -352,50 +351,48 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
 
             {/* Wallet Selector */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Wallet
               </label>
               <div className="relative">
                 {isLoadingWallets ? (
-                  <div className="w-full px-4 py-3 text-white/60 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-2">
+                  <div className="w-full px-4 py-3 text-muted-foreground bg-muted/50 border border-border rounded-2xl flex items-center gap-2">
                     <Loader2 className="animate-spin" size={16} />
                     <span>Loading wallets...</span>
                   </div>
                 ) : (
-                  <select
+                  <Select
                     value={selectedWallet}
                     onChange={(e) => setSelectedWallet(e.target.value)}
                     disabled={isLoading || wallets.length === 0}
-                    className={`w-full px-4 py-3 text-white bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer disabled:opacity-50 ${theme.inputFocus}`}
-                    style={{ colorScheme: 'dark' }}
+                    className={`text-foreground disabled:opacity-50 ${theme.inputFocus}`}
                   >
                     {wallets.map((wallet) => (
-                      <option key={wallet.id} value={wallet.id} className="bg-slate-900 text-white">
+                      <option key={wallet.id} value={wallet.id}>
                         {wallet.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 )}
               </div>
             </div>
 
             {/* Date Picker */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Tanggal
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Date
               </label>
               <div className="relative group">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" size={20} />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" size={20} />
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   disabled={isLoading}
-                  className={`w-full pl-12 pr-4 py-4 text-white bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
-                  style={{ colorScheme: 'dark' }}
+                  className={`w-full rounded-none border-0 border-b-2 border-input bg-transparent pl-12 pr-4 py-2 text-foreground focus:outline-none focus:ring-0 disabled:opacity-50 transition-colors ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
                 />
               </div>
-              <p className="mt-2 text-xs text-white/40">
+              <p className="mt-2 text-xs text-muted-foreground/70">
                 {new Date(selectedDate).toLocaleDateString("id-ID", {
                   weekday: "long",
                   year: "numeric",
@@ -415,10 +412,10 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
               {isLoading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Menyimpan...</span>
+                  <span>Saving...</span>
                 </>
               ) : (
-                isIncome ? "Simpan Pemasukan" : "Simpan Pengeluaran"
+                isIncome ? "Save Income" : "Save Expense"
               )}
             </Button>
           </form>

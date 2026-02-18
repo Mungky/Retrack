@@ -11,7 +11,7 @@ const navItems = [
   { href: "/statistics", label: "Stats", icon: BarChart3 },
   { href: "/budget", label: "Budget", icon: PiggyBank },
   { href: "/transactions", label: "Transactions", icon: Wallet },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/settings", label: "Settings", icon: User },
 ];
 
 export default function BottomNav() {

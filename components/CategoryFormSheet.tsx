@@ -214,7 +214,7 @@ export default function CategoryFormSheet({
     <BaseSheet
       isOpen={isOpen}
       onClose={onClose}
-      title={category ? "Edit Kategori" : "Tambah Kategori"}
+      title={category ? "Edit Category" : "Add Category"}
       titleAccent={
         <div
           className={`w-2 h-2 rounded-full transition-colors ${
@@ -240,7 +240,7 @@ export default function CategoryFormSheet({
                   : "bg-rose-500/5 border-rose-500/20"
               }`}
             >
-              <p className="text-xs font-medium text-white/50 mb-3">
+              <p className="text-xs font-medium text-muted-foreground mb-3">
                 Preview
               </p>
               <div className="flex items-center gap-4">
@@ -252,27 +252,26 @@ export default function CategoryFormSheet({
                 >
                   <CategoryIconDisplay
                     icon={icon}
-                    name={name || "Kategori"}
+                    name={name || "Category"}
                     size={28}
                     style={{ color }}
                   />
                 </div>
-                <p className="text-white font-semibold truncate">
-                  {name || "Nama Kategori"}
+                <p className="text-foreground font-semibold truncate">
+                  {name || "Category Name"}
                 </p>
               </div>
             </div>
 
             {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Nama Kategori
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Category Name
               </label>
-              <input
-                {...register("name", { required: "Nama harus diisi" })}
+              <Input
+                {...register("name", { required: "Name is required" })}
                 type="text"
-                placeholder="Nama kategori"
-                className="rounded-2xl w-full"
+                placeholder="Category name"
               />
               {errors.name && (
                 <p className="text-rose-400 text-sm mt-1">{errors.name.message}</p>
@@ -281,8 +280,8 @@ export default function CategoryFormSheet({
 
             {/* Type Toggle */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Tipe
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Type
               </label>
               <div className="flex gap-4">
                 <button
@@ -291,10 +290,10 @@ export default function CategoryFormSheet({
                   className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                     type === "expense"
                       ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                      : "bg-white/5 text-slate-400 border border-white/10"
+                      : "bg-muted/50 text-muted-foreground border border-border"
                   }`}
                 >
-                  Pengeluaran
+                  Expense
                 </button>
                 <button
                   type="button"
@@ -302,17 +301,17 @@ export default function CategoryFormSheet({
                   className={`flex-1 py-3 rounded-2xl font-semibold transition-all ${
                     type === "income"
                       ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                      : "bg-white/5 text-slate-400 border border-white/10"
+                      : "bg-muted/50 text-muted-foreground border border-border"
                   }`}
                 >
-                  Pemasukan
+                  Income
                 </button>
               </div>
             </div>
 
             {/* Icon Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Icon
               </label>
               <div className="flex gap-2 mb-3">
@@ -325,7 +324,7 @@ export default function CategoryFormSheet({
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     iconTab === "presets"
                       ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                      : "bg-white/5 text-slate-400 border border-white/10"
+                      : "bg-muted/50 text-muted-foreground border border-border"
                   }`}
                 >
                   Presets
@@ -339,7 +338,7 @@ export default function CategoryFormSheet({
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     iconTab === "emoji"
                       ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                      : "bg-white/5 text-slate-400 border border-white/10"
+                      : "bg-muted/50 text-muted-foreground border border-border"
                   }`}
                 >
                   Custom Emoji
@@ -367,7 +366,7 @@ export default function CategoryFormSheet({
                               ? type === "income"
                                 ? "bg-emerald-500/20 border-emerald-500/50"
                                 : "bg-rose-500/20 border-rose-500/50"
-                              : "bg-white/5 border-white/10"
+                              : "bg-muted/50 border-border"
                           }`}
                         >
                           <IconC
@@ -376,7 +375,7 @@ export default function CategoryFormSheet({
                                 ? type === "income"
                                   ? "text-emerald-400"
                                   : "text-rose-400"
-                                : "text-slate-400"
+                                : "text-muted-foreground"
                             }`}
                             size={22}
                           />
@@ -394,8 +393,8 @@ export default function CategoryFormSheet({
                     <input
                       {...register("icon")}
                       type="text"
-                      placeholder="Misal: 🍕 🚗 💼"
-                      className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all text-2xl text-center"
+                      placeholder="e.g. 🍕 🚗 💼"
+                      className={`w-full rounded-none border-0 border-b-2 border-input bg-transparent px-0 py-2 text-2xl text-center text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:border-b-primary focus:border-b-2 transition-colors ${theme.inputFocus}`}
                     />
                   </motion.div>
                 )}
@@ -404,8 +403,8 @@ export default function CategoryFormSheet({
 
             {/* Color Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Warna
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Color
               </label>
               <div className="flex gap-2 mb-3">
                 <button
@@ -414,7 +413,7 @@ export default function CategoryFormSheet({
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     colorTab === "presets"
                       ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                      : "bg-white/5 text-slate-400 border border-white/10"
+                      : "bg-muted/50 text-muted-foreground border border-border"
                   }`}
                 >
                   Presets
@@ -425,7 +424,7 @@ export default function CategoryFormSheet({
                   className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                     colorTab === "custom"
                       ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                      : "bg-white/5 text-slate-400 border border-white/10"
+                      : "bg-muted/50 text-muted-foreground border border-border"
                   }`}
                 >
                   Custom
@@ -471,7 +470,7 @@ export default function CategoryFormSheet({
                       value={color}
                       onChange={(e) => setValue("color", e.target.value)}
                       placeholder="#FF0000"
-                      className="flex-1 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all font-mono text-sm"
+                      className={`flex-1 rounded-none border-0 border-b-2 border-input bg-transparent px-0 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 focus:border-b-primary focus:border-b-2 transition-colors ${theme.inputFocus}`}
                     />
                   </motion.div>
                 )}
@@ -484,7 +483,7 @@ export default function CategoryFormSheet({
               size="lg"
               className="w-full"
             >
-              {category ? "Update Kategori" : "Tambah Kategori"}
+              {category ? "Update Category" : "Add Category"}
             </Button>
           </form>
     </BaseSheet>

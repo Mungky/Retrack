@@ -7,6 +7,7 @@ import { AuroraBackground } from "@/components/ui/aurora-background";
 import { SheetProvider } from "@/contexts/SheetContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
@@ -57,7 +58,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning>
       <Script
         id="theme-init"
         strategy="beforeInteractive"
@@ -71,6 +72,7 @@ export default function RootLayout({
         <ThemeProvider attribute="data-theme" defaultTheme="default">
         <AuroraBackground />
         <AuthProvider>
+          <CurrencyProvider>
           <ToastProvider>
             <SheetProvider>
               <div className="relative z-10">
@@ -79,6 +81,7 @@ export default function RootLayout({
               <BottomNav />
             </SheetProvider>
           </ToastProvider>
+          </CurrencyProvider>
         </AuthProvider>
         </ThemeProvider>
       </body>

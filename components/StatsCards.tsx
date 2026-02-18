@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCurrency } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface StatsCardsProps {
   income: number;
@@ -9,6 +9,7 @@ interface StatsCardsProps {
 }
 
 export default function StatsCards({ income, expense, netCash }: StatsCardsProps) {
+  const { formatCurrency } = useCurrency();
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="card">

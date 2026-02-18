@@ -8,9 +8,11 @@ import { X, ArrowRightLeft, Loader2 } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
+import { Select } from "@/components/ui";
 import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { formThemes } from "@/lib/form-themes";
 import { Z_INDEX } from "@/lib/z-index";
@@ -99,12 +101,8 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
     setToWallet("");
   };
 
-  const formatWalletBalance = (bal: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(bal);
+  const { formatCurrency } = useCurrency();
+  const formatWalletBalance = (bal: number) => formatCurrency(bal);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,7 +198,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       />
       <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl"
+          className="sheet-panel mx-auto max-w-2xl rounded-t-3xl rounded-b-none overflow-hidden sheet-bg-dark border-t border-x border-border shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex justify-center pt-3 pb-2">
@@ -248,7 +246,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
                 <Loader2 className="animate-spin text-blue-400" size={20} />
               </div>
             ) : (
-              <select
+              <Select
                 value={fromWallet}
                 onChange={(e) => {
                   setFromWallet(e.target.value);
@@ -256,15 +254,14 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
                     setToWallet("");
                   }
                 }}
-                className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
-                style={{ colorScheme: 'dark' }}
+                className={`text-foreground ${theme.inputFocus}`}
               >
                 {wallets.map((wallet) => (
-                  <option key={wallet.id} value={wallet.id} className="bg-slate-900">
+                  <option key={wallet.id} value={wallet.id}>
                     {wallet.name} - {formatWalletBalance(wallet.balance)}
                   </option>
                 ))}
-              </select>
+              </Select>
             )}
           </div>
 
@@ -280,20 +277,19 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
             <label className="block text-sm font-medium text-slate-400 mb-2">
               Ke Wallet
             </label>
-            <select
+            <Select
               value={toWallet}
               onChange={(e) => setToWallet(e.target.value)}
-              className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${theme.inputFocus}`}
-              style={{ colorScheme: 'dark' }}
+              className={`text-foreground disabled:opacity-50 ${theme.inputFocus}`}
               disabled={!fromWallet || availableToWallets.length === 0}
             >
-              <option value="" className="bg-slate-900">Pilih wallet tujuan</option>
+              <option value="">Pilih wallet tujuan</option>
               {availableToWallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id} className="bg-slate-900">
+                <option key={wallet.id} value={wallet.id}>
                   {wallet.name} - {formatWalletBalance(wallet.balance)}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Submit Button - blue themed */}
@@ -309,7 +305,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
                 <span>Memproses...</span>
               </>
             ) : (
-              "Transfer Sekarang"
+              "Transfer Now"
             )}
           </button>
         </form>

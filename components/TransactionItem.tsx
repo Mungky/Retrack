@@ -33,7 +33,7 @@ import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import EditTransactionSheet from "./EditTransactionSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { isIncome, isExpense } from "@/lib/transaction-calc";
-import { formatCurrency } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Z_INDEX } from "@/lib/z-index";
 import type { Transaction } from "@/types";
 
@@ -44,6 +44,7 @@ interface TransactionItemProps {
 }
 
 export default function TransactionItem({ transaction, isLastItem = false }: TransactionItemProps) {
+  const { formatCurrency } = useCurrency();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

@@ -2,38 +2,55 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
 import { useHaptic } from "@/hooks/useHaptic";
-import { formatCurrency } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useToast } from "@/contexts/ToastContext";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { supabaseClient } from "@/lib/supabase-client";
+import { useAuth } from "@/contexts/AuthContext";
+import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import type { Budget, Category, Transaction } from "@/types";
 
-type BudgetWithCategory = Budget & { category: Category | null };
+type BudgetWithCategory = Budget & { category: (Category & { type?: string }) | null };
 
 interface BudgetClientProps {
   initialBudgets: BudgetWithCategory[];
   categories: Category[];
   expensesThisMonth: Transaction[];
+  incomeThisMonth: Transaction[];
 }
 
-function getProgressColor(percentage: number) {
-  if (percentage < 75) return "bg-emerald-500";
-  if (percentage <= 100) return "bg-amber-500";
-  return "bg-rose-500";
+/** For EXPENSE: remaining bar (100%→0%). Red/Yellow. */
+function getExpenseBarColor(remainingPercent: number) {
+  if (remainingPercent <= 25) return "bg-rose-500";
+  return "bg-amber-500";
+}
+
+/** For INCOME: savings progress bar (0%→100%). Green. */
+function getIncomeBarColor(progressPercent: number) {
+  return "bg-emerald-500";
 }
 
 export default function BudgetClient({
   initialBudgets,
   categories,
   expensesThisMonth,
+  incomeThisMonth,
 }: BudgetClientProps) {
   const router = useRouter();
   const { lightTap } = useHaptic();
+  const { formatCurrency } = useCurrency();
+  const { showToast } = useToast();
+  const { user } = useAuth();
   const [budgets, setBudgets] = useState<BudgetWithCategory[]>(initialBudgets);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<BudgetWithCategory | null>(null);
+  const [deletingBudget, setDeletingBudget] = useState<BudgetWithCategory | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setBudgets(initialBudgets);
@@ -45,21 +62,68 @@ export default function BudgetClient({
       const cid = t.category_id || "uncategorized";
       spentByCategory[cid] = (spentByCategory[cid] || 0) + Number(t.amount || 0);
     }
+    const savedByCategory: Record<string, number> = {};
+    for (const t of incomeThisMonth) {
+      const cid = t.category_id || "uncategorized";
+      savedByCategory[cid] = (savedByCategory[cid] || 0) + Number(t.amount || 0);
+    }
 
     return budgets.map((b) => {
-      const spent = spentByCategory[b.category_id] || 0;
+      const categoryType = (b.category?.type || "expense").toLowerCase();
       const target = b.amount;
-      const percentage = target > 0 ? Math.min((spent / target) * 100, 150) : 0;
+
+      if (categoryType === "income") {
+        const saved = savedByCategory[b.category_id] || 0;
+        const progressPercent = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
+        return {
+          ...b,
+          categoryType: "income" as const,
+          spent: saved,
+          target,
+          progressPercent,
+          remaining: Math.max(0, target - saved),
+        };
+      }
+
+      const spent = spentByCategory[b.category_id] || 0;
       const remaining = Math.max(0, target - spent);
+      const remainingPercent = target > 0 ? (remaining / target) * 100 : 100;
+      const spentPercent = target > 0 ? Math.min((spent / target) * 100, 150) : 0;
       return {
         ...b,
+        categoryType: "expense" as const,
         spent,
         target,
-        percentage,
         remaining,
+        remainingPercent,
+        spentPercent,
       };
     });
-  }, [budgets, expensesThisMonth]);
+  }, [budgets, expensesThisMonth, incomeThisMonth]);
+
+  const handleDeleteBudget = async (budgetId: string) => {
+    if (!user?.id) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabaseClient
+        .from("budgets")
+        .delete()
+        .eq("id", budgetId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
+      setDeletingBudget(null);
+      showToast(TOAST_MESSAGES.SUCCESS.BUDGET_DELETED, "success");
+      revalidateTransactionPaths();
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting budget:", error);
+      showToast(TOAST_MESSAGES.ERROR.BUDGET_DELETE_FAILED, "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const existingBudgetCategoryIds = useMemo(
     () => budgets.map((b) => b.category_id),
@@ -80,7 +144,7 @@ export default function BudgetClient({
             Budget
           </h1>
           <p className="text-white/60 text-sm">
-            Kelola target pengeluaran per kategori bulan ini
+            Manage monthly spending targets per category
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -100,7 +164,7 @@ export default function BudgetClient({
       {/* Budget Cards */}
       {computed.length === 0 ? (
         <div className="fintech-card p-12 text-center">
-          <p className="text-white/50 mb-4">Belum ada budget. Mulai dengan menambahkan budget.</p>
+          <p className="text-white/50 mb-4">No budgets yet. Start by adding a budget.</p>
           <button
             onClick={() => {
               setEditingBudget(null);
@@ -108,7 +172,7 @@ export default function BudgetClient({
             }}
             className="px-5 py-2.5 rounded-xl bg-primary/20 text-primary font-medium hover:bg-primary/30 transition-colors"
           >
-            Tambah Budget Pertama
+            Add First Budget
           </button>
         </div>
       ) : (
@@ -116,7 +180,17 @@ export default function BudgetClient({
           {computed.map((item) => {
             const cat = item.category;
             const catColor = cat?.color || "#06b6d4";
-            const barColor = getProgressColor(item.percentage);
+            const isExpense = item.categoryType === "expense";
+
+            const barColor = isExpense
+              ? getExpenseBarColor(item.remainingPercent ?? 0)
+              : getIncomeBarColor(item.progressPercent ?? 0);
+
+            const barWidth = isExpense ? (item.remainingPercent ?? 100) : (item.progressPercent ?? 0);
+
+            const statusLabel = isExpense
+              ? `${formatCurrency(item.remaining ?? 0)} remaining`
+              : `${formatCurrency(item.spent ?? 0)} / ${formatCurrency(item.target)} saved`;
 
             return (
               <div
@@ -145,36 +219,47 @@ export default function BudgetClient({
                         {item.category?.name || "Uncategorized"}
                       </h3>
                       <p className="text-sm text-white/60 mt-0.5">
-                        {formatCurrency(item.spent)} / {formatCurrency(item.target)}
+                        {isExpense
+                          ? `${formatCurrency(item.spent)} / ${formatCurrency(item.target)} spent`
+                          : statusLabel}
                       </p>
                       <div
-                        className="mt-3 h-3 rounded-full bg-slate-800 overflow-hidden cursor-pointer touch-manipulation"
+                        className={`mt-3 h-3 rounded-full bg-slate-800 overflow-hidden cursor-pointer touch-manipulation flex ${isExpense ? "flex-row-reverse" : ""}`}
                         onClick={lightTap}
                         onTouchStart={lightTap}
                         role="progressbar"
-                        aria-valuenow={item.percentage}
+                        aria-valuenow={barWidth}
                         aria-valuemin={0}
                         aria-valuemax={100}
                       >
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ease-out ${barColor}`}
-                          style={{ width: `${Math.min(item.percentage, 100)}%` }}
+                          className={`h-full transition-all duration-500 ease-out ${barColor} ${isExpense ? "rounded-l-full" : "rounded-full"}`}
+                          style={{ width: `${barWidth}%`, minWidth: barWidth > 0 ? "4px" : 0 }}
                         />
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      setEditingBudget(item);
-                      setIsFormOpen(true);
-                    }}
-                    className="p-2 rounded-xl hover:bg-white/10 transition-colors text-white/50 hover:text-white"
-                    aria-label="Edit"
-                  >
-                    <Pencil size={18} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setEditingBudget(item);
+                        setIsFormOpen(true);
+                      }}
+                      className="p-2 rounded-xl hover:bg-white/10 transition-colors text-white/50 hover:text-white"
+                      aria-label="Edit"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      onClick={() => setDeletingBudget(item)}
+                      className="p-2 rounded-xl hover:bg-rose-500/20 transition-colors text-white/50 hover:text-rose-400"
+                      aria-label="Delete"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
-                {item.percentage > 100 && (
+                {isExpense && item.spent > item.target && (
                   <p className="mt-2 text-sm text-rose-400 font-medium">
                     Over budget: +{formatCurrency(item.spent - item.target)}
                   </p>
@@ -195,9 +280,22 @@ export default function BudgetClient({
         categories={categories}
         existingBudgetCategoryIds={editingBudget ? [] : existingBudgetCategoryIds}
         onSuccess={() => {
-          router.refresh();
+          refresh();
         }}
       />
+
+      {deletingBudget && (
+        <ConfirmDialog
+          isOpen={!!deletingBudget}
+          onClose={() => setDeletingBudget(null)}
+          title="Delete Budget"
+          description="Are you sure you want to delete this budget? This action cannot be undone."
+          onConfirm={() => handleDeleteBudget(deletingBudget.id)}
+          isLoading={isDeleting}
+          variant="danger"
+          confirmLabel="Delete"
+        />
+      )}
     </div>
   );
 }

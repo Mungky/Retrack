@@ -28,15 +28,15 @@ function getPasswordStrength(password: string): PasswordStrength {
 function getErrorMessage(error: { message?: string; status?: number }): string {
   const msg = (error.message || "").toLowerCase();
   if (msg.includes("already registered") || msg.includes("already exists")) {
-    return "Email sudah terdaftar. Silakan login.";
+    return "Email already registered. Please sign in.";
   }
   if (msg.includes("rate limit") || error.status === 429) {
-    return "Terlalu banyak percobaan. Silakan tunggu beberapa saat.";
+    return "Too many attempts. Please wait a moment.";
   }
   if (msg.includes("invalid email")) {
-    return "Format email tidak valid.";
+    return "Invalid email format.";
   }
-  return error.message || "Gagal mendaftar. Silakan coba lagi.";
+  return error.message || "Registration failed. Please try again.";
 }
 
 export default function RegisterPage() {
@@ -63,24 +63,24 @@ export default function RegisterPage() {
     setError(null);
 
     if (!EMAIL_REGEX.test(email.trim())) {
-      setError("Format email tidak valid.");
+      setError("Invalid email format.");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
+      setError("Password must be at least 6 characters.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Password dan konfirmasi tidak cocok.");
+      setError("Password and confirmation do not match.");
       return;
     }
 
     const rateLimitKey = `register:${email}`;
     if (isRateLimited(rateLimitKey, 3, 60000)) {
       const remaining = getRemainingTime(rateLimitKey);
-      setError(`Terlalu banyak percobaan. Tunggu ${Math.ceil(remaining / 1000)} detik.`);
+      setError(`Too many attempts. Wait ${Math.ceil(remaining / 1000)} seconds.`);
       return;
     }
 
@@ -102,7 +102,7 @@ export default function RegisterPage() {
 
       setEmailSent(true);
     } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +122,7 @@ export default function RegisterPage() {
         setError(null);
       }
     } catch {
-      setError("Gagal mengirim ulang email.");
+      setError("Failed to resend email.");
     } finally {
       setResendLoading(false);
     }
@@ -131,7 +131,7 @@ export default function RegisterPage() {
   if (loading && !emailSent) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-white/50">Memuat...</div>
+        <div className="animate-pulse text-white/50">Loading...</div>
       </main>
     );
   }
@@ -144,10 +144,10 @@ export default function RegisterPage() {
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="text-emerald-400" size={32} />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Cek Email Anda</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Check Your Email</h1>
             <p className="text-white/60 text-sm mb-6">
-              Kami telah mengirim link verifikasi ke <span className="text-white font-medium">{email}</span>.
-              Buka email dan klik link untuk mengaktifkan akun.
+              We sent a verification link to <span className="text-white font-medium">{email}</span>.
+              Open your email and click the link to activate your account.
             </p>
 
             {error && (
@@ -166,17 +166,17 @@ export default function RegisterPage() {
               {resendLoading ? (
                 <>
                   <Loader2 className="animate-spin" size={18} />
-                  Mengirim...
+                  Sending...
                 </>
               ) : (
-                "Kirim Ulang Email"
+                "Resend Email"
               )}
             </Button>
 
             <p className="mt-6 text-white/50 text-sm">
-              Sudah verifikasi?{" "}
+              Already verified?{" "}
               <Link href="/login" className="text-violet-400 hover:text-violet-300 font-semibold">
-                Masuk sekarang
+                Sign in now
               </Link>
             </p>
           </div>
@@ -191,7 +191,7 @@ export default function RegisterPage() {
         <div className="fintech-card p-8 border border-white/5 shadow-2xl">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Remula Money</h1>
-            <p className="text-white/50 text-sm">Buat akun baru</p>
+            <p className="text-white/50 text-sm">Create a new account</p>
           </div>
 
           {error && (
@@ -203,14 +203,14 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2">Nama</label>
+              <label className="block text-sm font-semibold text-white/80 mb-2">Name</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" size={20} />
                 <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Nama Anda"
+                  placeholder="Your name"
                   className="pl-12 rounded-2xl h-12"
                   disabled={isLoading}
                 />
@@ -241,7 +241,7 @@ export default function RegisterPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimal 6 karakter"
+                  placeholder="At least 6 characters"
                   required
                   minLength={6}
                   className="pl-12 rounded-2xl h-12"
@@ -270,7 +270,7 @@ export default function RegisterPage() {
                         : "text-emerald-400"
                     }`}
                   >
-                    {strength === "weak" ? "Lemah" : strength === "medium" ? "Sedang" : "Kuat"}
+                    {strength === "weak" ? "Weak" : strength === "medium" ? "Medium" : "Strong"}
                   </span>
                 </div>
               )}
@@ -278,7 +278,7 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2">
-                Konfirmasi Password
+                Confirm Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10" size={20} />
@@ -286,7 +286,7 @@ export default function RegisterPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Ulangi password"
+                  placeholder="Repeat password"
                   required
                   minLength={6}
                   className="pl-12 rounded-2xl h-12"
@@ -294,7 +294,7 @@ export default function RegisterPage() {
                 />
               </div>
               {confirmPassword && password !== confirmPassword && (
-                <p className="mt-2 text-sm text-rose-400">Password tidak cocok</p>
+                <p className="mt-2 text-sm text-rose-400">Passwords do not match</p>
               )}
             </div>
 
@@ -307,18 +307,18 @@ export default function RegisterPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Memproses...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
-                "Daftar"
+                "Sign Up"
               )}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-white/50 text-sm">
-            Sudah punya akun?{" "}
+            Already have an account?{" "}
             <Link href="/login" className="text-violet-400 hover:text-violet-300 font-semibold">
-              Masuk sekarang
+              Sign in now
             </Link>
           </p>
         </div>

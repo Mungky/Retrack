@@ -13,7 +13,7 @@ async function getBudgets(userId: string | null): Promise<(Budget & { category: 
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("budgets")
-      .select("*, category:categories(id, name, icon, color)")
+      .select("*, category:categories(id, name, icon, color, type)")
       .eq("user_id", userId);
 
     if (error) throw error;
@@ -42,16 +42,19 @@ async function getCategories(userId: string | null): Promise<Category[]> {
   }
 }
 
+function getMonthRange() {
+  const now = new Date();
+  const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const endOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  return { startOfMonth, endOfMonth };
+}
+
 async function getExpensesThisMonth(userId: string | null): Promise<Transaction[]> {
   if (!userId) return [];
-
   try {
     const supabase = await createClient();
-    const now = new Date();
-    const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const endOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-
+    const { startOfMonth, endOfMonth } = getMonthRange();
     const { data, error } = await supabase
       .from("transactions")
       .select("id, amount, type, date, category_id")
@@ -68,12 +71,34 @@ async function getExpensesThisMonth(userId: string | null): Promise<Transaction[
   }
 }
 
+async function getIncomeThisMonth(userId: string | null): Promise<Transaction[]> {
+  if (!userId) return [];
+  try {
+    const supabase = await createClient();
+    const { startOfMonth, endOfMonth } = getMonthRange();
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("id, amount, type, date, category_id")
+      .eq("user_id", userId)
+      .eq("type", "income")
+      .gte("date", startOfMonth)
+      .lte("date", endOfMonth);
+
+    if (error) throw error;
+    return (data as Transaction[]) || [];
+  } catch (error) {
+    console.error("Error fetching income:", error);
+    return [];
+  }
+}
+
 export default async function BudgetPage() {
   const userId = await getServerUserId();
-  const [budgetsWithCategory, categories, expensesThisMonth] = await Promise.all([
+  const [budgetsWithCategory, categories, expensesThisMonth, incomeThisMonth] = await Promise.all([
     getBudgets(userId),
     getCategories(userId),
     getExpensesThisMonth(userId),
+    getIncomeThisMonth(userId),
   ]);
 
   return (
@@ -82,6 +107,7 @@ export default async function BudgetPage() {
         initialBudgets={budgetsWithCategory}
         categories={categories}
         expensesThisMonth={expensesThisMonth}
+        incomeThisMonth={incomeThisMonth}
       />
     </main>
   );

@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { filterTransactionsByRange, getDatesInRange, type DateRangeKey } from "@/lib/date-range";
 import { calculateTotals, aggregateByDate, getCumulativeNetSeries } from "@/lib/transaction-calc";
-import { formatCurrency, formatCurrencyCompact, formatCurrencyFull } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { Transaction } from "@/types";
 
 const LineChart = dynamic(() => import("recharts").then((mod) => mod.LineChart), { ssr: false });
@@ -36,6 +36,7 @@ export default function DashboardSummary({
   transactions,
   dateRange,
 }: DashboardSummaryProps) {
+  const { formatCurrency, formatCurrencyCompact, formatCurrencyFull } = useCurrency();
   const { income, expense, net } = useMemo(() => {
     const filtered = filterTransactionsByRange(transactions, dateRange);
     return calculateTotals(filtered);
@@ -159,7 +160,7 @@ export default function DashboardSummary({
           </div>
         ) : (
           <div className="flex-1 min-w-0 h-14 flex items-center justify-center text-white/40 text-xs">
-            Tidak ada data
+            No data
           </div>
         )}
       </div>

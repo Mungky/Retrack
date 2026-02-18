@@ -58,7 +58,7 @@ export default function FloatingActionButton() {
                 <div className="p-2 rounded-xl bg-emerald-500/20">
                   <ReceiptText size={18} className="text-emerald-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Tambah Pemasukan</span>
+                <span className="text-sm font-medium text-white">Add Income</span>
               </button>
 
               <button
@@ -68,7 +68,7 @@ export default function FloatingActionButton() {
                 <div className="p-2 rounded-xl bg-rose-500/20">
                   <ReceiptText size={18} className="text-rose-400" />
                 </div>
-                <span className="text-sm font-medium text-white">Tambah Pengeluaran</span>
+                <span className="text-sm font-medium text-white">Add Expense</span>
               </button>
             </div>
           </div>

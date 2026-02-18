@@ -38,7 +38,7 @@ export function ThemeSwitcher() {
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium text-muted-foreground">
-        Pilih tema aplikasi
+        Choose app theme
       </p>
       <div className="grid grid-cols-3 gap-3">
         {THEMES.map((t) => (

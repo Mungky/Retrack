@@ -6,7 +6,7 @@ import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletI
 import WalletFormSheet from "./WalletFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { useToast } from "@/contexts/ToastContext";
@@ -62,6 +62,7 @@ const getWalletConfig = (type: string) => {
 
 export default function WalletManagement({ initialWallets, onWalletsChange }: WalletManagementProps) {
   const { showToast } = useToast();
+  const { formatCurrency, formatCurrencyCompact } = useCurrency();
   const { user } = useAuth();
   const [wallets, setWallets] = useState<Wallet[]>(initialWallets);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -105,7 +106,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
 
       if (transactions && transactions.length > 0) {
         showToast(
-          "Wallet ini memiliki transaksi. Tidak dapat dihapus.",
+          TOAST_MESSAGES.ERROR.WALLET_HAS_TRANSACTIONS,
           "error"
         );
         return;
@@ -134,29 +135,29 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
     <div className="space-y-4">
       {/* Row 1: My Accounts (rata kiri) | 2 Accounts (rata kanan) */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-white">My Accounts</h2>
-        <p className="text-sm text-white/60">
+        <h2 className="text-xl font-bold text-card-foreground">My Accounts</h2>
+        <p className="text-sm text-muted-foreground">
           {wallets.length} Account{wallets.length !== 1 ? "s" : ""}
         </p>
       </div>
 
-      {/* Add Wallet Button */}
+      {/* Add Wallet Button - uses primary for theme (Sultan=gold, Default=violet, Forest=green) */}
       <button
         onClick={() => {
           setSelectedWallet(null);
           setIsFormOpen(true);
         }}
-        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-semibold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+        className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all"
       >
         <Plus size={18} />
-        Tambah Dompet
+        Add Wallet
       </button>
 
       {/* Row 2: Wallet cards - rata kiri kanan (justify-between) */}
       {wallets.length === 0 ? (
         <div className="glass-card p-10 text-center">
-          <p className="text-white/60">Belum ada wallet</p>
-          <p className="text-white/40 text-sm mt-1">Tap &quot;Tambah Dompet&quot; di atas</p>
+          <p className="text-muted-foreground">No wallets yet</p>
+          <p className="text-muted-foreground/80 text-sm mt-1">Tap &quot;Add Wallet&quot; above</p>
         </div>
       ) : (
         <div className="flex flex-wrap justify-between gap-3">
@@ -167,7 +168,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
             return (
               <div
                 key={wallet.id}
-                className="glass-card p-5 hover:border-white/20 transition-all flex-1 min-w-[240px]"
+                className="glass-card p-5 hover:border-primary/20 transition-all flex-1 min-w-[240px]"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 flex-1">
@@ -178,10 +179,10 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-white mb-0.5">
+                      <h3 className="text-lg font-bold text-card-foreground mb-0.5">
                         {wallet.name}
                       </h3>
-                      <p className="text-xs text-white/60 capitalize font-medium">
+                      <p className="text-xs text-muted-foreground capitalize font-medium">
                         {wallet.type === "ewallet" ? "E-Wallet" : wallet.type}
                       </p>
                     </div>
@@ -189,14 +190,14 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
 
                   <div className="text-right">
                     <p
-                      className="text-lg font-bold text-white mb-0.5 truncate max-w-[140px]"
+                      className="text-lg font-bold text-card-foreground mb-0.5 truncate max-w-[140px]"
                       title={formatCurrency(wallet.balance || 0)}
                     >
                       {formatCurrencyCompact(wallet.balance || 0)}
                     </p>
                     <div className="flex items-center justify-end gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span className="text-xs text-white/60 font-medium">Active</span>
+                      <span className="text-xs text-muted-foreground font-medium">Active</span>
                     </div>
                   </div>
 
@@ -206,10 +207,10 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                       onClick={() =>
                         setMenuOpenId(menuOpenId === wallet.id ? null : wallet.id)
                       }
-                      className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                      className="p-2 rounded-full hover:bg-muted transition-colors"
                       aria-label="Menu"
                     >
-                      <MoreVertical className="text-white/50" size={20} />
+                      <MoreVertical className="text-muted-foreground" size={20} />
                     </button>
 
                     {menuOpenId === wallet.id &&
@@ -236,9 +237,9 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                                 setSelectedWallet(wallet);
                                 setIsFormOpen(true);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                             >
-                              <Pencil size={16} className="text-cyan-400" />
+                              <Pencil size={16} className="text-primary" />
                               Edit
                             </button>
                             <button
@@ -247,7 +248,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                                 setSelectedWallet(wallet);
                                 setIsDeleteOpen(true);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                             >
                               <Trash2 size={16} className="text-rose-400" />
                               Delete

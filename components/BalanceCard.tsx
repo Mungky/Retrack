@@ -2,7 +2,7 @@
 
 import { User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatCurrency, formatCurrencyFull } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface BalanceCardProps {
   totalBalance: number;
@@ -10,6 +10,7 @@ interface BalanceCardProps {
 
 export default function BalanceCard({ totalBalance }: BalanceCardProps) {
   const { user } = useAuth();
+  const { formatCurrency, formatCurrencyFull } = useCurrency();
   const formatted = formatCurrency(totalBalance);
   const charCount = formatted.length;
   const fontSize =

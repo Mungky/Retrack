@@ -38,7 +38,12 @@ async function getCategories(userId: string | null): Promise<Category[]> {
   }
 }
 
-export default async function ProfilePage() {
+export const metadata = {
+  title: "Settings",
+  description: "Manage your account and settings",
+};
+
+export default async function SettingsPage() {
   const userId = await getServerUserId();
   if (!userId) redirect("/login");
 

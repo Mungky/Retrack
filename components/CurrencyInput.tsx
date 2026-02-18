@@ -1,7 +1,10 @@
 "use client";
 
 import React from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { FormAccent } from "@/lib/form-themes";
+
+const CURRENCY_SYMBOLS: Record<string, string> = { IDR: "Rp", USD: "$", EUR: "€" };
 
 interface CurrencyInputProps {
   value: number;
@@ -12,11 +15,11 @@ interface CurrencyInputProps {
 }
 
 const ACCENT_FOCUS: Record<FormAccent, string> = {
-  emerald: "focus:ring-emerald-500/30 focus:border-emerald-500/50",
-  rose: "focus:ring-rose-500/30 focus:border-rose-500/50",
-  blue: "focus:ring-blue-500/30 focus:border-blue-500/50",
-  violet: "focus:ring-violet-500/30 focus:border-violet-500/50",
-  cyan: "focus:ring-cyan-500/30 focus:border-cyan-500/50",
+  emerald: "focus:ring-0 focus:border-b-primary focus:border-b-2",
+  rose: "focus:ring-0 focus:border-b-primary focus:border-b-2",
+  blue: "focus:ring-0 focus:border-b-primary focus:border-b-2",
+  violet: "focus:ring-0 focus:border-b-primary focus:border-b-2",
+  cyan: "focus:ring-0 focus:border-b-primary focus:border-b-2",
 };
 
 const ACCENT_PREFIX: Record<FormAccent, string> = {
@@ -27,10 +30,13 @@ const ACCENT_PREFIX: Record<FormAccent, string> = {
   cyan: "text-cyan-400/50",
 };
 
-/** Format a number into Indonesian locale (e.g. 100000 → "100.000") */
-export function formatIDR(num: number): string {
+const INPUT_LOCALES: Record<string, string> = { IDR: "id-ID", USD: "en-US", EUR: "de-DE" };
+
+/** Format a number for input display (locale-aware thousand separators) */
+export function formatForInput(num: number, currency = "IDR"): string {
   if (!num) return "";
-  return new Intl.NumberFormat("id-ID").format(num);
+  const locale = INPUT_LOCALES[currency] ?? "id-ID";
+  return new Intl.NumberFormat(locale).format(num);
 }
 
 /** Strip non-digits and parse to integer */
@@ -46,6 +52,8 @@ export default function CurrencyInput({
   accent = "cyan",
   placeholder = "0",
 }: CurrencyInputProps) {
+  const { currency } = useCurrency();
+  const symbol = CURRENCY_SYMBOLS[currency] ?? "Rp";
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(parseIDR(e.target.value));
   };
@@ -55,16 +63,16 @@ export default function CurrencyInput({
       <span
         className={`absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold pointer-events-none select-none ${ACCENT_PREFIX[accent]}`}
       >
-        Rp
+        {symbol}
       </span>
       <input
         type="text"
         inputMode="numeric"
-        value={value > 0 ? formatIDR(value) : ""}
+        value={value > 0 ? formatForInput(value, currency) : ""}
         onChange={handleChange}
         placeholder={placeholder}
         disabled={disabled}
-        className={`w-full pl-14 pr-4 py-4 text-2xl font-bold text-white bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 transition-all placeholder:text-white/20 disabled:opacity-50 ${ACCENT_FOCUS[accent]}`}
+        className={`w-full rounded-none border-0 border-b-2 border-input bg-transparent pl-14 pr-4 py-3 text-2xl font-bold text-foreground focus:outline-none focus:ring-0 placeholder:text-muted-foreground disabled:opacity-50 transition-colors ${ACCENT_FOCUS[accent]}`}
       />
     </div>
   );

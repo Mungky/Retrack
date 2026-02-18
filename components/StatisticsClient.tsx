@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { calculateTotals, isExpense, isIncome } from "@/lib/transaction-calc";
-import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { Category, Transaction } from "@/types";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
@@ -45,7 +45,17 @@ function getExpenseCategoryColor(categoryName: string): string {
 const INCOME_COLORS = ["#10B981", "#34d399", "#6ee7b7", "#a7f3d0", "#d1fae5", "#059669", "#047857", "#065f46"];
 
 /** Custom Glass Tooltip for charts */
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+function ChartTooltip({
+  active,
+  payload,
+  label,
+  formatCurrency,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+  formatCurrency: (n: number) => string;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip-bg px-4 py-3 rounded-xl bg-[#181A25]/95 backdrop-blur-xl border border-white/10 shadow-xl">
@@ -61,11 +71,13 @@ function CategoryTooltip({
   payload,
   total,
   isIncome,
+  formatCurrency,
 }: {
   active?: boolean;
   payload?: ReadonlyArray<{ name: string; value: number }>;
   total?: number;
   isIncome?: boolean;
+  formatCurrency: (n: number) => string;
 }) {
   if (!active || !payload?.length || !total) return null;
   const item = payload[0];
@@ -84,6 +96,7 @@ export default function StatisticsClient({
   transactions,
   categories,
 }: StatisticsClientProps) {
+  const { formatCurrency, formatCurrencyCompact } = useCurrency();
   const stats = useMemo(() => {
     const { income, expense, net } = calculateTotals(transactions);
 
@@ -118,7 +131,7 @@ export default function StatisticsClient({
       .filter((t) => isExpense(t) && t.category_id)
       .forEach((t) => {
         const category = categories.find((c) => c.id === t.category_id);
-        const categoryName = category?.name || "Lainnya";
+        const categoryName = category?.name || "Other";
         categoryExpenses[categoryName] =
           (categoryExpenses[categoryName] || 0) + t.amount;
       });
@@ -128,7 +141,7 @@ export default function StatisticsClient({
       .filter((t) => isIncome(t) && t.category_id)
       .forEach((t) => {
         const category = categories.find((c) => c.id === t.category_id);
-        const categoryName = category?.name || "Lainnya";
+        const categoryName = category?.name || "Other";
         categoryIncome[categoryName] =
           (categoryIncome[categoryName] || 0) + t.amount;
       });
@@ -222,7 +235,7 @@ export default function StatisticsClient({
                 axisLine={false}
                 tickFormatter={(v) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : v)}
               />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip content={(props) => <ChartTooltip {...props} formatCurrency={formatCurrency} />} />
               <Area
                 type="natural"
                 dataKey="amount"
@@ -242,9 +255,9 @@ export default function StatisticsClient({
       {/* 3. PEMASUKAN PER KATEGORI */}
       <div className="fintech-card p-6">
         <h3 className="font-playfair text-xl font-semibold text-white mb-1">
-          Pemasukan per Kategori
+          Income by Category
         </h3>
-        <p className="text-white/50 text-sm mb-4">Sumber pemasukan Anda</p>
+        <p className="text-white/50 text-sm mb-4">Your income sources</p>
         {stats.incomeCategoryData.length > 0 ? (
           <div className="flex flex-col lg:flex-row gap-6 items-center">
             <ResponsiveContainer width="100%" height={220}>
@@ -255,6 +268,7 @@ export default function StatisticsClient({
                       {...props}
                       total={stats.incomeCategoryData.reduce((s, d) => s + d.value, 0)}
                       isIncome={true}
+                      formatCurrency={formatCurrency}
                     />
                   )}
                 />
@@ -289,7 +303,7 @@ export default function StatisticsClient({
           </div>
         ) : (
           <div className="h-[180px] flex items-center justify-center text-white/40 text-sm">
-            Belum ada data pemasukan
+            No income data yet
           </div>
         )}
       </div>
@@ -297,9 +311,9 @@ export default function StatisticsClient({
       {/* 4. PENGELUARAN PER KATEGORI */}
       <div className="fintech-card p-6">
         <h3 className="font-playfair text-xl font-semibold text-white mb-1">
-          Pengeluaran per Kategori
+          Expense by Category
         </h3>
-        <p className="text-white/50 text-sm mb-4">Sumber pengeluaran Anda</p>
+        <p className="text-white/50 text-sm mb-4">Your expense sources</p>
         {stats.expenseCategoryData.length > 0 ? (
           <div className="flex flex-col lg:flex-row gap-6 items-center">
             <ResponsiveContainer width="100%" height={220}>
@@ -310,6 +324,7 @@ export default function StatisticsClient({
                       {...props}
                       total={stats.expenseCategoryData.reduce((s, d) => s + d.value, 0)}
                       isIncome={false}
+                      formatCurrency={formatCurrency}
                     />
                   )}
                 />

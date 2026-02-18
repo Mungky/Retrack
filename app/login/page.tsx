@@ -13,15 +13,15 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function getErrorMessage(error: { message?: string; status?: number }): string {
   const msg = (error.message || "").toLowerCase();
   if (msg.includes("rate limit") || error.status === 429) {
-    return "Terlalu banyak percobaan. Silakan tunggu beberapa saat.";
+    return "Too many attempts. Please wait a moment.";
   }
   if (msg.includes("invalid login") || msg.includes("invalid credentials")) {
-    return "Email atau password salah. Periksa kembali.";
+    return "Invalid email or password. Please check again.";
   }
   if (msg.includes("email not confirmed")) {
-    return "Email belum terverifikasi. Cek inbox untuk link verifikasi.";
+    return "Email not verified. Check your inbox for the verification link.";
   }
-  return error.message || "Gagal login. Silakan coba lagi.";
+  return error.message || "Login failed. Please try again.";
 }
 
 export default function LoginPage() {
@@ -42,14 +42,14 @@ export default function LoginPage() {
     setError(null);
 
     if (!EMAIL_REGEX.test(email.trim())) {
-      setError("Format email tidak valid.");
+      setError("Invalid email format.");
       return;
     }
 
     const rateLimitKey = `login:${email}`;
     if (isRateLimited(rateLimitKey, 5, 60000)) {
       const remaining = getRemainingTime(rateLimitKey);
-      setError(`Terlalu banyak percobaan. Tunggu ${Math.ceil(remaining / 1000)} detik.`);
+      setError(`Too many attempts. Wait ${Math.ceil(remaining / 1000)} seconds.`);
       return;
     }
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
       await new Promise((r) => setTimeout(r, 300));
       window.location.replace("/");
     } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ export default function LoginPage() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-white/50">Memuat...</div>
+        <div className="animate-pulse text-white/50">Loading...</div>
       </main>
     );
   }
@@ -89,7 +89,7 @@ export default function LoginPage() {
         <Card variant="glass" className="p-8 border border-white/5 shadow-2xl">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Remula Money</h1>
-            <p className="text-white/50 text-sm">Masuk ke akun Anda</p>
+            <p className="text-white/50 text-sm">Sign in to your account</p>
           </div>
 
           {error && (
@@ -141,18 +141,18 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Memproses...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
-                "Masuk"
+                "Sign In"
               )}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-white/50 text-sm">
-            Belum punya akun?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="text-violet-400 hover:text-violet-300 font-semibold">
-              Daftar sekarang
+              Sign up now
             </Link>
           </p>
         </Card>

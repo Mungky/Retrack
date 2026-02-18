@@ -40,7 +40,21 @@ export default function CategoryManagement({
     if (!user?.id) return;
 
     try {
-      // Check if category has transactions
+      const { data: budgets, error: budgetError } = await supabaseClient
+        .from("budgets")
+        .select("id")
+        .eq("category_id", categoryId)
+        .eq("user_id", user.id)
+        .limit(1);
+
+      if (budgetError) throw budgetError;
+
+      if (budgets && budgets.length > 0) {
+        showToast(TOAST_MESSAGES.ERROR.CATEGORY_IN_BUDGET, "error");
+        setIsDeleteOpen(false);
+        return;
+      }
+
       const { data: transactions, error: checkError } = await supabaseClient
         .from("transactions")
         .select("id")
@@ -52,6 +66,7 @@ export default function CategoryManagement({
 
       if (transactions && transactions.length > 0) {
         showToast(TOAST_MESSAGES.ERROR.CATEGORY_HAS_TRANSACTIONS, "error");
+        setIsDeleteOpen(false);
         return;
       }
 
@@ -108,7 +123,7 @@ export default function CategoryManagement({
                   : "text-red-400"
               }`}
             >
-              {effectiveType === "income" ? "Pemasukan" : "Pengeluaran"}
+              {effectiveType === "income" ? "Income" : "Expense"}
             </p>
           </div>
         </div>
@@ -152,10 +167,10 @@ export default function CategoryManagement({
             }`}
           >
             {filterType === "all"
-              ? "Semua"
+              ? "All"
               : filterType === "income"
-              ? "Pemasukan"
-              : "Pengeluaran"}
+              ? "Income"
+              : "Expense"}
           </button>
         ))}
       </div>
@@ -169,13 +184,13 @@ export default function CategoryManagement({
         className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
       >
         <Plus size={20} />
-        <span>Tambah Kategori</span>
+        <span>Add Category</span>
       </button>
 
       {/* Categories List */}
       {filteredCategories.length === 0 ? (
         <div className="rounded-2xl bg-slate-900/50 border border-slate-800 p-12 text-center">
-          <p className="text-slate-400">Belum ada kategori</p>
+          <p className="text-slate-400">No categories yet</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -187,7 +202,7 @@ export default function CategoryManagement({
                 <div>
                   <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-red-400" />
-                    Pengeluaran
+                    Expense
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     {filteredCategories
@@ -201,7 +216,7 @@ export default function CategoryManagement({
                 <div>
                   <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    Pemasukan
+                    Income
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     {filteredCategories

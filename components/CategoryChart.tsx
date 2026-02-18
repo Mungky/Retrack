@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { formatCurrency } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const PieChart = dynamic(() => import("recharts").then((mod) => mod.PieChart), { ssr: false });
 const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie), { ssr: false });
@@ -31,6 +31,7 @@ export default function CategoryChart({
   subtitle = "Current period expenses",
   variant = "expense",
 }: CategoryChartProps) {
+  const { formatCurrency } = useCurrency();
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const colors = variant === "income" ? INCOME_COLORS : EXPENSE_COLORS;
   const emptyMsg =

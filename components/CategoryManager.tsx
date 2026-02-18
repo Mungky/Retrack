@@ -69,6 +69,22 @@ export default function CategoryManager({
 
     setIsDeleting(true);
     try {
+      const { data: budgets, error: budgetError } = await supabaseClient
+        .from("budgets")
+        .select("id")
+        .eq("category_id", categoryId)
+        .eq("user_id", user.id)
+        .limit(1);
+
+      if (budgetError) throw budgetError;
+
+      if (budgets && budgets.length > 0) {
+        showToast(TOAST_MESSAGES.ERROR.CATEGORY_IN_BUDGET, "error");
+        setIsDeleting(false);
+        setIsDeleteOpen(false);
+        return;
+      }
+
       const { data: transactions, error: checkError } = await supabaseClient
         .from("transactions")
         .select("id")
@@ -80,6 +96,8 @@ export default function CategoryManager({
 
       if (transactions && transactions.length > 0) {
         showToast(TOAST_MESSAGES.ERROR.CATEGORY_HAS_TRANSACTIONS, "error");
+        setIsDeleting(false);
+        setIsDeleteOpen(false);
         return;
       }
 
@@ -115,7 +133,7 @@ export default function CategoryManager({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 border border-slate-800 p-4 hover:border-slate-700 transition-all flex items-center gap-4"
+        className="group relative overflow-hidden rounded-2xl bg-card border border-border p-4 hover:border-primary/30 transition-all flex items-center gap-4"
       >
         <div
           className="p-3 rounded-xl flex-shrink-0"
@@ -133,16 +151,16 @@ export default function CategoryManager({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-semibold truncate">{category.name}</h3>
+          <h3 className="text-card-foreground font-semibold truncate">{category.name}</h3>
         </div>
         <div className="relative flex-shrink-0">
           <button
             ref={menuOpenId === category.id ? menuButtonRef : undefined}
             onClick={() => setMenuOpenId(menuOpenId === category.id ? null : category.id)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-muted transition-colors"
             aria-label="Menu"
           >
-            <MoreVertical className="text-white/50" size={20} />
+            <MoreVertical className="text-muted-foreground" size={20} />
           </button>
           {menuOpenId === category.id &&
             typeof document !== "undefined" &&
@@ -168,9 +186,9 @@ export default function CategoryManager({
                       setSelectedCategory(category);
                       setIsFormOpen(true);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                   >
-                    <Pencil size={16} className="text-cyan-400" />
+                    <Pencil size={16} className="text-primary" />
                     Edit
                   </button>
                   <button
@@ -179,7 +197,7 @@ export default function CategoryManager({
                       setSelectedCategory(category);
                       setIsDeleteOpen(true);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                   >
                     <Trash2 size={16} className="text-rose-400" />
                     Delete
@@ -195,44 +213,44 @@ export default function CategoryManager({
 
   return (
     <div className="space-y-4">
-      {/* Tabs */}
-      <div className="flex gap-2 px-1">
-        {(["expense", "income"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2.5 rounded-xl font-semibold transition-all ${
-              activeTab === tab
-                ? tab === "income"
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                  : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                : "bg-slate-900/50 text-slate-400 border border-slate-800"
-            }`}
-          >
-            {tab === "income" ? "Income" : "Expense"}
-          </button>
-        ))}
+      {/* Row: Add Category (left) | Toggle Expense/Income (right) - thumb-friendly */}
+      <div className="flex items-center gap-3">
+        <Button
+          onClick={() => {
+            setSelectedCategory(null);
+            setIsFormOpen(true);
+          }}
+          className="flex-1 justify-center"
+        >
+          <Plus size={18} />
+          Add Category
+        </Button>
+        <div className="flex rounded-xl border border-border bg-card p-1">
+          {(["expense", "income"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                activeTab === tab
+                  ? tab === "income"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab === "income" ? "Income" : "Expense"}
+            </button>
+          ))}
+        </div>
       </div>
-
-      {/* Add Category Button - same style as Add Wallet */}
-      <Button
-        onClick={() => {
-          setSelectedCategory(null);
-          setIsFormOpen(true);
-        }}
-        className="w-full"
-      >
-        <Plus size={18} />
-        Add Category
-      </Button>
 
       {/* Category List */}
       {filteredCategories.length === 0 ? (
-        <div className="rounded-2xl bg-slate-900/50 border border-slate-800 p-10 text-center">
-          <p className="text-slate-400 text-sm">
+        <div className="rounded-2xl bg-card border border-border p-10 text-center">
+          <p className="text-muted-foreground text-sm">
             No {activeTab} categories yet
           </p>
-          <p className="text-slate-500 text-xs mt-1">
+          <p className="text-muted-foreground/80 text-xs mt-1">
             Tap &quot;Add Category&quot; above
           </p>
         </div>
@@ -270,12 +288,12 @@ export default function CategoryManager({
             setIsDeleteOpen(false);
             setSelectedCategory(null);
           }}
-          title="Hapus Kategori"
-          description="Apakah Anda yakin ingin menghapus kategori ini? Tindakan ini tidak dapat dibatalkan."
+          title="Delete Category"
+          description="Are you sure you want to delete this category? This action cannot be undone."
           onConfirm={() => handleDelete(selectedCategory.id)}
           isLoading={isDeleting}
           variant="danger"
-          confirmLabel="Hapus"
+          confirmLabel="Delete"
         />
       )}
     </div>

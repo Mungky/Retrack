@@ -86,28 +86,31 @@
     --radius: 0.25rem;
   }
 
-  /* TEMA 3: FOREST (NATURE) - Light Mode */
+  /* TEMA 3: FOREST (NATURE) - Light Mode Clean */
   [data-theme="forest"] {
-    --background: 150 20% 97%;
-    --foreground: 150 35% 8%;
-    --card: 150 15% 95%;
+    --background: 150 20% 98%; /* Mint White */
+    --foreground: 150 35% 8%;  /* Dark Green Text */
+    --card: 0 0% 100%; /* Pure White */
     --card-foreground: 150 35% 8%;
-    --popover: 150 15% 95%;
+    --popover: 0 0% 100%;
     --popover-foreground: 150 35% 8%;
-    --primary: 142 71% 45%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 142 71% 45%; /* Emerald */
+    --primary-foreground: 0 0% 100%;
     --secondary: 150 12% 90%;
     --secondary-foreground: 150 35% 10%;
     --muted: 150 12% 92%;
-    --muted-foreground: 150 25% 28%;
-    --accent: 150 20% 88%;
+    --muted-foreground: 150 25% 40%;
+    --accent: 150 20% 94%;
     --accent-foreground: 150 35% 10%;
-    --destructive: 0 62.8% 42%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 150 12% 86%;
-    --input: 150 12% 86%;
+
+    /* BORDER & INPUT: Hijau Tua (Sama kayak Primary) biar tegas kayak tinta */
+    --border: 142 71% 45%;
+    --input: 142 71% 45%;
     --ring: 142 71% 45%;
-    --surface: 150 15% 96%;
+
+    --surface: 150 20% 98%;
     --radius: 1rem;
   }
 
@@ -196,9 +199,15 @@
 [data-theme="forest"] .bg-white\/20 {
   background-color: hsl(var(--foreground) / 0.15) !important;
 }
-[data-theme="forest"] .border-white\/5,
+[data-theme="forest"] .hover\:border-white\/20:hover,
+[data-theme="forest"] .border-white\/20 {
+  border-color: hsl(var(--border) / 0.9) !important;
+}
+[data-theme="forest"] .border-white\/5 {
+  border-color: hsl(var(--border) / 0.8) !important;
+}
 [data-theme="forest"] .border-white\/10 {
-  border-color: hsl(var(--foreground) / 0.12) !important;
+  border-color: hsl(var(--border)) !important;
 }
 [data-theme="forest"] input[type="date"]::-webkit-calendar-picker-indicator {
   filter: none !important;
@@ -225,25 +234,62 @@
   color: hsl(var(--primary)) !important;
 }
 
-/* Balance card - gradasi hijau */
+/* Balance card - hijau + border hijau (ala Sultan border emas) */
 [data-theme="forest"] .balance-card-gradient {
-  background: linear-gradient(135deg, hsl(142 71% 40%), hsl(150 70% 32%), hsl(155 65% 25%)) !important;
+  background: linear-gradient(135deg, hsl(152 50% 42%), hsl(155 45% 35%), hsl(158 42% 28%)) !important;
+  border: 2px solid hsl(var(--primary)) !important;
+  box-shadow: none !important;
 }
 [data-theme="forest"] .balance-card-gradient .bg-white\/5,
 [data-theme="forest"] .balance-card-gradient .bg-white\/20,
 [data-theme="forest"] .balance-card-gradient .bg-cyan-400\/10 {
-  background-color: transparent !important;
+  background-color: rgba(255 255 255 / 0.1) !important;
 }
 
-/* Dashboard summary & statistics cards - bg-slate-900 ke card */
+/* Forest: border hijau untuk cards */
+[data-theme="forest"] .glass-card,
+[data-theme="forest"] .fintech-card {
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Dashboard summary & statistics cards */
 [data-theme="forest"] .bg-slate-900 {
   background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--primary)) !important;
 }
 
+/* Forest: border hijau untuk list items */
+[data-theme="forest"] .border-slate-800 {
+  border-color: hsl(var(--primary)) !important;
+}
 /* Chart tooltips - dark ke card untuk forest */
 [data-theme="forest"] .chart-tooltip-bg {
   background-color: hsl(var(--card) / 0.98) !important;
   border-color: hsl(var(--border)) !important;
+}
+
+[data-theme="forest"] .focus\:ring-violet-500\/30:focus,
+[data-theme="forest"] .focus\:ring-emerald-500\/30:focus,
+[data-theme="forest"] .focus\:ring-rose-500\/30:focus,
+[data-theme="forest"] .focus\:ring-cyan-500\/30:focus,
+[data-theme="forest"] .focus\:ring-blue-500\/30:focus {
+  --tw-ring-color: hsl(var(--primary) / 0.35) !important;
+}
+[data-theme="forest"] .focus\:border-violet-500\/50:focus,
+[data-theme="forest"] .focus\:border-emerald-500\/50:focus,
+[data-theme="forest"] .focus\:border-rose-500\/50:focus,
+[data-theme="forest"] .focus\:border-cyan-500\/50:focus,
+[data-theme="forest"] .focus\:border-blue-500\/50:focus {
+  border-color: hsl(var(--primary)) !important;
+}
+[data-theme="forest"] .focus\:border-cyan-500\/30:focus {
+  border-color: hsl(var(--primary)) !important;
+}
+[data-theme="forest"] .focus\:ring-cyan-500\/20:focus {
+  --tw-ring-color: hsl(var(--primary) / 0.25) !important;
+}
+[data-theme="forest"] .focus\:ring-ring:focus {
+  --tw-ring-color: hsl(var(--primary) / 0.35) !important;
 }
 
 /* Sheet background - default dark, forest pakai card */

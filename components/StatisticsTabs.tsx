@@ -6,7 +6,7 @@ import { FileText, TrendingUp, BarChart3, ArrowUpCircle, ArrowDownCircle } from 
 import DateRangeFilter from "./DateRangeFilter";
 import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/date-range";
 import { normalizeTransactionType } from "@/lib/transaction-calc";
-import { formatCurrency } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import type { Category, Transaction } from "@/types";
 
@@ -36,6 +36,7 @@ export default function StatisticsTabs({
   transactions,
   categories,
 }: StatisticsTabsProps) {
+  const { formatCurrency } = useCurrency();
   const [dateRange, setDateRange] = useState<DateRangeKey>("this_month");
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("report");
 

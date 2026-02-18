@@ -22,6 +22,7 @@ import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { Z_INDEX } from "@/lib/z-index";
 import { Button } from "@/components/ui";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { CurrencySwitcher } from "@/components/ui/CurrencySwitcher";
 import type { Wallet, Category } from "@/types";
 
 interface ProfileClientProps {
@@ -78,7 +79,7 @@ export default function ProfileClient({
     return (
       <main className="min-h-screen pb-32 px-4 py-8">
         <div className="glass-card p-12 text-center">
-          <p className="text-white/60">User not found</p>
+          <p className="text-muted-foreground">User not found</p>
         </div>
       </main>
     );
@@ -118,8 +119,8 @@ export default function ProfileClient({
     <main className="min-h-screen pb-32 px-4 py-8 relative z-10 flex flex-col">
       {/* Header: User Card */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Control Center</h1>
-        <p className="text-white/60 text-sm mb-6">Manage your account and settings</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+        <p className="text-muted-foreground text-sm mb-6">Manage your account and settings</p>
 
         <div className="glass-card p-6">
           <div className="flex items-center gap-4 mb-4">
@@ -127,15 +128,15 @@ export default function ProfileClient({
               <User className="text-white" size={32} />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-white truncate">
+              <h2 className="text-xl font-bold text-card-foreground truncate">
                 {displayName}
               </h2>
-              <p className="text-white/60 text-sm truncate">{user.email}</p>
+              <p className="text-muted-foreground text-sm truncate">{user.email}</p>
               <span
-                className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold border ${
                   (accountStatus as string) === "Pro"
-                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                    : "bg-slate-700/50 text-slate-400 border border-slate-600"
+                    ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                    : "bg-muted text-muted-foreground border-border"
                 }`}
               >
                 {accountStatus}
@@ -143,16 +144,16 @@ export default function ProfileClient({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-            <Mail className="text-cyan-400 flex-shrink-0" size={20} />
-            <p className="text-white font-medium truncate">{user.email}</p>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+            <Mail className="text-primary flex-shrink-0" size={20} />
+            <p className="text-card-foreground font-medium truncate">{user.email}</p>
           </div>
         </div>
       </div>
 
       {/* Menu Settings - List Style */}
       <div className="flex-1 space-y-2">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
           Settings
         </h3>
         {menuItems.map((item) => {
@@ -162,28 +163,31 @@ export default function ProfileClient({
               key={item.label}
               variant="ghost"
               onClick={item.onClick}
-              className="w-full glass-card p-4 flex items-center gap-4 hover:border-white/20 transition-all text-left group h-auto justify-start"
+              className="w-full glass-card p-4 flex items-center gap-4 hover:border-primary/20 transition-all text-left group h-auto justify-start"
             >
-              <div className="p-2.5 rounded-xl bg-white/5 group-hover:bg-white/10 transition-colors">
-                <Icon className="text-cyan-400" size={22} />
+              <div className="p-2.5 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors">
+                <Icon className="text-primary" size={22} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-white">{item.label}</p>
-                <p className="text-sm text-white/50 truncate">{item.subtitle}</p>
+                <p className="font-semibold text-card-foreground">{item.label}</p>
+                <p className="text-sm text-muted-foreground truncate">{item.subtitle}</p>
               </div>
-              <ChevronRight className="text-white/40 flex-shrink-0" size={20} />
+              <ChevronRight className="text-muted-foreground flex-shrink-0" size={20} />
             </Button>
           );
         })}
       </div>
 
-      {/* Pengaturan Aplikasi */}
+      {/* App Settings */}
       <div className="mt-8">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">
-          Pengaturan Aplikasi
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+          App Settings
         </h3>
-        <div className="glass-card p-4 mb-4">
+        <div className="glass-card p-4 mb-4 space-y-6">
           <ThemeSwitcher />
+          <div className="pt-4 border-t border-border">
+            <CurrencySwitcher />
+          </div>
         </div>
       </div>
 
@@ -200,7 +204,7 @@ export default function ProfileClient({
       </div>
 
       {/* App Version Footer */}
-      <p className="text-center text-xs text-white/30 mt-8 mb-4">
+      <p className="text-center text-xs text-muted-foreground/60 mt-8 mb-4">
         App Version: {APP_VERSION}
       </p>
 

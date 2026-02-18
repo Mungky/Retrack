@@ -30,8 +30,8 @@ export function ConfirmDialog({
   onConfirm,
   isLoading = false,
   variant = "danger",
-  confirmLabel = "Hapus",
-  cancelLabel = "Batal",
+  confirmLabel = "Delete",
+  cancelLabel = "Cancel",
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
 
@@ -105,7 +105,7 @@ export function ConfirmDialog({
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                <span>Memproses...</span>
+                <span>Processing...</span>
               </>
             ) : (
               confirmLabel

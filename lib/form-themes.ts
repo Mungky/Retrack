@@ -1,7 +1,11 @@
 export type FormAccent = "emerald" | "rose" | "blue" | "violet" | "cyan";
 
+/** Flushed/underline base style for form inputs (no box, bg-transparent, border-b only) */
+export const FORM_INPUT_FLUSHED =
+  "w-full rounded-none border-0 border-b-2 border-input bg-transparent px-0 py-2 text-sm text-foreground focus:outline-none focus:ring-0 focus:border-b-primary focus:border-b-2 transition-colors";
+
 export interface FormTheme {
-  /** Focus ring + border classes for text inputs and selects */
+  /** Focus style for flushed inputs - border-bottom to primary (no ring) */
   inputFocus: string;
   /** Gradient classes for submit button */
   submitGradient: string;
@@ -15,35 +19,35 @@ export interface FormTheme {
 
 export const formThemes: Record<FormAccent, FormTheme> = {
   emerald: {
-    inputFocus: "focus:ring-emerald-500/30 focus:border-emerald-500/50",
+    inputFocus: "focus:ring-0 focus:border-b-primary focus:border-b-2",
     submitGradient: "bg-gradient-to-r from-emerald-500 to-green-600",
     submitShadow: "0 4px 14px rgba(16, 185, 129, 0.35)",
     selectedBorder: "border-emerald-500/50",
     bgTint: "bg-emerald-950/20",
   },
   rose: {
-    inputFocus: "focus:ring-rose-500/30 focus:border-rose-500/50",
+    inputFocus: "focus:ring-0 focus:border-b-primary focus:border-b-2",
     submitGradient: "bg-gradient-to-r from-rose-500 to-red-600",
     submitShadow: "0 4px 14px rgba(244, 63, 94, 0.35)",
     selectedBorder: "border-rose-500/50",
     bgTint: "bg-rose-950/20",
   },
   blue: {
-    inputFocus: "focus:ring-blue-500/30 focus:border-blue-500/50",
+    inputFocus: "focus:ring-0 focus:border-b-primary focus:border-b-2",
     submitGradient: "bg-gradient-to-r from-blue-500 to-indigo-600",
     submitShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
     selectedBorder: "border-blue-500/50",
     bgTint: "bg-blue-950/20",
   },
   violet: {
-    inputFocus: "focus:ring-violet-500/30 focus:border-violet-500/50",
+    inputFocus: "focus:ring-0 focus:border-b-primary focus:border-b-2",
     submitGradient: "bg-gradient-to-r from-violet-500 to-purple-600",
     submitShadow: "0 4px 14px rgba(139, 92, 246, 0.35)",
     selectedBorder: "border-violet-500/50",
     bgTint: "bg-violet-950/20",
   },
   cyan: {
-    inputFocus: "focus:ring-cyan-500/30 focus:border-cyan-500/50",
+    inputFocus: "focus:ring-0 focus:border-b-primary focus:border-b-2",
     submitGradient: "bg-gradient-to-r from-cyan-500 to-blue-600",
     submitShadow: "0 4px 14px rgba(6, 182, 212, 0.35)",
     selectedBorder: "border-cyan-500/50",

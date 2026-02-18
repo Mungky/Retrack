@@ -7,7 +7,7 @@ const PROTECTED_PATHS = [
   "/transactions",
   "/wallets",
   "/statistics",
-  "/profile",
+  "/settings",
   "/categories",
   "/budget",
 ];
@@ -89,7 +89,7 @@ export const config = {
     "/transactions/:path*",
     "/wallets/:path*",
     "/statistics/:path*",
-    "/profile/:path*",
+    "/settings/:path*",
     "/categories/:path*",
     "/budget/:path*",
     "/login",

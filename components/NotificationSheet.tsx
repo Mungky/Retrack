@@ -202,7 +202,7 @@ export default function NotificationSheet({
       {/* Sheet */}
       <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl max-h-[85vh] rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl backdrop-blur-xl flex flex-col"
+          className="sheet-panel mx-auto max-w-2xl max-h-[85vh] rounded-t-3xl rounded-b-none overflow-hidden sheet-bg-dark border-t border-x border-border shadow-2xl backdrop-blur-xl flex flex-col"
         >
           {/* Handle */}
           <div className="flex justify-center pt-3 pb-2">

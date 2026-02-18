@@ -11,6 +11,7 @@ import { useSheet } from "@/contexts/SheetContext";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import CurrencyInput from "./CurrencyInput";
+import { Select, Input } from "@/components/ui";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
@@ -196,7 +197,7 @@ export default function EditTransactionSheet({
       />
       <div className="fixed bottom-0 left-0 right-0 animate-in" style={{ zIndex: Z_INDEX.sheet }}>
         <div
-          className="mx-auto max-w-2xl rounded-t-3xl rounded-b-none sheet-bg-dark border-t border-x shadow-2xl"
+          className="sheet-panel mx-auto max-w-2xl rounded-t-3xl rounded-b-none overflow-hidden sheet-bg-dark border-t border-x border-border shadow-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="flex justify-center pt-3 pb-2">
@@ -205,7 +206,7 @@ export default function EditTransactionSheet({
           <div className="flex items-center justify-between px-6 pb-4 border-b border-white/10">
             <div className="flex items-center gap-3">
               <div className={`w-2 h-2 rounded-full ${isIncome ? 'bg-emerald-400' : 'bg-rose-400'} transition-colors`} />
-              <h2 className="text-xl font-bold text-white">Edit Transaksi</h2>
+              <h2 className="text-xl font-bold text-white">Edit Transaction</h2>
             </div>
             <button
               onClick={onClose}
@@ -239,12 +240,11 @@ export default function EditTransactionSheet({
             <label className="block text-sm font-medium text-slate-400 mb-2">
               Deskripsi
             </label>
-            <input
+            <Input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Contoh: Makan siang, Gaji bulanan"
-              className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
             />
           </div>
 
@@ -262,7 +262,7 @@ export default function EditTransactionSheet({
                   : "bg-white/5 text-slate-400 border border-white/10"
               }`}
             >
-              Pengeluaran
+              Expense
             </button>
             <button
               type="button"
@@ -276,7 +276,7 @@ export default function EditTransactionSheet({
                   : "bg-white/5 text-slate-400 border border-white/10"
               }`}
             >
-              Pemasukan
+              Income
             </button>
           </div>
 
@@ -284,7 +284,7 @@ export default function EditTransactionSheet({
           {!isLoadingCategories && filteredCategories.length > 0 && (
             <div>
               <label className="block text-sm font-semibold text-slate-300 mb-2">
-                Kategori
+                Category
               </label>
               <div className="grid grid-cols-4 gap-3">
                 {filteredCategories.map((category) => {
@@ -333,26 +333,25 @@ export default function EditTransactionSheet({
               <label className="block text-sm font-medium text-slate-400 mb-2">
                 Wallet
               </label>
-              <select
+              <Select
                 value={selectedWallet}
                 onChange={(e) => setSelectedWallet(e.target.value)}
-                className={`w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 transition-all ${theme.inputFocus}`}
-                style={{ colorScheme: 'dark' }}
+                className={`text-foreground ${theme.inputFocus}`}
               >
-                <option value="">Pilih wallet</option>
+                <option value="">Select wallet</option>
                 {wallets.map((wallet) => (
                   <option key={wallet.id} value={wallet.id}>
                     {wallet.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
 
           {/* Date Picker */}
           <div>
             <label className="block text-sm font-medium text-slate-400 mb-2">
-              Tanggal
+              Date
             </label>
             <div className="relative group">
               <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" size={20} />
@@ -360,8 +359,7 @@ export default function EditTransactionSheet({
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className={`w-full pl-12 pr-4 py-4 text-white bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 transition-all ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
-                style={{ colorScheme: 'dark' }}
+                className={`w-full rounded-none border-0 border-b-2 border-input bg-transparent pl-12 pr-4 py-2 text-foreground focus:outline-none focus:ring-0 transition-colors ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
               />
             </div>
             <p className="mt-2 text-xs text-white/40">
@@ -384,10 +382,10 @@ export default function EditTransactionSheet({
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
-                <span>Memproses...</span>
+                <span>Processing...</span>
               </>
             ) : (
-              "Update Transaksi"
+              "Update Transaction"
             )}
           </button>
         </form>
