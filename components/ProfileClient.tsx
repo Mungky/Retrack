@@ -9,9 +9,10 @@ import {
   ChevronRight,
   Wallet as WalletIcon,
   FolderTree,
-  Download,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 import { useToast } from "@/contexts/ToastContext";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +24,7 @@ import { Z_INDEX } from "@/lib/z-index";
 import { Button } from "@/components/ui";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { CurrencySwitcher } from "@/components/ui/CurrencySwitcher";
+import DataManagementCard from "@/components/settings/DataManagementCard";
 import type { Wallet, Category } from "@/types";
 
 interface ProfileClientProps {
@@ -36,6 +38,8 @@ export default function ProfileClient({
 }: ProfileClientProps) {
   const { user, loading, signOut } = useAuth();
   const { showToast } = useToast();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const [walletsSheetOpen, setWalletsSheetOpen] = useState(false);
   const [categoriesSheetOpen, setCategoriesSheetOpen] = useState(false);
   const [walletsPortalMounted, setWalletsPortalMounted] = useState(false);
@@ -63,10 +67,6 @@ export default function ProfileClient({
     }
   };
 
-  const handleExportData = () => {
-    showToast(TOAST_MESSAGES.SUCCESS.EXPORT_COMING_SOON, "success");
-  };
-
   if (loading) {
     return (
       <main className="min-h-screen pb-32 px-4 py-8 flex items-center justify-center">
@@ -86,7 +86,6 @@ export default function ProfileClient({
   }
 
   const displayName = user.user_metadata?.name || user.email?.split("@")[0] || "User";
-  const accountStatus: "Free" | "Pro" = "Free"; // TODO: integrate with premium/subscription
 
   const menuItems = [
     {
@@ -107,12 +106,6 @@ export default function ProfileClient({
         setCategoriesPortalMounted(true);
       },
     },
-    {
-      label: "Export Data",
-      subtitle: "Coming soon",
-      icon: Download,
-      onClick: handleExportData,
-    },
   ];
 
   return (
@@ -132,15 +125,26 @@ export default function ProfileClient({
                 {displayName}
               </h2>
               <p className="text-muted-foreground text-sm truncate">{user.email}</p>
-              <span
-                className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold border ${
-                  (accountStatus as string) === "Pro"
-                    ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                    : "bg-muted text-muted-foreground border-border"
-                }`}
-              >
-                {accountStatus}
-              </span>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                    isPro
+                      ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                      : "bg-muted text-muted-foreground border-border"
+                  }`}
+                >
+                  {isPro ? "Pro" : "Free"}
+                </span>
+                {!isPro && (
+                  <button
+                    type="button"
+                    onClick={openPremium}
+                    className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/40 hover:bg-primary/30 transition-colors"
+                  >
+                    Upgrade to Pro
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -189,6 +193,11 @@ export default function ProfileClient({
             <CurrencySwitcher />
           </div>
         </div>
+      </div>
+
+      {/* Data Management */}
+      <div className="mt-8">
+        <DataManagementCard />
       </div>
 
       {/* Logout */}

@@ -8,6 +8,8 @@ import QuickActionsRow from "./QuickActionsRow";
 import NotificationsBadge from "./NotificationsBadge";
 import type { DateRangeKey } from "@/lib/date-range";
 import type { Transaction, Wallet } from "@/types";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 
 interface DashboardClientProps {
   wallets: Wallet[];
@@ -19,6 +21,16 @@ export default function DashboardClient({
   transactions,
 }: DashboardClientProps) {
   const [dateRange, setDateRange] = useState<DateRangeKey>("this_month");
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
+
+  const handleDateRangeChange = (range: DateRangeKey) => {
+    if (!isPro && range !== "this_month") {
+      openPremium();
+      return;
+    }
+    setDateRange(range);
+  };
 
   return (
     <div className="space-y-6">
@@ -30,7 +42,10 @@ export default function DashboardClient({
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+          <DateRangeFilter
+            value={isPro ? dateRange : "this_month"}
+            onChange={handleDateRangeChange}
+          />
           <NotificationsBadge />
         </div>
       </div>

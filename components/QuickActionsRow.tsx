@@ -1,7 +1,8 @@
 "use client";
 
-import { Plus, Minus, ArrowRightLeft } from "lucide-react";
+import { Plus, Minus, ArrowRightLeft, Calculator } from "lucide-react";
 import AddTransactionSheet from "./AddTransactionSheet";
+import CalculatorDialog from "./CalculatorDialog";
 import QuickTransferSheet from "./QuickTransferSheet";
 import { useSheet } from "@/contexts/SheetContext";
 import { useState } from "react";
@@ -25,6 +26,12 @@ const actions = [
     color: "bg-blue-500/20 text-blue-400",
     handler: "transfer",
   },
+  {
+    label: "Tally",
+    icon: Calculator,
+    color: "bg-cyan-500/20 text-cyan-400",
+    handler: "tally",
+  },
 ];
 
 export default function QuickActionsRow() {
@@ -32,12 +39,20 @@ export default function QuickActionsRow() {
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [tallyOpen, setTallyOpen] = useState(false);
+  const [expenseInitialData, setExpenseInitialData] = useState<
+    { amount: number; description: string } | undefined
+  >();
+  const [incomeInitialData, setIncomeInitialData] = useState<
+    { amount: number; description: string } | undefined
+  >();
 
   const handleClick = (handler: string) => {
     setIsSheetOpen(true);
     if (handler === "income") setIncomeOpen(true);
     else if (handler === "expense") setExpenseOpen(true);
     else if (handler === "transfer") setTransferOpen(true);
+    else if (handler === "tally") setTallyOpen(true);
   };
 
   const closeSheet = () => {
@@ -45,6 +60,23 @@ export default function QuickActionsRow() {
     setIncomeOpen(false);
     setExpenseOpen(false);
     setTransferOpen(false);
+    setTallyOpen(false);
+    setExpenseInitialData(undefined);
+    setIncomeInitialData(undefined);
+  };
+
+  const handleTallySave = (total: number, description: string, type: "income" | "expense") => {
+    setTallyOpen(false);
+    setIsSheetOpen(false);
+    const data = { amount: total, description };
+    if (type === "expense") {
+      setExpenseInitialData(data);
+      setExpenseOpen(true);
+    } else {
+      setIncomeInitialData(data);
+      setIncomeOpen(true);
+    }
+    setIsSheetOpen(true);
   };
 
   return (
@@ -70,13 +102,20 @@ export default function QuickActionsRow() {
         isOpen={incomeOpen}
         onClose={closeSheet}
         transactionType="income"
+        initialData={incomeInitialData}
       />
       <AddTransactionSheet
         isOpen={expenseOpen}
         onClose={closeSheet}
         transactionType="expense"
+        initialData={expenseInitialData}
       />
       <QuickTransferSheet isOpen={transferOpen} onClose={closeSheet} />
+      <CalculatorDialog
+        isOpen={tallyOpen}
+        onClose={closeSheet}
+        onSave={handleTallySave}
+      />
     </>
   );
 }

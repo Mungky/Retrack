@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import CategoryFormSheet from "./CategoryFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { getCategoryIcon } from "@/lib/category-icons";
@@ -9,6 +9,8 @@ import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 import type { Category } from "@/types";
 
 interface CategoryManagementProps {
@@ -20,6 +22,8 @@ export default function CategoryManagement({
 }: CategoryManagementProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -131,21 +135,29 @@ export default function CategoryManagement({
         <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => {
+                if (!isPro) {
+                  openPremium();
+                  return;
+                }
                 setSelectedCategory(category);
                 setIsFormOpen(true);
               }}
               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
             >
-              <Pencil className="text-cyan-400" size={16} />
+              {!isPro ? <Lock className="text-amber-500" size={16} /> : <Pencil className="text-cyan-400" size={16} />}
             </button>
             <button
               onClick={() => {
+                if (!isPro) {
+                  openPremium();
+                  return;
+                }
                 setSelectedCategory(category);
                 setIsDeleteOpen(true);
               }}
               className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
             >
-              <Trash2 className="text-red-400" size={16} />
+              {!isPro ? <Lock className="text-amber-500" size={16} /> : <Trash2 className="text-red-400" size={16} />}
             </button>
           </div>
       </div>
@@ -178,12 +190,16 @@ export default function CategoryManagement({
       {/* Add Button */}
       <button
         onClick={() => {
+          if (!isPro) {
+            openPremium();
+            return;
+          }
           setSelectedCategory(null);
           setIsFormOpen(true);
         }}
-        className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+        className={`w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${!isPro ? "opacity-90" : ""}`}
       >
-        <Plus size={20} />
+        {!isPro ? <Lock size={20} className="text-amber-500" /> : <Plus size={20} />}
         <span>Add Category</span>
       </button>
 

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
@@ -12,6 +12,8 @@ import { useToast } from "@/contexts/ToastContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import type { Budget, Category, Transaction } from "@/types";
 
@@ -46,7 +48,11 @@ export default function BudgetClient({
   const { formatCurrency } = useCurrency();
   const { showToast } = useToast();
   const { user } = useAuth();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const [budgets, setBudgets] = useState<BudgetWithCategory[]>(initialBudgets);
+
+  const canAddBudget = isPro || budgets.length < 1;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<BudgetWithCategory | null>(null);
   const [deletingBudget, setDeletingBudget] = useState<BudgetWithCategory | null>(null);
@@ -150,12 +156,16 @@ export default function BudgetClient({
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
+              if (!canAddBudget) {
+                openPremium();
+                return;
+              }
               setEditingBudget(null);
               setIsFormOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary/20 border border-primary/40 text-primary font-semibold hover:bg-primary/30 transition-all"
+            className={`inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-primary/20 border border-primary/40 text-primary font-semibold hover:bg-primary/30 transition-all ${!canAddBudget ? "opacity-85" : ""}`}
           >
-            <Plus size={20} />
+            {!canAddBudget ? <Lock size={20} className="text-amber-500" /> : <Plus size={20} />}
             Create Budget
           </button>
         </div>
@@ -167,11 +177,16 @@ export default function BudgetClient({
           <p className="text-white/50 mb-4">No budgets yet. Start by adding a budget.</p>
           <button
             onClick={() => {
+              if (!canAddBudget) {
+                openPremium();
+                return;
+              }
               setEditingBudget(null);
               setIsFormOpen(true);
             }}
             className="px-5 py-2.5 rounded-xl bg-primary/20 text-primary font-medium hover:bg-primary/30 transition-colors"
           >
+            <Plus size={18} />
             Add First Budget
           </button>
         </div>

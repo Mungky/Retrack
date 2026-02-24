@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletIcon, Plus } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletIcon, Plus, Lock } from "lucide-react";
 import WalletFormSheet from "./WalletFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { useToast } from "@/contexts/ToastContext";
@@ -64,7 +66,10 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
   const { showToast } = useToast();
   const { formatCurrency, formatCurrencyCompact } = useCurrency();
   const { user } = useAuth();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const [wallets, setWallets] = useState<Wallet[]>(initialWallets);
+  const canAddWallet = isPro || wallets.length < 5;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
@@ -144,12 +149,16 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
       {/* Add Wallet Button - uses primary for theme (Sultan=gold, Default=violet, Forest=green) */}
       <button
         onClick={() => {
+          if (!canAddWallet) {
+            openPremium();
+            return;
+          }
           setSelectedWallet(null);
           setIsFormOpen(true);
         }}
-        className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all"
+        className={`w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all ${!canAddWallet ? "opacity-90" : ""}`}
       >
-        <Plus size={18} />
+        {!canAddWallet ? <Lock size={18} className="text-amber-500" /> : <Plus size={18} />}
         Add Wallet
       </button>
 

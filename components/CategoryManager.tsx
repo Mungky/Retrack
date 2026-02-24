@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Plus, Pencil, Trash2, MoreVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, MoreVertical, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
@@ -13,6 +13,8 @@ import CategoryFormSheet from "./CategoryFormSheet";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 import type { Category } from "@/types";
 
 interface CategoryManagerProps {
@@ -30,6 +32,8 @@ export default function CategoryManager({
 }: CategoryManagerProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [activeTab, setActiveTab] = useState<TabType>("expense");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -183,23 +187,31 @@ export default function CategoryManager({
                   <button
                     onClick={() => {
                       setMenuOpenId(null);
+                      if (!isPro) {
+                        openPremium();
+                        return;
+                      }
                       setSelectedCategory(category);
                       setIsFormOpen(true);
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                   >
-                    <Pencil size={16} className="text-primary" />
+                    {!isPro ? <Lock size={16} className="text-amber-500" /> : <Pencil size={16} className="text-primary" />}
                     Edit
                   </button>
                   <button
                     onClick={() => {
                       setMenuOpenId(null);
+                      if (!isPro) {
+                        openPremium();
+                        return;
+                      }
                       setSelectedCategory(category);
                       setIsDeleteOpen(true);
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                   >
-                    <Trash2 size={16} className="text-rose-400" />
+                    {!isPro ? <Lock size={16} className="text-amber-500" /> : <Trash2 size={16} className="text-rose-400" />}
                     Delete
                   </button>
                 </div>
@@ -217,12 +229,16 @@ export default function CategoryManager({
       <div className="flex items-center gap-3">
         <Button
           onClick={() => {
+            if (!isPro) {
+              openPremium();
+              return;
+            }
             setSelectedCategory(null);
             setIsFormOpen(true);
           }}
-          className="flex-1 justify-center"
+          className={`flex-1 justify-center gap-2 ${!isPro ? "opacity-85" : ""}`}
         >
-          <Plus size={18} />
+          {!isPro ? <Lock size={18} className="text-amber-500" /> : <Plus size={18} />}
           Add Category
         </Button>
         <div className="flex rounded-xl border border-border bg-card p-1">

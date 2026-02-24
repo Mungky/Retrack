@@ -24,6 +24,7 @@ export const TOAST_MESSAGES = {
     ALL_CAUGHT_UP: "All caught up!",
     ALL_NOTIFICATIONS_CLEARED: "All notifications cleared",
     EXPORT_COMING_SOON: "Export Data feature coming soon!",
+    EXPORT_SUCCESS: "Transaction history downloaded successfully!",
   },
   ERROR: {
     GENERIC: "Something went wrong. Please try again.",

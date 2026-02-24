@@ -1,7 +1,10 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { Lock } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 
 type ThemeId = "default" | "sultan" | "forest";
 
@@ -33,7 +36,17 @@ const THEMES: {
 
 export function ThemeSwitcher() {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const currentTheme = (theme || resolvedTheme || "default") as ThemeId;
+
+  const handleThemeClick = (id: ThemeId) => {
+    if ((id === "sultan" || id === "forest") && !isPro) {
+      openPremium();
+      return;
+    }
+    setTheme(id);
+  };
 
   return (
     <div className="space-y-3">
@@ -41,46 +54,57 @@ export function ThemeSwitcher() {
         Choose app theme
       </p>
       <div className="grid grid-cols-3 gap-3">
-        {THEMES.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTheme(t.id)}
-            className={cn(
-              "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
-              "hover:scale-[1.02] active:scale-[0.98]",
-              currentTheme === t.id
-                ? "border-primary bg-primary/10"
-                : "border-border/50 bg-card hover:border-primary/50"
-            )}
-          >
-            <div
+        {THEMES.map((t) => {
+          const isLocked = !isPro && (t.id === "sultan" || t.id === "forest");
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => handleThemeClick(t.id)}
               className={cn(
-                "w-full aspect-[4/3] rounded-lg bg-gradient-to-br",
-                t.preview
-              )}
-            />
-            <span
-              className={cn(
-                "text-lg leading-none",
-                currentTheme === t.id ? "opacity-100" : "opacity-70"
+                "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all",
+                "hover:scale-[1.02] active:scale-[0.98]",
+                currentTheme === t.id
+                  ? "border-primary bg-primary/10"
+                  : "border-border/50 bg-card hover:border-primary/50",
+                isLocked && "opacity-75"
               )}
             >
-              {t.icon}
-            </span>
-            <span
-              className={cn(
-                "text-xs font-semibold",
-                currentTheme === t.id ? "text-primary" : "text-muted-foreground"
+              <div
+                className={cn(
+                  "w-full aspect-[4/3] rounded-lg bg-gradient-to-br relative",
+                  t.preview,
+                  isLocked && "opacity-80"
+                )}
+              >
+                {isLocked && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                    <Lock size={20} className="text-white drop-shadow" />
+                  </span>
+                )}
+              </div>
+              <span
+                className={cn(
+                  "text-lg leading-none",
+                  currentTheme === t.id ? "opacity-100" : "opacity-70"
+                )}
+              >
+                {t.icon}
+              </span>
+              <span
+                className={cn(
+                  "text-xs font-semibold",
+                  currentTheme === t.id ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                {t.label}
+              </span>
+              {currentTheme === t.id && (
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
               )}
-            >
-              {t.label}
-            </span>
-            {currentTheme === t.id && (
-              <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
-            )}
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

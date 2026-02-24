@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { FileText, TrendingUp, BarChart3, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { FileText, TrendingUp, BarChart3, ArrowUpCircle, ArrowDownCircle, Lock } from "lucide-react";
 import DateRangeFilter from "./DateRangeFilter";
 import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/date-range";
+import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { usePremiumModal } from "@/stores/premiumModalStore";
 import { normalizeTransactionType } from "@/lib/transaction-calc";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
@@ -32,13 +34,25 @@ const TABS = [
   { id: "cashflow" as const, label: "Cash Flow", icon: BarChart3 },
 ];
 
+const PRO_TABS: (typeof TABS)[number]["id"][] = ["balance", "cashflow"];
+
 export default function StatisticsTabs({
   transactions,
   categories,
 }: StatisticsTabsProps) {
   const { formatCurrency } = useCurrency();
+  const isPro = useSubscriptionStore((s) => s.isPro);
+  const { open: openPremium } = usePremiumModal();
   const [dateRange, setDateRange] = useState<DateRangeKey>("this_month");
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("report");
+
+  const handleDateRangeChange = (range: DateRangeKey) => {
+    if (!isPro && range !== "this_month") {
+      openPremium();
+      return;
+    }
+    setDateRange(range);
+  };
 
   const filtered = useMemo(
     () => filterTransactionsByRange(transactions, dateRange),
@@ -119,27 +133,42 @@ export default function StatisticsTabs({
           <h1 className="font-playfair text-3xl font-bold text-white mb-2">Statistics</h1>
           <p className="text-white/60 text-sm">Your financial analysis</p>
         </div>
-        <div className="flex items-center gap-3">
-          <DateRangeFilter value={dateRange} onChange={setDateRange} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <DateRangeFilter
+            value={isPro ? dateRange : "this_month"}
+            onChange={handleDateRangeChange}
+          />
         </div>
       </div>
 
       {/* Tab Nav */}
       <div className="flex gap-1 p-1 fintech-card rounded-2xl">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
-              activeTab === id
-                ? "bg-primary/20 text-primary"
-                : "text-white/60 hover:text-white/80"
-            }`}
-          >
-            <Icon size={18} />
-            {label}
-          </button>
-        ))}
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const isLocked = !isPro && PRO_TABS.includes(id);
+          const handleClick = () => {
+            if (isLocked) {
+              openPremium();
+              return;
+            }
+            setActiveTab(id);
+          };
+          return (
+            <button
+              key={id}
+              onClick={handleClick}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${
+                activeTab === id
+                  ? "bg-primary/20 text-primary"
+                  : isLocked
+                    ? "text-white/40 hover:text-white/60"
+                    : "text-white/60 hover:text-white/80"
+              }`}
+            >
+              {isLocked ? <Lock size={16} /> : <Icon size={18} />}
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}

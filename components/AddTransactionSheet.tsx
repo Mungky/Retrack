@@ -25,9 +25,16 @@ interface AddTransactionSheetProps {
   onClose: () => void;
   /** Fixed type - no toggle, form is either Income or Expense */
   transactionType: "income" | "expense";
+  /** Pre-fill amount and description (e.g. from Calculator) */
+  initialData?: { amount: number; description: string };
 }
 
-export default function AddTransactionSheet({ isOpen, onClose, transactionType }: AddTransactionSheetProps) {
+export default function AddTransactionSheet({
+  isOpen,
+  onClose,
+  transactionType,
+  initialData,
+}: AddTransactionSheetProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -64,10 +71,22 @@ export default function AddTransactionSheet({ isOpen, onClose, transactionType }
         fetchWallets();
         fetchCategories();
       }
+      if (initialData) {
+        setAmount(initialData.amount);
+        setDescription(initialData.description);
+      }
     } else {
       setIsSheetOpen(false);
     }
-  }, [isOpen, user?.id, setIsSheetOpen]);
+  }, [isOpen, user?.id, setIsSheetOpen, initialData]);
+
+  // Reset form when closed so next open starts clean
+  useEffect(() => {
+    if (!isOpen) {
+      setAmount(0);
+      setDescription("");
+    }
+  }, [isOpen]);
 
   // Refetch categories when user adds/updates one (e.g. from Settings > Manage Categories)
   useEffect(() => {
