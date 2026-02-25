@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { revalidateTransactionPaths } from "@/app/actions";
-import { Loader2, Receipt, Banknote, Calendar } from "lucide-react";
+import { Loader2, Calendar, WifiOff } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,9 +15,11 @@ import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import { BaseSheet } from "@/components/shared/BaseSheet";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
-import { getCategoryStyle } from "@/lib/category-icons";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import { Button, Input, Select } from "@/components/ui";
+import { useOptimisticTransactionStore } from "@/stores/optimisticTransactionStore";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { useHaptic } from "@/hooks/useHaptic";
 import type { Category, Wallet } from "@/types";
 
 interface AddTransactionSheetProps {
@@ -39,6 +41,9 @@ export default function AddTransactionSheet({
   const { showToast } = useToast();
   const { user } = useAuth();
   const { setIsSheetOpen } = useSheet();
+  const { addOptimistic, removeOptimistic } = useOptimisticTransactionStore();
+  const isOnline = useNetworkStatus();
+  const { lightTap, successVibrate } = useHaptic();
   const [amount, setAmount] = useState(0);
   const [description, setDescription] = useState("");
   const isIncome = transactionType === "income";
@@ -47,7 +52,6 @@ export default function AddTransactionSheet({
   const [selectedDate, setSelectedDate] = useState(getTodayLocal());
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
@@ -168,6 +172,12 @@ export default function AddTransactionSheet({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    lightTap();
+
+    if (!isOnline) {
+      showToast(TOAST_MESSAGES.ERROR.OFFLINE, "error");
+      return;
+    }
 
     if (!user?.id) {
       showToast(TOAST_MESSAGES.ERROR.USER_NOT_FOUND_LOGIN, "error");
@@ -194,70 +204,81 @@ export default function AddTransactionSheet({
       return;
     }
 
-    try {
-      setIsLoading(true);
+    const selectedWalletData = wallets.find((w) => w.id === selectedWallet);
+    if (!selectedWalletData) {
+      showToast("Wallet not found", "error");
+      return;
+    }
 
-      const selectedWalletData = wallets.find(w => w.id === selectedWallet);
-      
-      if (!selectedWalletData) {
-        throw new Error("Wallet not found");
-      }
-
-      let categoryId: string | null = null;
-      if (selectedCategory) {
-        const foundCategory = categories.find(cat => 
-          cat.name.toLowerCase() === selectedCategory.toLowerCase() || 
+    let categoryId: string | null = null;
+    if (selectedCategory) {
+      const foundCategory = categories.find(
+        (cat) =>
+          cat.name.toLowerCase() === selectedCategory.toLowerCase() ||
           cat.id === selectedCategory
-        );
-        if (foundCategory) {
-          categoryId = foundCategory.id;
-        } else {
-          categoryId = selectedCategory;
-        }
-      }
+      );
+      categoryId = foundCategory ? foundCategory.id : selectedCategory;
+    }
 
-      const transactionData: any = {
+    const tempId = `opt-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const walletDelta = isIncome ? amount : -amount;
+
+    addOptimistic(
+      {
+        id: tempId,
         amount,
         type: isIncome ? "income" : "expense",
         date: selectedDate,
         description: description.trim(),
         category_id: categoryId,
-        user_id: user.id,
         source_wallet_id: selectedWallet,
         destination_wallet_id: null,
-      };
+      },
+      { [selectedWallet]: walletDelta }
+    );
 
-      const { data, error } = await supabaseClient
-        .from("transactions")
-        .insert([transactionData])
-        .select();
+    onClose();
+    resetForm();
+    showToast(TOAST_MESSAGES.SUCCESS.SAVING_TRANSACTION, "success");
 
-      if (error) {
-        console.error("Supabase error:", error.code, error.message);
-        throw error;
-      }
+    const transactionData = {
+      amount,
+      type: isIncome ? "income" : "expense",
+      date: selectedDate,
+      description: description.trim(),
+      category_id: categoryId,
+      user_id: user.id,
+      source_wallet_id: selectedWallet,
+      destination_wallet_id: null,
+    };
 
-      await revalidateTransactionPaths();
-      router.refresh();
-      showToast(TOAST_MESSAGES.SUCCESS.TRANSACTION_SAVED, "success");
-      window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
-      onClose();
-      resetForm();
-    } catch (error: any) {
-      console.error("Error saving transaction:", error);
-      
-      let errorMessage = error?.message || "Failed to save transaction. Please try again.";
-      
-      if (error?.message?.toLowerCase().includes("rate limit") || 
+    (async () => {
+      try {
+        const { error } = await supabaseClient
+          .from("transactions")
+          .insert([transactionData])
+          .select();
+
+        if (error) throw error;
+
+        removeOptimistic(tempId);
+        await revalidateTransactionPaths();
+        router.refresh();
+        successVibrate();
+        showToast(TOAST_MESSAGES.SUCCESS.TRANSACTION_SAVED, "success");
+        window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
+      } catch (error: any) {
+        removeOptimistic(tempId);
+        console.error("Error saving transaction:", error);
+        const msg =
+          error?.message?.toLowerCase().includes("rate limit") ||
           error?.message?.toLowerCase().includes("too many requests") ||
-          error?.status === 429) {
-        errorMessage = "Too many requests. Please wait a moment and try again.";
+          error?.status === 429
+            ? "Too many requests. Please wait a moment."
+            : error?.message || "Gagal menyimpan transaksi. Coba lagi.";
+        showToast(msg, "error");
       }
-      
-      showToast(errorMessage, "error");
-    } finally {
-      setIsLoading(false);
-    }
+    })();
   };
 
   const resetForm = () => {
@@ -276,7 +297,7 @@ export default function AddTransactionSheet({
       titleAccent={
         <div className={`w-2 h-2 rounded-full ${isIncome ? "bg-emerald-400" : "bg-rose-400"}`} />
       }
-      disabled={isLoading}
+                  disabled={false}
     >
       <form
             onSubmit={handleSubmit}
@@ -295,7 +316,7 @@ export default function AddTransactionSheet({
                 value={amount}
                 onChange={setAmount}
                 accent={accent}
-                disabled={isLoading}
+                disabled={false}
               />
             </div>
 
@@ -309,7 +330,7 @@ export default function AddTransactionSheet({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g. Lunch, Monthly salary"
-                disabled={isLoading}
+                disabled={false}
               />
             </div>
 
@@ -342,7 +363,7 @@ export default function AddTransactionSheet({
                         key={category.id}
                         type="button"
                         onClick={() => setSelectedCategory(category.id)}
-                        disabled={isLoading}
+                        disabled={false}
                         className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all disabled:opacity-50 ${
                           isSelected
                             ? `${theme.selectedBorder}`
@@ -383,7 +404,7 @@ export default function AddTransactionSheet({
                   <Select
                     value={selectedWallet}
                     onChange={(e) => setSelectedWallet(e.target.value)}
-                    disabled={isLoading || wallets.length === 0}
+                    disabled={wallets.length === 0}
                     className={`text-foreground disabled:opacity-50 ${theme.inputFocus}`}
                   >
                     {wallets.map((wallet) => (
@@ -407,7 +428,7 @@ export default function AddTransactionSheet({
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  disabled={isLoading}
+                  disabled={false}
                   className={`w-full rounded-none border-0 border-b-2 border-input bg-transparent pl-12 pr-4 py-2 text-foreground focus:outline-none focus:ring-0 disabled:opacity-50 transition-colors ${theme.inputFocus} [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:ml-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5`}
                 />
               </div>
@@ -424,14 +445,14 @@ export default function AddTransactionSheet({
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={!isOnline}
               size="lg"
               className="w-full"
             >
-              {isLoading ? (
+              {!isOnline ? (
                 <>
-                  <Loader2 className="animate-spin" size={20} />
-                  <span>Saving...</span>
+                  <WifiOff size={18} className="shrink-0" />
+                  Menunggu koneksi...
                 </>
               ) : (
                 isIncome ? "Save Income" : "Save Expense"

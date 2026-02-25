@@ -5,6 +5,7 @@ import AddTransactionSheet from "./AddTransactionSheet";
 import CalculatorDialog from "./CalculatorDialog";
 import QuickTransferSheet from "./QuickTransferSheet";
 import { useSheet } from "@/contexts/SheetContext";
+import { useHaptic } from "@/hooks/useHaptic";
 import { useState } from "react";
 
 const actions = [
@@ -36,6 +37,7 @@ const actions = [
 
 export default function QuickActionsRow() {
   const { setIsSheetOpen } = useSheet();
+  const { lightTap } = useHaptic();
   const [incomeOpen, setIncomeOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -48,6 +50,7 @@ export default function QuickActionsRow() {
   >();
 
   const handleClick = (handler: string) => {
+    lightTap();
     setIsSheetOpen(true);
     if (handler === "income") setIncomeOpen(true);
     else if (handler === "expense") setExpenseOpen(true);

@@ -6,7 +6,6 @@ import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
-import { useHaptic } from "@/hooks/useHaptic";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/contexts/ToastContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -44,7 +43,6 @@ export default function BudgetClient({
   incomeThisMonth,
 }: BudgetClientProps) {
   const router = useRouter();
-  const { lightTap } = useHaptic();
   const { formatCurrency } = useCurrency();
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -239,9 +237,7 @@ export default function BudgetClient({
                           : statusLabel}
                       </p>
                       <div
-                        className={`mt-3 h-3 rounded-full bg-slate-800 overflow-hidden cursor-pointer touch-manipulation flex ${isExpense ? "flex-row-reverse" : ""}`}
-                        onClick={lightTap}
-                        onTouchStart={lightTap}
+                        className={`mt-3 h-3 rounded-full bg-slate-800 overflow-hidden flex ${isExpense ? "flex-row-reverse" : ""}`}
                         role="progressbar"
                         aria-valuenow={barWidth}
                         aria-valuemin={0}

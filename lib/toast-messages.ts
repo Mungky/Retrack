@@ -5,10 +5,13 @@
 export const TOAST_MESSAGES = {
   SUCCESS: {
     LOGGED_OUT: "Logged out successfully!",
-    TRANSACTION_SAVED: "Transaction saved successfully!",
+    SAVING_TRANSACTION: "Menyimpan transaksi...",
+    TRANSACTION_SAVED: "Transaksi berhasil ditambahkan",
+    TRANSACTION_SAVED_ALT: "Transaction saved successfully!",
     TRANSACTION_UPDATED: "Transaction updated successfully!",
     TRANSACTION_DELETED: "Transaction deleted successfully!",
-    TRANSFER_SUCCESS: "Transfer completed!",
+    TRANSFER_SUCCESS: "Transfer berhasil",
+    SAVING_TRANSFER: "Menyimpan transfer...",
     WALLET_DELETED: "Wallet deleted successfully!",
     CATEGORY_DELETED: "Category deleted successfully!",
     BUDGET_UPDATED: "Budget updated successfully!",
@@ -45,6 +48,7 @@ export const TOAST_MESSAGES = {
     NO_WALLETS: "No wallets yet. Please add a wallet first.",
     SAME_WALLET_TRANSFER: "Source and destination wallets must be different.",
     INSUFFICIENT_BALANCE: "Insufficient balance.",
+    OFFLINE: "Koneksi terputus. Menunggu jaringan...",
     TRANSFER_FAILED: "Transfer failed. Please try again.",
     TRANSACTION_DELETE_FAILED: "Failed to delete transaction.",
     TRANSACTION_UPDATE_FAILED: "Failed to update transaction.",

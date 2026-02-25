@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { revalidateTransactionPaths } from "@/app/actions";
-import { X, ArrowRightLeft, Loader2 } from "lucide-react";
+import { X, ArrowRightLeft, Loader2, WifiOff } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,9 @@ import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { formThemes } from "@/lib/form-themes";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
+import { useOptimisticTransactionStore } from "@/stores/optimisticTransactionStore";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { useHaptic } from "@/hooks/useHaptic";
 import type { Wallet } from "@/types";
 
 interface QuickTransferSheetProps {
@@ -29,11 +32,13 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
   const { showToast } = useToast();
   const { user } = useAuth();
   const { setIsSheetOpen } = useSheet();
+  const { addOptimistic, removeOptimistic } = useOptimisticTransactionStore();
+  const isOnline = useNetworkStatus();
+  const { lightTap, successVibrate } = useHaptic();
   const [amount, setAmount] = useState(0);
   const [fromWallet, setFromWallet] = useState<string>("");
   const [toWallet, setToWallet] = useState<string>("");
   const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
 
   // Blue/indigo theme for transfers
@@ -106,6 +111,12 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    lightTap();
+
+    if (!isOnline) {
+      showToast(TOAST_MESSAGES.ERROR.OFFLINE, "error");
+      return;
+    }
 
     if (!fromWallet || !toWallet) {
       showToast(TOAST_MESSAGES.ERROR.VALIDATE_ALL_FIELDS, "error");
@@ -133,56 +144,58 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
       return;
     }
 
-    setIsLoading(true);
-
-    let insertedTransactionId: string | null = null;
-
-    try {
-      const transactionData = {
+    const tempId = `opt-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    addOptimistic(
+      {
+        id: tempId,
         amount,
         type: "transfer",
         date: getTodayLocal(),
+        description: null,
+        category_id: null,
         source_wallet_id: fromWallet,
         destination_wallet_id: toWallet,
-        user_id: user.id,
-      };
+      },
+      { [fromWallet]: -amount, [toWallet]: amount }
+    );
 
-      const { data: insertedTransaction, error: transactionError } = await supabaseClient
-        .from("transactions")
-        .insert([transactionData])
-        .select("id")
-        .single();
+    onClose();
+    resetForm();
+    showToast(TOAST_MESSAGES.SUCCESS.SAVING_TRANSFER, "success");
 
-      if (transactionError) throw transactionError;
-      insertedTransactionId = insertedTransaction?.id || null;
+    const transactionData = {
+      amount,
+      type: "transfer",
+      date: getTodayLocal(),
+      source_wallet_id: fromWallet,
+      destination_wallet_id: toWallet,
+      user_id: user.id,
+    };
 
-      await revalidateTransactionPaths();
-      showToast(TOAST_MESSAGES.SUCCESS.TRANSFER_SUCCESS, "success");
-      window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
-      onClose();
-      resetForm();
-      setTimeout(() => router.refresh(), 500);
-    } catch (error: any) {
-      if (user?.id && insertedTransactionId) {
-        const { error: rollbackError } = await supabaseClient
+    (async () => {
+      try {
+        const { error } = await supabaseClient
           .from("transactions")
-          .delete()
-          .eq("id", insertedTransactionId)
-          .eq("user_id", user.id);
+          .insert([transactionData])
+          .select();
 
-        if (rollbackError) {
-          console.error("Rollback transaction delete failed:", rollbackError);
-        }
+        if (error) throw error;
+
+        removeOptimistic(tempId);
+        await revalidateTransactionPaths();
+        router.refresh();
+        successVibrate();
+        showToast(TOAST_MESSAGES.SUCCESS.TRANSFER_SUCCESS, "success");
+        window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
+      } catch (error: any) {
+        removeOptimistic(tempId);
+        console.error("Error transferring:", error);
+        showToast(
+          error?.message || TOAST_MESSAGES.ERROR.TRANSFER_FAILED,
+          "error"
+        );
       }
-
-      console.error("Error transferring:", error);
-      showToast(
-        error?.message || TOAST_MESSAGES.ERROR.TRANSFER_FAILED,
-        "error"
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    })();
   };
 
   if (!isOpen) return null;
@@ -295,14 +308,14 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
           {/* Submit Button - blue themed */}
           <button
             type="submit"
-            disabled={isLoading || isLoadingWallets}
+            disabled={!isOnline || isLoadingWallets}
             className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
             style={{ boxShadow: theme.submitShadow }}
           >
-            {isLoading ? (
+            {!isOnline ? (
               <>
-                <Loader2 className="animate-spin" size={20} />
-                <span>Memproses...</span>
+                <WifiOff size={18} className="shrink-0" />
+                Menunggu koneksi...
               </>
             ) : (
               "Transfer Now"
