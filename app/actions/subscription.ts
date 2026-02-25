@@ -1,12 +1,21 @@
 "use server";
 
 import { createClient } from "@/lib/supabase-server";
+import { getServerUserId } from "@/lib/auth-helpers";
+
+export type SubscriptionResult =
+  | { success: true }
+  | { success: false; error: string };
 
 /**
  * Cek status Pro user dari database.
+ * Mengambil userId dari sesi server (tidak menerima parameter dari client).
  * @returns true jika user memiliki Lifetime Access, false jika tidak atau error
  */
-export async function getProStatus(userId: string): Promise<boolean> {
+export async function getProStatus(): Promise<boolean> {
+  const userId = await getServerUserId();
+  if (!userId) return false;
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -15,29 +24,29 @@ export async function getProStatus(userId: string): Promise<boolean> {
     .eq("id", userId)
     .single();
 
-  if (error) {
-    console.error("[getProStatus] Supabase error:", error.message, "userId:", userId);
-    return false;
-  }
-  if (!data) {
-    console.error("[getProStatus] No row found for userId:", userId);
-    return false;
-  }
+  if (error || !data) return false;
   return data.isPro === true;
 }
 
 /**
  * Upgrade user ke Pro Lifetime (beli putus).
+ * Mengambil userId dari sesi server (tidak menerima parameter dari client).
  * Dipanggil saat pembayaran sukses.
  */
-export async function upgradeToProLifetime(userId: string): Promise<{ success: true }> {
-  const supabase = await createClient();
+export async function upgradeToProLifetime(): Promise<SubscriptionResult> {
+  const userId = await getServerUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
+  }
 
+  const supabase = await createClient();
   const { error } = await supabase
     .from("users")
     .update({ isPro: true })
     .eq("id", userId);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    return { success: false, error: error.message };
+  }
   return { success: true };
 }

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Mail, Lock, User, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useAuth } from "@/contexts/AuthContext";
-import { isRateLimited, getRemainingTime } from "@/lib/rate-limiter";
 import Link from "next/link";
 import { Button, Input } from "@/components/ui";
 
@@ -74,13 +73,6 @@ export default function RegisterPage() {
 
     if (password !== confirmPassword) {
       setError("Password and confirmation do not match.");
-      return;
-    }
-
-    const rateLimitKey = `register:${email}`;
-    if (isRateLimited(rateLimitKey, 3, 60000)) {
-      const remaining = getRemainingTime(rateLimitKey);
-      setError(`Too many attempts. Wait ${Math.ceil(remaining / 1000)} seconds.`);
       return;
     }
 
@@ -190,7 +182,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="fintech-card p-8 border border-white/5 shadow-2xl">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Remula Money</h1>
+            <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Re-Start</h1>
             <p className="text-white/50 text-sm">Create a new account</p>
           </div>
 

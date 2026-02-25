@@ -11,6 +11,7 @@ import { Button } from "@/components/ui";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModalStore } from "@/stores/premiumModalStore";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import { upgradeToProLifetime } from "@/app/actions/subscription";
 import { cn } from "@/lib/cn";
 import { Loader2 } from "lucide-react";
@@ -26,6 +27,7 @@ const BENEFITS = [
 export function PremiumModal() {
   const { isOpen, close } = usePremiumModalStore();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const upgrade = useSubscriptionStore((s) => s.upgrade);
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -33,13 +35,15 @@ export function PremiumModal() {
     if (!user?.id) return;
     try {
       setIsUpgrading(true);
-      const res = await upgradeToProLifetime(user.id);
+      const res = await upgradeToProLifetime();
       if (res.success) {
         upgrade();
         close();
+      } else {
+        showToast(res.error, "error");
       }
     } catch (error) {
-      console.error("Gagal upgrade ke Pro:", error);
+      showToast("Gagal upgrade ke Pro. Coba lagi.", "error");
     } finally {
       setIsUpgrading(false);
     }

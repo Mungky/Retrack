@@ -19,7 +19,7 @@ export function SubscriptionSync() {
       setProStatus(false);
       return;
     }
-    getProStatus(user.id).then(setProStatus);
+    getProStatus().then(setProStatus);
   }, [user?.id, setProStatus]);
 
   useEffect(() => {

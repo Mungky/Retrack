@@ -1,6 +1,6 @@
 {
-  "name": "Money Tracker",
-  "short_name": "MoneyTrack",
+  "name": "Re-Start",
+  "short_name": "Re-Start",
   "description": "Premium Personal Finance Tracker",
   "start_url": "/",
   "display": "standalone",

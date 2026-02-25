@@ -23,14 +23,14 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Money Tracker",
+  title: "Re-Start",
   description: "Premium Personal Finance Tracker",
-  applicationName: "Money Tracker",
+  applicationName: "Re-Start",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "MoneyTrack",
+    title: "Re-Start",
   },
   formatDetection: {
     telephone: false,

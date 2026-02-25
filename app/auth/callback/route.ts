@@ -3,10 +3,19 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+function getSafeRedirectPath(next: string | null): string {
+  if (!next || typeof next !== "string") return "/";
+  const trimmed = next.trim();
+  // Only allow relative paths to prevent Open Redirect
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) return "/";
+  return trimmed;
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/";
+  const nextRaw = requestUrl.searchParams.get("next");
+  const next = getSafeRedirectPath(nextRaw);
 
   if (code) {
     const cookieStore = await cookies();

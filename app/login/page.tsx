@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useAuth } from "@/contexts/AuthContext";
-import { isRateLimited, getRemainingTime } from "@/lib/rate-limiter";
 import Link from "next/link";
 import { Button, Input, Card } from "@/components/ui";
 
@@ -46,13 +45,6 @@ export default function LoginPage() {
       return;
     }
 
-    const rateLimitKey = `login:${email}`;
-    if (isRateLimited(rateLimitKey, 5, 60000)) {
-      const remaining = getRemainingTime(rateLimitKey);
-      setError(`Too many attempts. Wait ${Math.ceil(remaining / 1000)} seconds.`);
-      return;
-    }
-
     setIsLoading(true);
     try {
       const { error: authError } = await supabaseClient.auth.signInWithPassword({
@@ -88,7 +80,7 @@ export default function LoginPage() {
         {/* Glassmorphism Card */}
         <Card variant="glass" className="p-8 border border-white/5 shadow-2xl">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Remula Money</h1>
+            <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Re-Start</h1>
             <p className="text-white/50 text-sm">Sign in to your account</p>
           </div>
 
