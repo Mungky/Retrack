@@ -6,7 +6,7 @@ import { MoreVertical, Pencil, Trash2, CreditCard, Smartphone, Wallet as WalletI
 import WalletFormSheet from "./WalletFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModal } from "@/stores/premiumModalStore";
 import { Z_INDEX } from "@/lib/z-index";
@@ -64,7 +64,6 @@ const getWalletConfig = (type: string) => {
 
 export default function WalletManagement({ initialWallets, onWalletsChange }: WalletManagementProps) {
   const { showToast } = useToast();
-  const { formatCurrency, formatCurrencyCompact } = useCurrency();
   const { user } = useAuth();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
@@ -232,7 +231,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                             onClick={() => setMenuOpenId(null)}
                           />
                           <div
-                            className="fixed fintech-card py-1 min-w-[130px] animate-fade-in"
+                            className="fixed bg-card border border-border rounded-xl py-1 min-w-[130px] shadow-xl animate-fade-in"
                             style={{
                               zIndex: Z_INDEX.dropdown,
                               top: menuPosition.top,
@@ -246,7 +245,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                                 setSelectedWallet(wallet);
                                 setIsFormOpen(true);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left"
                             >
                               <Pencil size={16} className="text-primary" />
                               Edit
@@ -257,7 +256,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
                                 setSelectedWallet(wallet);
                                 setIsDeleteOpen(true);
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left"
                             >
                               <Trash2 size={16} className="text-rose-400" />
                               Delete

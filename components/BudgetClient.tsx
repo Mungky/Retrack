@@ -6,7 +6,7 @@ import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import { revalidateTransactionPaths } from "@/app/actions";
 import BudgetFormSheet from "./BudgetFormSheet";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
 import { useToast } from "@/contexts/ToastContext";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { supabaseClient } from "@/lib/supabase-client";
@@ -25,15 +25,14 @@ interface BudgetClientProps {
   incomeThisMonth: Transaction[];
 }
 
-/** For EXPENSE: remaining bar (100%→0%). Red/Yellow. */
-function getExpenseBarColor(remainingPercent: number) {
-  if (remainingPercent <= 25) return "bg-rose-500";
-  return "bg-amber-500";
+/** Bar color - sesuaikan dengan tema (primary) */
+function getExpenseBarColor(_remainingPercent: number) {
+  return "bg-primary";
 }
 
-/** For INCOME: savings progress bar (0%→100%). Green. */
-function getIncomeBarColor(progressPercent: number) {
-  return "bg-emerald-500";
+/** Bar color - sesuaikan dengan tema (primary) */
+function getIncomeBarColor(_progressPercent: number) {
+  return "bg-primary";
 }
 
 export default function BudgetClient({
@@ -43,7 +42,6 @@ export default function BudgetClient({
   incomeThisMonth,
 }: BudgetClientProps) {
   const router = useRouter();
-  const { formatCurrency } = useCurrency();
   const { showToast } = useToast();
   const { user } = useAuth();
   const isPro = useSubscriptionStore((s) => s.isPro);
@@ -237,16 +235,31 @@ export default function BudgetClient({
                           : statusLabel}
                       </p>
                       <div
-                        className={`mt-3 h-3 rounded-full bg-slate-800 overflow-hidden flex ${isExpense ? "flex-row-reverse" : ""}`}
+                        className="mt-3 h-3 rounded-full bg-muted overflow-hidden flex"
                         role="progressbar"
                         aria-valuenow={barWidth}
                         aria-valuemin={0}
                         aria-valuemax={100}
                       >
-                        <div
-                          className={`h-full transition-all duration-500 ease-out ${barColor} ${isExpense ? "rounded-l-full" : "rounded-full"}`}
-                          style={{ width: `${barWidth}%`, minWidth: barWidth > 0 ? "4px" : 0 }}
-                        />
+                        {isExpense ? (
+                          /* Spend: bar dari kiri (100% remaining = penuh, 0% = kosong), konsumsi dari kanan ke kiri */
+                          <div
+                            className={`h-full transition-all duration-500 ease-out ${barColor} rounded-l-full shrink-0 ${barWidth >= 100 ? "rounded-full" : ""}`}
+                            style={{
+                              width: `${barWidth}%`,
+                              minWidth: barWidth > 0 ? 4 : 0,
+                            }}
+                          />
+                        ) : (
+                          /* Income: bar dari kiri ke kanan (0%→100%) */
+                          <div
+                            className={`h-full transition-all duration-500 ease-out ${barColor} rounded-full shrink-0`}
+                            style={{
+                              width: `${barWidth}%`,
+                              minWidth: barWidth > 0 ? 4 : 0,
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   </div>

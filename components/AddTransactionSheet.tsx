@@ -10,13 +10,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
 import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
-import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import { BaseSheet } from "@/components/shared/BaseSheet";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
-import { Button, Input, Select } from "@/components/ui";
+import { Button, Input, ThemeSelect } from "@/components/ui";
 import { useOptimisticTransactionStore } from "@/stores/optimisticTransactionStore";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -266,7 +265,6 @@ export default function AddTransactionSheet({
         router.refresh();
         successVibrate();
         showToast(TOAST_MESSAGES.SUCCESS.TRANSACTION_SAVED, "success");
-        window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
       } catch (error: any) {
         removeOptimistic(tempId);
         console.error("Error saving transaction:", error);
@@ -401,18 +399,13 @@ export default function AddTransactionSheet({
                     <span>Loading wallets...</span>
                   </div>
                 ) : (
-                  <Select
+                  <ThemeSelect
                     value={selectedWallet}
                     onChange={(e) => setSelectedWallet(e.target.value)}
+                    options={wallets.map((w) => ({ value: w.id, label: w.name }))}
                     disabled={wallets.length === 0}
-                    className={`text-foreground disabled:opacity-50 ${theme.inputFocus}`}
-                  >
-                    {wallets.map((wallet) => (
-                      <option key={wallet.id} value={wallet.id}>
-                        {wallet.name}
-                      </option>
-                    ))}
-                  </Select>
+                    className={`disabled:opacity-50 ${theme.inputFocus}`}
+                  />
                 )}
               </div>
             </div>

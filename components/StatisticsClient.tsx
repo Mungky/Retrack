@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { calculateTotals, isExpense, isIncome } from "@/lib/transaction-calc";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/currency";
 import type { Category, Transaction } from "@/types";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
@@ -96,7 +96,6 @@ export default function StatisticsClient({
   transactions,
   categories,
 }: StatisticsClientProps) {
-  const { formatCurrency, formatCurrencyCompact } = useCurrency();
   const stats = useMemo(() => {
     const { income, expense, net } = calculateTotals(transactions);
 

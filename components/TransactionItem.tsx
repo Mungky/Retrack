@@ -33,7 +33,7 @@ import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import EditTransactionSheet from "./EditTransactionSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { isIncome, isExpense } from "@/lib/transaction-calc";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
 import { Z_INDEX } from "@/lib/z-index";
 import type { Transaction } from "@/types";
 
@@ -44,7 +44,6 @@ interface TransactionItemProps {
 }
 
 export default function TransactionItem({ transaction, isLastItem = false }: TransactionItemProps) {
-  const { formatCurrency } = useCurrency();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -126,7 +125,7 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
         onClick={() => setMenuOpen(false)}
       />
       <div
-        className="fixed fintech-card py-1 min-w-[130px] animate-fade-in"
+        className="fixed bg-card border border-border rounded-xl py-1 min-w-[130px] shadow-xl animate-fade-in"
         style={{
           zIndex: Z_INDEX.dropdown,
           top: menuPosition.top,
@@ -139,7 +138,7 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
             setMenuOpen(false);
             setIsEditOpen(true);
           }}
-          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left"
         >
           <Pencil size={16} className="text-cyan-400" />
           Edit
@@ -149,7 +148,7 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
             setMenuOpen(false);
             setIsDeleteOpen(true);
           }}
-          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white hover:bg-white/5 transition-colors text-left"
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors text-left"
         >
           <Trash2 size={16} className="text-rose-400" />
           Delete

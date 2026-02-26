@@ -8,12 +8,11 @@ import { X, ArrowRightLeft, Loader2, WifiOff } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
 import { useSheet } from "@/contexts/SheetContext";
 import { getTodayLocal } from "@/lib/date-range";
 import CurrencyInput from "./CurrencyInput";
-import { Select } from "@/components/ui";
-import { REFRESH_NOTIFICATIONS_EVENT } from "./NotificationsBadge";
+import { ThemeSelect } from "@/components/ui";
 import { formThemes } from "@/lib/form-themes";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
@@ -106,9 +105,6 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
     setToWallet("");
   };
 
-  const { formatCurrency } = useCurrency();
-  const formatWalletBalance = (bal: number) => formatCurrency(bal);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     lightTap();
@@ -186,7 +182,6 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
         router.refresh();
         successVibrate();
         showToast(TOAST_MESSAGES.SUCCESS.TRANSFER_SUCCESS, "success");
-        window.dispatchEvent(new CustomEvent(REFRESH_NOTIFICATIONS_EVENT));
       } catch (error: any) {
         removeOptimistic(tempId);
         console.error("Error transferring:", error);
@@ -259,7 +254,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
                 <Loader2 className="animate-spin text-blue-400" size={20} />
               </div>
             ) : (
-              <Select
+              <ThemeSelect
                 value={fromWallet}
                 onChange={(e) => {
                   setFromWallet(e.target.value);
@@ -267,14 +262,12 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
                     setToWallet("");
                   }
                 }}
-                className={`text-foreground ${theme.inputFocus}`}
-              >
-                {wallets.map((wallet) => (
-                  <option key={wallet.id} value={wallet.id}>
-                    {wallet.name} - {formatWalletBalance(wallet.balance)}
-                  </option>
-                ))}
-              </Select>
+                options={wallets.map((w) => ({
+                  value: w.id,
+                  label: `${w.name} - ${formatCurrency(w.balance ?? 0)}`,
+                }))}
+                className={theme.inputFocus}
+              />
             )}
           </div>
 
@@ -290,19 +283,19 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
             <label className="block text-sm font-medium text-slate-400 mb-2">
               Ke Wallet
             </label>
-            <Select
+            <ThemeSelect
               value={toWallet}
               onChange={(e) => setToWallet(e.target.value)}
-              className={`text-foreground disabled:opacity-50 ${theme.inputFocus}`}
+              options={[
+                { value: "", label: "Pilih wallet tujuan" },
+                ...availableToWallets.map((w) => ({
+                  value: w.id,
+                  label: `${w.name} - ${formatCurrency(w.balance ?? 0)}`,
+                })),
+              ]}
               disabled={!fromWallet || availableToWallets.length === 0}
-            >
-              <option value="">Pilih wallet tujuan</option>
-              {availableToWallets.map((wallet) => (
-                <option key={wallet.id} value={wallet.id}>
-                  {wallet.name} - {formatWalletBalance(wallet.balance)}
-                </option>
-              ))}
-            </Select>
+              className={`disabled:opacity-50 ${theme.inputFocus}`}
+            />
           </div>
 
           {/* Submit Button - blue themed */}

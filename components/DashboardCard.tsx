@@ -1,13 +1,12 @@
 "use client";
 
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrencyCompact, formatCurrencyFull } from "@/lib/currency";
 
 interface DashboardCardProps {
   totalBalance: number;
 }
 
 export default function DashboardCard({ totalBalance }: DashboardCardProps) {
-  const { formatCurrencyCompact, formatCurrencyFull } = useCurrency();
   const formatted = formatCurrencyCompact(totalBalance);
   // Scale font: longer strings = smaller font to prevent overflow
   const charCount = formatted.length;

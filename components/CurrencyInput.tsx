@@ -1,10 +1,7 @@
 "use client";
 
 import React from "react";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import type { FormAccent } from "@/lib/form-themes";
-
-const CURRENCY_SYMBOLS: Record<string, string> = { IDR: "Rp", USD: "$", EUR: "€" };
 
 interface CurrencyInputProps {
   value: number;
@@ -30,13 +27,10 @@ const ACCENT_PREFIX: Record<FormAccent, string> = {
   cyan: "text-cyan-400/50",
 };
 
-const INPUT_LOCALES: Record<string, string> = { IDR: "id-ID", USD: "en-US", EUR: "de-DE" };
-
-/** Format a number for input display (locale-aware thousand separators) */
-export function formatForInput(num: number, currency = "IDR"): string {
+/** Format a number for input display (IDR locale) */
+export function formatForInput(num: number): string {
   if (!num) return "";
-  const locale = INPUT_LOCALES[currency] ?? "id-ID";
-  return new Intl.NumberFormat(locale).format(num);
+  return new Intl.NumberFormat("id-ID").format(num);
 }
 
 /** Strip non-digits and parse to integer */
@@ -52,8 +46,6 @@ export default function CurrencyInput({
   accent = "cyan",
   placeholder = "0",
 }: CurrencyInputProps) {
-  const { currency } = useCurrency();
-  const symbol = CURRENCY_SYMBOLS[currency] ?? "Rp";
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(parseIDR(e.target.value));
   };
@@ -63,12 +55,12 @@ export default function CurrencyInput({
       <span
         className={`absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold pointer-events-none select-none ${ACCENT_PREFIX[accent]}`}
       >
-        {symbol}
+        Rp
       </span>
       <input
         type="text"
         inputMode="numeric"
-        value={value > 0 ? formatForInput(value, currency) : ""}
+        value={value > 0 ? formatForInput(value) : ""}
         onChange={handleChange}
         placeholder={placeholder}
         disabled={disabled}

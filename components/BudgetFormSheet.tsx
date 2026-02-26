@@ -9,7 +9,7 @@ import { useSheet } from "@/contexts/SheetContext";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import CurrencyInput from "./CurrencyInput";
-import { Select } from "@/components/ui";
+import { ThemeSelect } from "@/components/ui";
 import { formThemes } from "@/lib/form-themes";
 import type { Budget, Category } from "@/types";
 
@@ -90,7 +90,7 @@ export default function BudgetFormSheet({
       if (budget) {
         const { error } = await supabaseClient
           .from("budgets")
-          .update({ amount })
+          .update({ category_id: categoryId, amount })
           .eq("id", budget.id)
           .eq("user_id", user.id);
 
@@ -180,19 +180,16 @@ export default function BudgetFormSheet({
             <label className="block text-sm font-medium text-slate-400 mb-2">
               Category
             </label>
-            <Select
+            <ThemeSelect
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              disabled={!!budget}
-              className={`text-foreground disabled:opacity-60 ${theme.inputFocus}`}
-            >
-              <option value="">Select category</option>
-              {availableCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: "", label: "Select category" },
+                ...availableCategories.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              placeholder="Select category"
+              className={theme.inputFocus}
+            />
             {availableCategories.length === 0 && !budget && (
               <p className="mt-2 text-sm text-amber-400">
                 All categories already have budgets. Edit from the budget list.

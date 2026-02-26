@@ -3,9 +3,9 @@
 import { useState, useMemo } from "react";
 import DateRangeFilter from "./DateRangeFilter";
 import BalanceCard from "./BalanceCard";
+import DashboardWallets from "./DashboardWallets";
 import DashboardSummary from "./DashboardSummary";
 import QuickActionsRow from "./QuickActionsRow";
-import NotificationsBadge from "./NotificationsBadge";
 import type { DateRangeKey } from "@/lib/date-range";
 import type { Transaction, Wallet } from "@/types";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
@@ -58,13 +58,10 @@ export default function DashboardClient({
             Here&apos;s your financial overview
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <DateRangeFilter
-            value={isPro ? dateRange : "this_month"}
-            onChange={handleDateRangeChange}
-          />
-          <NotificationsBadge />
-        </div>
+        <DateRangeFilter
+          value={isPro ? dateRange : "this_month"}
+          onChange={handleDateRangeChange}
+        />
       </div>
 
       <div className="space-y-6">
@@ -78,6 +75,9 @@ export default function DashboardClient({
         />
 
         <QuickActionsRow />
+
+        {/* Wallet list - saldo per wallet (full format, no rb/jt/mil) */}
+        <DashboardWallets wallets={wallets} walletDeltas={walletDeltas} />
       </div>
     </div>
   );

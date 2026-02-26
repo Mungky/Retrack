@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
 
 const AreaChart = dynamic(() => import("recharts").then((mod) => mod.AreaChart), { ssr: false });
 const Area = dynamic(() => import("recharts").then((mod) => mod.Area), { ssr: false });
@@ -35,7 +35,6 @@ function formatChartDate(isoDate: string): string {
 }
 
 export default function TrendChart({ data }: TrendChartProps) {
-  const { formatCurrency } = useCurrency();
   const chartData = data.map((d) => ({
     ...d,
     dateLabel: formatChartDate(d.date),

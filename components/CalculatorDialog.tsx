@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
 import { useTheme } from "next-themes";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModal } from "@/stores/premiumModalStore";
@@ -24,15 +24,10 @@ interface CalculatorDialogProps {
   onSave: (total: number, description: string, type: "income" | "expense") => void;
 }
 
-function formatForDescription(value: number, currency: string): string {
+function formatForDescription(value: number): string {
   const abs = Math.abs(value);
-  if (currency === "IDR") {
-    if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(".", ",")}Jt`;
-    if (abs >= 1_000) return `${(value / 1_000).toFixed(0)}k`;
-    return String(value);
-  }
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(".", ",")}Jt`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(0)}k`;
   return String(value);
 }
 
@@ -70,7 +65,6 @@ const NUMPAD_LAYOUT: string[][] = [
 ];
 
 export default function CalculatorDialog({ isOpen, onClose, onSave }: CalculatorDialogProps) {
-  const { currency, formatCurrency } = useCurrency();
   const { theme: themeVal, resolvedTheme } = useTheme();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
@@ -261,9 +255,9 @@ export default function CalculatorDialog({ isOpen, onClose, onSave }: Calculator
 
   const handleSave = useCallback((type: "income" | "expense") => {
     if (items.length === 0) return;
-    const itemParts = items.map((i) => `${i.name} (${formatForDescription(i.value, currency)})`);
+    const itemParts = items.map((i) => `${i.name} (${formatForDescription(i.value)})`);
     onSave(total, itemParts.join(", "), type);
-  }, [items, total, currency, onSave]);
+  }, [items, total, onSave]);
 
   const canSave = items.length > 0;
   const isOperatorKey = (k: string) => ["+", "-", "×", "÷", "%", "="].includes(k);

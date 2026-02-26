@@ -46,6 +46,8 @@ export function BaseSheet({
     if (!disabled) onClose();
   };
 
+  if (typeof document === "undefined") return null;
+
   return createPortal(
     <AnimatePresence mode="wait">
       {isOpen && (

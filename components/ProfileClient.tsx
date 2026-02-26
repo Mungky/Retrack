@@ -23,7 +23,6 @@ import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { Z_INDEX } from "@/lib/z-index";
 import { Button } from "@/components/ui";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
-import { CurrencySwitcher } from "@/components/ui/CurrencySwitcher";
 import DataManagementCard from "@/components/settings/DataManagementCard";
 import type { Wallet, Category } from "@/types";
 
@@ -59,7 +58,6 @@ export default function ProfileClient({
     try {
       await signOut();
       showToast(TOAST_MESSAGES.SUCCESS.LOGGED_OUT, "success");
-      await new Promise((resolve) => setTimeout(resolve, 500));
       window.location.href = "/login";
     } catch (error: unknown) {
       console.error("Logout error:", error);
@@ -187,11 +185,8 @@ export default function ProfileClient({
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
           App Settings
         </h3>
-        <div className="glass-card p-4 mb-4 space-y-6">
+        <div className="glass-card p-4 mb-4">
           <ThemeSwitcher />
-          <div className="pt-4 border-t border-border">
-            <CurrencySwitcher />
-          </div>
         </div>
       </div>
 

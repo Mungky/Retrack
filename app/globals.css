@@ -221,6 +221,18 @@
   color-scheme: light !important;
 }
 
+/* Dark themes: native date picker / select mengikuti dark */
+[data-theme="default"],
+[data-theme="sultan"] {
+  color-scheme: dark;
+}
+/* Dark mode: icon kalender tetap terlihat (jangan invert - color-scheme dark sudah kasih icon terang) */
+[data-theme="default"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="sultan"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
 /* Navbar: active tab pakai primary (hijau) bukan violet */
 [data-theme="forest"] .text-violet-400 {
   color: hsl(var(--primary)) !important;

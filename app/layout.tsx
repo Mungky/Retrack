@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import BottomNav from "@/components/BottomNav";
+import { AppShell } from "@/components/AppShell";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { SheetProvider } from "@/contexts/SheetContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { SubscriptionSync } from "@/components/SubscriptionSync";
@@ -29,7 +27,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Re-Start",
   },
   formatDetection: {
@@ -51,7 +49,10 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: "#09090b",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+    { media: "(prefers-color-scheme: light)", color: "#f0fdf4" },
+  ],
 };
 
 export default function RootLayout({
@@ -64,9 +65,8 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-background`}
       >
-        <Script
+        <script
           id="theme-init"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('remula-theme');if(t&&['default','sultan','forest'].includes(t)){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.setAttribute('data-theme','default')}}catch(e){document.documentElement.setAttribute('data-theme','default')}})();`,
           }}
@@ -75,17 +75,12 @@ export default function RootLayout({
         <AuroraBackground />
         <AuthProvider>
           <SubscriptionSync />
-          <CurrencyProvider>
           <ToastProvider>
             <SheetProvider>
-              <div className="relative z-10">
-                {children}
-              </div>
-              <BottomNav />
+              <AppShell>{children}</AppShell>
               <PremiumModal />
             </SheetProvider>
           </ToastProvider>
-          </CurrencyProvider>
         </AuthProvider>
         </ThemeProvider>
       </body>

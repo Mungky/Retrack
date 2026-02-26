@@ -11,7 +11,7 @@ import { useSheet } from "@/contexts/SheetContext";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import CurrencyInput from "./CurrencyInput";
-import { Select, Input } from "@/components/ui";
+import { ThemeSelect, Input } from "@/components/ui";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import { Z_INDEX } from "@/lib/z-index";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
@@ -333,18 +333,16 @@ export default function EditTransactionSheet({
               <label className="block text-sm font-medium text-slate-400 mb-2">
                 Wallet
               </label>
-              <Select
+              <ThemeSelect
                 value={selectedWallet}
                 onChange={(e) => setSelectedWallet(e.target.value)}
-                className={`text-foreground ${theme.inputFocus}`}
-              >
-                <option value="">Select wallet</option>
-                {wallets.map((wallet) => (
-                  <option key={wallet.id} value={wallet.id}>
-                    {wallet.name}
-                  </option>
-                ))}
-              </Select>
+                options={[
+                  { value: "", label: "Select wallet" },
+                  ...wallets.map((w) => ({ value: w.id, label: w.name })),
+                ]}
+                placeholder="Select wallet"
+                className={theme.inputFocus}
+              />
             </div>
           )}
 

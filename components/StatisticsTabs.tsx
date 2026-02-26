@@ -8,7 +8,7 @@ import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModal } from "@/stores/premiumModalStore";
 import { normalizeTransactionType } from "@/lib/transaction-calc";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import type { Category, Transaction } from "@/types";
 
@@ -40,7 +40,6 @@ export default function StatisticsTabs({
   transactions,
   categories,
 }: StatisticsTabsProps) {
-  const { formatCurrency } = useCurrency();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
   const [dateRange, setDateRange] = useState<DateRangeKey>("this_month");
