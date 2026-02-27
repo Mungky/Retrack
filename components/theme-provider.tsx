@@ -25,6 +25,7 @@ export function ThemeProvider({
       themes={["default", "sultan", "forest"]}
       enableSystem={false}
       enableColorScheme={false}
+      disableTransitionOnChange
     >
       {children}
     </NextThemesProvider>

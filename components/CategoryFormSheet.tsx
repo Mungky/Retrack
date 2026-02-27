@@ -25,7 +25,9 @@ import {
   HandCoins,
   Coins,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { supabaseClient } from "@/lib/supabase-client";
+import { revalidateCategoryPaths } from "@/app/actions/categories";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSheet } from "@/contexts/SheetContext";
@@ -93,6 +95,7 @@ export default function CategoryFormSheet({
   category,
   onSuccess,
 }: CategoryFormSheetProps) {
+  const router = useRouter();
   const { showToast } = useToast();
   const { user } = useAuth();
   const { setIsSheetOpen } = useSheet();
@@ -194,11 +197,13 @@ export default function CategoryFormSheet({
         result = inserted as Category;
       }
 
+      await revalidateCategoryPaths();
       showToast(
         category ? TOAST_MESSAGES.SUCCESS.CATEGORY_UPDATED : TOAST_MESSAGES.SUCCESS.CATEGORY_ADDED,
         "success"
       );
       window.dispatchEvent(new CustomEvent(REFRESH_CATEGORIES_EVENT));
+      router.refresh();
       onSuccess(result);
       onClose();
     } catch (error: unknown) {

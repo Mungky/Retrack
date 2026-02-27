@@ -64,6 +64,7 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-background`}
+        suppressHydrationWarning
       >
         <script
           id="theme-init"

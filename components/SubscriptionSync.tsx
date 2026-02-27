@@ -15,7 +15,7 @@ const PREMIUM_THEMES = ["forest", "sultan"] as const;
  * ThemeGuard: paksa tema default jika non-Pro atau belum login memakai tema premium.
  */
 export function SubscriptionSync() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const setProStatus = useSubscriptionStore((s) => s.setProStatus);
@@ -49,13 +49,15 @@ export function SubscriptionSync() {
   }, [sync]);
 
   useEffect(() => {
+    if (authLoading) return;
     const current = resolvedTheme ?? theme ?? "default";
     const isPremiumTheme = PREMIUM_THEMES.includes(current as (typeof PREMIUM_THEMES)[number]);
-    const shouldReset = (!user || !isPro) && isPremiumTheme;
+    const isNonProOrGuest = !user || !isPro;
+    const shouldReset = isNonProOrGuest && isPremiumTheme;
     if (shouldReset && setTheme) {
       setTheme("default");
     }
-  }, [user, isPro, theme, resolvedTheme, setTheme]);
+  }, [authLoading, user, isPro, theme, resolvedTheme, setTheme]);
 
   return null;
 }

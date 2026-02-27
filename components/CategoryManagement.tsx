@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import CategoryFormSheet from "./CategoryFormSheet";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { TOAST_MESSAGES } from "@/lib/toast-messages";
 import { supabaseClient } from "@/lib/supabase-client";
+import { revalidateCategoryPaths } from "@/app/actions/categories";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
@@ -20,6 +22,7 @@ interface CategoryManagementProps {
 export default function CategoryManagement({
   initialCategories,
 }: CategoryManagementProps) {
+  const router = useRouter();
   const { showToast } = useToast();
   const { user } = useAuth();
   const isPro = useSubscriptionStore((s) => s.isPro);
@@ -82,8 +85,10 @@ export default function CategoryManagement({
 
       if (error) throw error;
 
+      await revalidateCategoryPaths();
       setCategories(categories.filter((c) => c.id !== categoryId));
       showToast(TOAST_MESSAGES.SUCCESS.CATEGORY_DELETED, "success");
+      router.refresh();
       setIsDeleteOpen(false);
     } catch (error: any) {
       console.error("Error deleting category:", error);
