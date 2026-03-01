@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -19,7 +20,9 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { isSheetOpen } = useSheet();
   const { resolvedTheme } = useTheme();
-  const isForest = resolvedTheme === "forest";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isForest = mounted && resolvedTheme === "forest";
 
   const isLandingOrAuthPage =
     pathname === "/" ||

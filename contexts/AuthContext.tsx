@@ -9,6 +9,8 @@ const MAX_LOADING_MS = 1000; // Jangan blokir UI > 1 detik
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  /** True hanya ketika getSession() selesai (bukan dari timeout). Untuk ThemeGuard. */
+  sessionCheckComplete: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -17,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionCheckComplete, setSessionCheckComplete] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -32,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) {
         setUser(session?.user ?? null);
         setLoading(false);
+        setSessionCheckComplete(true);
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
@@ -45,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) {
         setUser(session?.user ?? null);
         setLoading(false);
+        setSessionCheckComplete(true);
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
           timeoutRef.current = null;
@@ -65,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, sessionCheckComplete, signOut }}>
       {children}
     </AuthContext.Provider>
   );
