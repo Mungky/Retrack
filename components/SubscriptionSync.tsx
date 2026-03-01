@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
@@ -17,7 +17,7 @@ const PRO_STATUS_RETRY_MS = 2000;
  * Source of Truth: database (users.is_pro).
  * Refetch: pada login dan saat tab/window mendapat fokus kembali.
  * ThemeGuard: paksa tema default jika non-Pro atau belum login memakai tema premium.
- * Guard dieksekusi LANGSUNG setelah getProStatus resolved (bukan di useEffect) untuk menghindari race condition.
+ * Semua async logic di dalam useEffect untuk mematuhi React async rules.
  */
 export function SubscriptionSync() {
   const { user, sessionCheckComplete } = useAuth();
@@ -25,6 +25,8 @@ export function SubscriptionSync() {
   const setProStatus = useSubscriptionStore((s) => s.setProStatus);
   const setProStatusSettled = useSubscriptionStore((s) => s.setProStatusSettled);
   const mountedRef = useRef(true);
+  const setThemeRef = useRef(setTheme);
+  setThemeRef.current = setTheme;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -33,32 +35,24 @@ export function SubscriptionSync() {
     };
   }, []);
 
-  const runThemeGuard = useCallback(
-    (isPremiumUser: boolean) => {
-      if (typeof window === "undefined") return;
-      const current = localStorage.getItem(STORAGE_KEY) ?? "default";
-      const isPremiumTheme = PREMIUM_THEMES.includes(current as (typeof PREMIUM_THEMES)[number]);
-      if (!isPremiumUser && isPremiumTheme) {
-        setTheme("default");
+  useEffect(() => {
+    async function checkUserStatus() {
+      if (!user?.id) {
+        if (mountedRef.current) {
+          setProStatus(false);
+          setProStatusSettled(true);
+        }
+        if (sessionCheckComplete && typeof window !== "undefined") {
+          const current = localStorage.getItem(STORAGE_KEY) ?? "default";
+          const isPremiumTheme = PREMIUM_THEMES.includes(current as (typeof PREMIUM_THEMES)[number]);
+          if (isPremiumTheme && setThemeRef.current) {
+            setThemeRef.current("default");
+          }
+        }
+        return;
       }
-    },
-    [setTheme]
-  );
 
-  const sync = useCallback(() => {
-    if (!user?.id) {
-      if (mountedRef.current) {
-        setProStatus(false);
-        setProStatusSettled(true);
-      }
-      if (sessionCheckComplete) {
-        runThemeGuard(false);
-      }
-      return;
-    }
-
-    setProStatusSettled(false);
-    const run = async () => {
+      setProStatusSettled(false);
       let isPremiumUser = await getProStatus();
       if (!isPremiumUser && typeof window !== "undefined") {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -74,21 +68,35 @@ export function SubscriptionSync() {
         }
         setProStatus(isPremiumUser);
         setProStatusSettled(true);
-        runThemeGuard(isPremiumUser);
+        const current = localStorage.getItem(STORAGE_KEY) ?? "default";
+        const isPremiumTheme = PREMIUM_THEMES.includes(current as (typeof PREMIUM_THEMES)[number]);
+        if (!isPremiumUser && isPremiumTheme && setThemeRef.current) {
+          setThemeRef.current("default");
+        }
       }
-    };
-    run();
-  }, [user?.id, sessionCheckComplete, setProStatus, setProStatusSettled, setTheme, runThemeGuard]);
+    }
+
+    checkUserStatus();
+  }, [user?.id, sessionCheckComplete, setProStatus, setProStatusSettled]);
 
   useEffect(() => {
-    sync();
-  }, [sync]);
-
-  useEffect(() => {
-    const onFocus = () => sync();
+    async function onFocus() {
+      if (!user?.id) return;
+      setProStatusSettled(false);
+      let isPremiumUser = await getProStatus();
+      if (mountedRef.current) {
+        setProStatus(isPremiumUser);
+        setProStatusSettled(true);
+        const current = localStorage.getItem(STORAGE_KEY) ?? "default";
+        const isPremiumTheme = PREMIUM_THEMES.includes(current as (typeof PREMIUM_THEMES)[number]);
+        if (!isPremiumUser && isPremiumTheme && setThemeRef.current) {
+          setThemeRef.current("default");
+        }
+      }
+    }
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [sync]);
+  }, [user?.id, setProStatus, setProStatusSettled]);
 
   return null;
 }

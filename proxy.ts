@@ -16,7 +16,7 @@ function isMatchedPath(pathname: string, targetPath: string) {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
