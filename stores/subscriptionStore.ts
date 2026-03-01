@@ -2,7 +2,10 @@ import { create } from "zustand";
 
 interface SubscriptionState {
   isPro: boolean;
+  /** True setelah Pro status selesai di-fetch (untuk ThemeGuard) */
+  proStatusSettled: boolean;
   setProStatus: (isPro: boolean) => void;
+  setProStatusSettled: (settled: boolean) => void;
   upgrade: () => void;
   downgrade: () => void;
   checkLimit: (currentCount: number, limit: number) => boolean;
@@ -16,7 +19,9 @@ interface SubscriptionState {
  */
 export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
   isPro: false,
+  proStatusSettled: false,
   setProStatus: (isPro: boolean) => set({ isPro }),
+  setProStatusSettled: (settled: boolean) => set({ proStatusSettled: settled }),
   upgrade: () => set({ isPro: true }),
   downgrade: () => set({ isPro: false }),
   checkLimit: (currentCount: number, limit: number) => {

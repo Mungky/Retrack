@@ -66,12 +66,6 @@ export default function RootLayout({
         className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-background`}
         suppressHydrationWarning
       >
-        <script
-          id="theme-init"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('remula-theme');if(t&&['default','sultan','forest'].includes(t)){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.setAttribute('data-theme','default')}}catch(e){document.documentElement.setAttribute('data-theme','default')}})();`,
-          }}
-        />
         <ThemeProvider attribute="data-theme" defaultTheme="default">
         <AuroraBackground />
         <AuthProvider>

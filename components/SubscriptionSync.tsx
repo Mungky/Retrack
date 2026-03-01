@@ -18,7 +18,9 @@ export function SubscriptionSync() {
   const { user, loading: authLoading } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isPro = useSubscriptionStore((s) => s.isPro);
+  const proStatusSettled = useSubscriptionStore((s) => s.proStatusSettled);
   const setProStatus = useSubscriptionStore((s) => s.setProStatus);
+  const setProStatusSettled = useSubscriptionStore((s) => s.setProStatusSettled);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -30,13 +32,20 @@ export function SubscriptionSync() {
 
   const sync = useCallback(() => {
     if (!user?.id) {
-      if (mountedRef.current) setProStatus(false);
+      if (mountedRef.current) {
+        setProStatus(false);
+        setProStatusSettled(true);
+      }
       return;
     }
+    setProStatusSettled(false);
     getProStatus().then((isPro) => {
-      if (mountedRef.current) setProStatus(isPro);
+      if (mountedRef.current) {
+        setProStatus(isPro);
+        setProStatusSettled(true);
+      }
     });
-  }, [user?.id, setProStatus]);
+  }, [user?.id, setProStatus, setProStatusSettled]);
 
   useEffect(() => {
     sync();
@@ -49,7 +58,7 @@ export function SubscriptionSync() {
   }, [sync]);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || !proStatusSettled) return;
     const current = resolvedTheme ?? theme ?? "default";
     const isPremiumTheme = PREMIUM_THEMES.includes(current as (typeof PREMIUM_THEMES)[number]);
     const isNonProOrGuest = !user || !isPro;
@@ -57,7 +66,7 @@ export function SubscriptionSync() {
     if (shouldReset && setTheme) {
       setTheme("default");
     }
-  }, [authLoading, user, isPro, theme, resolvedTheme, setTheme]);
+  }, [authLoading, proStatusSettled, user, isPro, theme, resolvedTheme, setTheme]);
 
   return null;
 }
