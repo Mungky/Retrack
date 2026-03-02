@@ -28,6 +28,7 @@ export default function Error({ error, reset }: ErrorProps) {
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
+            type="button"
             onClick={reset}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
