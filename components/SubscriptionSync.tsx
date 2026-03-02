@@ -6,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { getProStatusAndTheme } from "@/app/actions/user";
 
+const STORAGE_KEY = "remula-theme";
+
 /**
  * Sinkronkan status Pro dan tema dari database ke store dan UI.
  * Source of Truth: database (users.is_pro, users.theme).
@@ -57,6 +59,9 @@ export function SubscriptionSync() {
         const current = themeRef.current ?? "default";
         if (themeFromDb !== current && setThemeRef.current) {
           setThemeRef.current(themeFromDb);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(STORAGE_KEY, themeFromDb);
+          }
         }
       }
     }
@@ -76,6 +81,9 @@ export function SubscriptionSync() {
         const current = themeRef.current ?? "default";
         if (themeFromDb !== current && setThemeRef.current) {
           setThemeRef.current(themeFromDb);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(STORAGE_KEY, themeFromDb);
+          }
         }
       }
     }

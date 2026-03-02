@@ -5,7 +5,10 @@ import { Lock } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModal } from "@/stores/premiumModalStore";
+import { useToast } from "@/contexts/ToastContext";
 import { updateUserTheme } from "@/app/actions/user";
+
+const STORAGE_KEY = "remula-theme";
 
 type ThemeId = "default" | "sultan" | "forest";
 
@@ -39,6 +42,7 @@ export function ThemeSwitcher() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
+  const { showToast } = useToast();
   const currentTheme = (theme || resolvedTheme || "default") as ThemeId;
 
   const handleThemeClick = async (id: ThemeId) => {
@@ -48,8 +52,15 @@ export function ThemeSwitcher() {
     }
     setTheme(id);
     const result = await updateUserTheme(id);
-    if (!result.success && result.error?.includes("Premium")) {
-      setTheme("default");
+    if (!result.success) {
+      if (result.error?.includes("Premium")) {
+        setTheme("default");
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, "default");
+        }
+      } else if (!result.error?.includes("Not authenticated")) {
+        showToast(result.error ?? "Gagal menyinkronkan tema", "error");
+      }
     }
   };
 
