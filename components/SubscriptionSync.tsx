@@ -20,7 +20,7 @@ export function SubscriptionSync() {
   const setProStatusSettled = useSubscriptionStore((s) => s.setProStatusSettled);
   const mountedRef = useRef(true);
   const setThemeRef = useRef(setTheme);
-  const themeRef = useRef<string | undefined>();
+  const themeRef = useRef<string | undefined>(undefined);
   setThemeRef.current = setTheme;
   themeRef.current = theme ?? undefined;
 
