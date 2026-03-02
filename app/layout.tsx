@@ -62,6 +62,16 @@ export default function RootLayout({
         className={`${inter.variable} ${playfair.variable} antialiased min-h-screen relative text-foreground overflow-x-hidden bg-background`}
         suppressHydrationWarning
       >
+        {/* Consume manifest icon preload to avoid browser warning */}
+        <img
+          src="/icon-192x192.png"
+          alt=""
+          width={1}
+          height={1}
+          loading="eager"
+          className="absolute w-px h-px opacity-0 pointer-events-none -z-10"
+          aria-hidden
+        />
         <ThemeProvider attribute="data-theme" defaultTheme="default">
         <AuroraBackground />
         <AuthProvider>
