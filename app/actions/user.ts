@@ -58,12 +58,12 @@ export async function updateUserTheme(theme: string): Promise<UpdateThemeResult>
     const supabase = await createClient();
     const { data } = await supabase
       .from("users")
-      .select("is_pro, isPro")
+      .select("isPro")
       .eq("id", userId)
       .single();
 
-    const row = data as { is_pro?: boolean; isPro?: boolean } | null;
-    const isPro = row && (row.is_pro === true || row.isPro === true);
+    const row = data as { isPro?: boolean } | null;
+    const isPro = row?.isPro === true;
     if (!isPro) {
       return { success: false, error: "Premium theme requires Pro subscription" };
     }
@@ -91,13 +91,13 @@ export async function getProStatusAndTheme(): Promise<ProStatusAndTheme> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("users")
-    .select("is_pro, isPro, theme")
+    .select("isPro, theme")
     .eq("id", userId)
     .single();
 
   if (error || !data) return null;
-  const row = data as { is_pro?: boolean; isPro?: boolean; theme?: string };
-  const isPro = row.is_pro === true || row.isPro === true;
+  const row = data as { isPro?: boolean; theme?: string };
+  const isPro = row.isPro === true;
   const theme = (row.theme && VALID_THEMES.includes(row.theme as ThemeId))
     ? (row.theme as ThemeId)
     : "default";

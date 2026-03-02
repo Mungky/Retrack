@@ -25,7 +25,7 @@ export async function getProStatus(): Promise<boolean> {
     .single();
 
   if (error || !data) return false;
-  return data.isPro === true;
+  return (data as { isPro?: boolean }).isPro === true;
 }
 
 /**
