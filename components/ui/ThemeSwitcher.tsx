@@ -5,6 +5,7 @@ import { Lock } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModal } from "@/stores/premiumModalStore";
+import { updateUserTheme } from "@/app/actions/user";
 
 type ThemeId = "default" | "sultan" | "forest";
 
@@ -40,12 +41,16 @@ export function ThemeSwitcher() {
   const { open: openPremium } = usePremiumModal();
   const currentTheme = (theme || resolvedTheme || "default") as ThemeId;
 
-  const handleThemeClick = (id: ThemeId) => {
+  const handleThemeClick = async (id: ThemeId) => {
     if ((id === "sultan" || id === "forest") && !isPro) {
       openPremium();
       return;
     }
     setTheme(id);
+    const result = await updateUserTheme(id);
+    if (!result.success && result.error?.includes("Premium")) {
+      setTheme("default");
+    }
   };
 
   return (
