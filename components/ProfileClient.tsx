@@ -24,6 +24,7 @@ import { Z_INDEX } from "@/lib/z-index";
 import { Button } from "@/components/ui";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import DataManagementCard from "@/components/settings/DataManagementCard";
+import FinancialCycleSettings from "@/components/settings/FinancialCycleSettings";
 import type { Wallet, Category } from "@/types";
 
 interface ProfileClientProps {
@@ -181,13 +182,16 @@ export default function ProfileClient({
       </div>
 
       {/* App Settings */}
-      <div className="mt-8">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-          App Settings
-        </h3>
-        <div className="glass-card p-4 mb-4">
-          <ThemeSwitcher />
+      <div className="mt-8 space-y-6">
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+            App Settings
+          </h3>
+          <div className="glass-card p-4 mb-4">
+            <ThemeSwitcher />
+          </div>
         </div>
+        <FinancialCycleSettings />
       </div>
 
       {/* Data Management */}

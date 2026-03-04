@@ -1,6 +1,8 @@
 import { getServerUserId } from "@/lib/auth-helpers";
 import { createClient } from "@/lib/supabase-server";
 import BudgetClient from "@/components/BudgetClient";
+import { getCycleDateRange, type CycleType } from "@/lib/dateUtils";
+import { getCyclePrefs } from "@/app/actions/user";
 import type { Budget, Category, Transaction } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -42,19 +44,21 @@ async function getCategories(userId: string | null): Promise<Category[]> {
   }
 }
 
-function getMonthRange() {
+function getMonthRange(cycleType: CycleType, paycheckDate: number) {
   const now = new Date();
-  const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const endOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-  return { startOfMonth, endOfMonth };
+  const { startStr, endStr } = getCycleDateRange(now, cycleType, paycheckDate);
+  return { startOfMonth: startStr, endOfMonth: endStr };
 }
 
-async function getExpensesThisMonth(userId: string | null): Promise<Transaction[]> {
+async function getExpensesThisMonth(
+  userId: string | null,
+  cycleType: CycleType,
+  paycheckDate: number
+): Promise<Transaction[]> {
   if (!userId) return [];
   try {
     const supabase = await createClient();
-    const { startOfMonth, endOfMonth } = getMonthRange();
+    const { startOfMonth, endOfMonth } = getMonthRange(cycleType, paycheckDate);
     const { data, error } = await supabase
       .from("transactions")
       .select("id, amount, type, date, category_id")
@@ -71,11 +75,15 @@ async function getExpensesThisMonth(userId: string | null): Promise<Transaction[
   }
 }
 
-async function getIncomeThisMonth(userId: string | null): Promise<Transaction[]> {
+async function getIncomeThisMonth(
+  userId: string | null,
+  cycleType: CycleType,
+  paycheckDate: number
+): Promise<Transaction[]> {
   if (!userId) return [];
   try {
     const supabase = await createClient();
-    const { startOfMonth, endOfMonth } = getMonthRange();
+    const { startOfMonth, endOfMonth } = getMonthRange(cycleType, paycheckDate);
     const { data, error } = await supabase
       .from("transactions")
       .select("id, amount, type, date, category_id")
@@ -94,11 +102,15 @@ async function getIncomeThisMonth(userId: string | null): Promise<Transaction[]>
 
 export default async function BudgetPage() {
   const userId = await getServerUserId();
+  const cyclePrefs = await getCyclePrefs();
+  const cycleType = cyclePrefs?.cycleType ?? "calendar";
+  const paycheckDate = cyclePrefs?.paycheckDate ?? 1;
+
   const [budgetsWithCategory, categories, expensesThisMonth, incomeThisMonth] = await Promise.all([
     getBudgets(userId),
     getCategories(userId),
-    getExpensesThisMonth(userId),
-    getIncomeThisMonth(userId),
+    getExpensesThisMonth(userId, cycleType, paycheckDate),
+    getIncomeThisMonth(userId, cycleType, paycheckDate),
   ]);
 
   return (

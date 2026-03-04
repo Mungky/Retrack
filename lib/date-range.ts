@@ -1,3 +1,6 @@
+import type { CycleType } from "./dateUtils";
+import { getCycleDateRange } from "./dateUtils";
+
 export type DateRangeKey = "today" | "this_week" | "this_month" | "last_month" | "last_3_months" | "this_year";
 
 export const DATE_RANGE_OPTIONS: { value: DateRangeKey; label: string }[] = [
@@ -9,10 +12,21 @@ export const DATE_RANGE_OPTIONS: { value: DateRangeKey; label: string }[] = [
   { value: "this_year", label: "This Year" },
 ];
 
-export function getDateRange(range: DateRangeKey): { start: Date; end: Date } {
+export interface CycleParams {
+  cycleType: CycleType;
+  paycheckDate: number;
+}
+
+export function getDateRange(
+  range: DateRangeKey,
+  cycleParams?: CycleParams
+): { start: Date; end: Date } {
   const now = new Date();
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let start: Date;
+
+  const cycleType = cycleParams?.cycleType ?? "calendar";
+  const paycheckDate = cycleParams?.paycheckDate ?? 1;
 
   switch (range) {
     case "today":
@@ -24,15 +38,14 @@ export function getDateRange(range: DateRangeKey): { start: Date; end: Date } {
       start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
       break;
     }
-    case "this_month":
-      start = new Date(now.getFullYear(), now.getMonth(), 1);
-      break;
+    case "this_month": {
+      const cycle = getCycleDateRange(now, cycleType, paycheckDate);
+      return { start: cycle.startDate, end: cycle.endDate };
+    }
     case "last_month": {
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      end.setTime(start.getTime());
-      end.setMonth(end.getMonth() + 1);
-      end.setDate(0); // Last day of previous month
-      break;
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const cycle = getCycleDateRange(lastMonth, cycleType, paycheckDate);
+      return { start: cycle.startDate, end: cycle.endDate };
     }
     case "last_3_months":
       start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
@@ -65,8 +78,8 @@ export function toLocalDateString(d: Date): string {
 }
 
 /** Get all date strings (YYYY-MM-DD) in range, inclusive */
-export function getDatesInRange(range: DateRangeKey): string[] {
-  const { start, end } = getDateRange(range);
+export function getDatesInRange(range: DateRangeKey, cycleParams?: CycleParams): string[] {
+  const { start, end } = getDateRange(range, cycleParams);
   const dates: string[] = [];
   const d = new Date(start);
   while (d <= end) {
@@ -83,9 +96,10 @@ export function toDateOnly(dateStr: string): string {
 
 export function filterTransactionsByRange<T extends { date: string }>(
   transactions: T[],
-  range: DateRangeKey
+  range: DateRangeKey,
+  cycleParams?: CycleParams
 ): T[] {
-  const { start, end } = getDateRange(range);
+  const { start, end } = getDateRange(range, cycleParams);
   const startStr = toLocalDateString(start);
   const endStr = toLocalDateString(end);
   return transactions.filter((t) => {

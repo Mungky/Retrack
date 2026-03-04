@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { getServerUserId } from "@/lib/auth-helpers";
 
@@ -102,4 +103,69 @@ export async function getProStatusAndTheme(): Promise<ProStatusAndTheme> {
     ? (row.theme as ThemeId)
     : "default";
   return { isPro, theme };
+}
+
+export type CycleType = "calendar" | "paycheck";
+
+export type CyclePrefs = { cycleType: CycleType; paycheckDate: number } | null;
+
+export type UpdateCycleResult =
+  | { success: true }
+  | { success: false; error: string };
+
+/**
+ * Get user's financial cycle preferences.
+ */
+export async function getCyclePrefs(): Promise<CyclePrefs> {
+  const userId = await getServerUserId();
+  if (!userId) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("cycle_type, paycheck_date")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) return null;
+  const row = data as { cycle_type?: string; paycheck_date?: number };
+  const cycleType =
+    row.cycle_type === "paycheck" ? "paycheck" : "calendar";
+  const paycheckDate = Math.max(
+    1,
+    Math.min(31, Number(row.paycheck_date) || 1)
+  );
+  return { cycleType, paycheckDate };
+}
+
+/**
+ * Update user's financial cycle preferences.
+ */
+export async function updateCyclePrefs(
+  cycleType: CycleType,
+  paycheckDate: number
+): Promise<UpdateCycleResult> {
+  const userId = await getServerUserId();
+  if (!userId) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const clamped = Math.max(1, Math.min(31, paycheckDate));
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({
+      cycle_type: cycleType,
+      paycheck_date: clamped,
+    })
+    .eq("id", userId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  revalidatePath("/budget");
+  revalidatePath("/dashboard");
+  revalidatePath("/statistics");
+  return { success: true };
 }

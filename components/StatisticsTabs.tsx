@@ -6,6 +6,7 @@ import { FileText, TrendingUp, BarChart3, ArrowUpCircle, ArrowDownCircle, Lock }
 import DateRangeFilter from "./DateRangeFilter";
 import { filterTransactionsByRange, toDateOnly, type DateRangeKey } from "@/lib/date-range";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
+import { useCycleStore } from "@/stores/cycleStore";
 import { usePremiumModal } from "@/stores/premiumModalStore";
 import { normalizeTransactionType } from "@/lib/transaction-calc";
 import { formatCurrency } from "@/lib/currency";
@@ -42,6 +43,9 @@ export default function StatisticsTabs({
 }: StatisticsTabsProps) {
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
+  const cycleType = useCycleStore((s) => s.cycleType);
+  const paycheckDate = useCycleStore((s) => s.paycheckDate);
+  const cycleParams = { cycleType, paycheckDate };
   const [dateRange, setDateRange] = useState<DateRangeKey>("this_month");
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("report");
 
@@ -54,8 +58,8 @@ export default function StatisticsTabs({
   };
 
   const filtered = useMemo(
-    () => filterTransactionsByRange(transactions, dateRange),
-    [transactions, dateRange]
+    () => filterTransactionsByRange(transactions, dateRange, cycleParams),
+    [transactions, dateRange, cycleType, paycheckDate]
   );
 
   const stats = useMemo(() => {

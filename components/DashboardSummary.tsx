@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { filterTransactionsByRange, getDatesInRange, type DateRangeKey } from "@/lib/date-range";
+import { useCycleStore } from "@/stores/cycleStore";
 import { calculateTotals, aggregateByDate, getCumulativeNetSeries } from "@/lib/transaction-calc";
 import { formatCurrency, formatCurrencyCompact, formatCurrencyFull } from "@/lib/currency";
 import type { Transaction } from "@/types";
@@ -36,22 +37,26 @@ export default function DashboardSummary({
   transactions,
   dateRange,
 }: DashboardSummaryProps) {
+  const cycleType = useCycleStore((s) => s.cycleType);
+  const paycheckDate = useCycleStore((s) => s.paycheckDate);
+  const cycleParams = { cycleType, paycheckDate };
+
   const { income, expense, net } = useMemo(() => {
-    const filtered = filterTransactionsByRange(transactions, dateRange);
+    const filtered = filterTransactionsByRange(transactions, dateRange, cycleParams);
     return calculateTotals(filtered);
-  }, [transactions, dateRange]);
+  }, [transactions, dateRange, cycleType, paycheckDate]);
 
   const chartData = useMemo(() => {
-    const filtered = filterTransactionsByRange(transactions, dateRange);
+    const filtered = filterTransactionsByRange(transactions, dateRange, cycleParams);
     const daily = aggregateByDate(filtered);
-    const dates = getDatesInRange(dateRange);
+    const dates = getDatesInRange(dateRange, cycleParams);
     if (dates.length === 0) return [];
     const series = getCumulativeNetSeries(daily, dates);
     return series.map((d) => ({
       ...d,
       dateLabel: formatChartDate(d.date),
     }));
-  }, [transactions, dateRange]);
+  }, [transactions, dateRange, cycleType, paycheckDate]);
 
   const chartColor = net >= 0 ? "#10B981" : "#F43F5E";
 

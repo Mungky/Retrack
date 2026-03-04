@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
-import { getProStatusAndTheme } from "@/app/actions/user";
+import { getProStatusAndTheme, getCyclePrefs } from "@/app/actions/user";
+import { useCycleStore } from "@/stores/cycleStore";
 
 const STORAGE_KEY = "remula-theme";
 
@@ -20,6 +21,7 @@ export function SubscriptionSync() {
   const { theme, setTheme } = useTheme();
   const setProStatus = useSubscriptionStore((s) => s.setProStatus);
   const setProStatusSettled = useSubscriptionStore((s) => s.setProStatusSettled);
+  const setCycle = useCycleStore((s) => s.setCycle);
   const mountedRef = useRef(true);
   const setThemeRef = useRef(setTheme);
   const themeRef = useRef<string | undefined>(undefined);
@@ -46,12 +48,16 @@ export function SubscriptionSync() {
         if (mountedRef.current) {
           setProStatus(false);
           setProStatusSettled(true);
+          setCycle("calendar", 1);
         }
         return;
       }
 
       setProStatusSettled(false);
-      const payload = await getProStatusAndTheme();
+      const [payload, cyclePrefs] = await Promise.all([
+        getProStatusAndTheme(),
+        getCyclePrefs(),
+      ]);
 
       if (mountedRef.current && payload) {
         if (process.env.NODE_ENV === "development") {
@@ -59,6 +65,10 @@ export function SubscriptionSync() {
         }
         setProStatus(payload.isPro);
         setProStatusSettled(true);
+
+        if (mountedRef.current && cyclePrefs) {
+          setCycle(cyclePrefs.cycleType, cyclePrefs.paycheckDate);
+        }
 
         const themeFromDb = payload.isPro ? payload.theme : payload.theme === "sultan" || payload.theme === "forest" ? "default" : payload.theme;
         const current = themeRef.current ?? "default";
@@ -80,10 +90,16 @@ export function SubscriptionSync() {
     async function onFocus() {
       if (!user?.id) return;
       setProStatusSettled(false);
-      const payload = await getProStatusAndTheme();
+      const [payload, cyclePrefs] = await Promise.all([
+        getProStatusAndTheme(),
+        getCyclePrefs(),
+      ]);
       if (mountedRef.current && payload) {
         setProStatus(payload.isPro);
         setProStatusSettled(true);
+        if (mountedRef.current && cyclePrefs) {
+          setCycle(cyclePrefs.cycleType, cyclePrefs.paycheckDate);
+        }
         const themeFromDb = payload.isPro ? payload.theme : payload.theme === "sultan" || payload.theme === "forest" ? "default" : payload.theme;
         const current = themeRef.current ?? "default";
         if (themeFromDb !== current && setThemeRef.current) {
