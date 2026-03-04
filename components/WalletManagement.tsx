@@ -68,7 +68,7 @@ export default function WalletManagement({ initialWallets, onWalletsChange }: Wa
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
   const [wallets, setWallets] = useState<Wallet[]>(initialWallets);
-  const canAddWallet = isPro || wallets.length < 5;
+  const canAddWallet = isPro || wallets.length < 1;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
