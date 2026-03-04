@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -39,11 +40,15 @@ const THEMES: {
 ];
 
 export function ThemeSwitcher() {
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
   const { showToast } = useToast();
-  const currentTheme = (theme || resolvedTheme || "default") as ThemeId;
+
+  useEffect(() => setMounted(true), []);
+
+  const currentTheme = (mounted ? (theme || resolvedTheme || "default") : "default") as ThemeId;
 
   const handleThemeClick = async (id: ThemeId) => {
     if ((id === "sultan" || id === "forest") && !isPro) {

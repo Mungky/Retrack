@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
@@ -12,8 +12,10 @@ const STORAGE_KEY = "remula-theme";
  * Sinkronkan status Pro dan tema dari database ke store dan UI.
  * Source of Truth: database (users.is_pro, users.theme).
  * Refetch: pada login dan saat tab/window mendapat fokus kembali.
+ * Strict mounted check: jangan jalankan logic client (setTheme, localStorage, window) sebelum mounted.
  */
 export function SubscriptionSync() {
+  const [mounted, setMounted] = useState(false);
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const setProStatus = useSubscriptionStore((s) => s.setProStatus);
@@ -25,6 +27,7 @@ export function SubscriptionSync() {
   themeRef.current = theme ?? undefined;
 
   useEffect(() => {
+    setMounted(true);
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
@@ -36,6 +39,8 @@ export function SubscriptionSync() {
   }, [theme]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     async function checkUserStatus() {
       if (!user?.id) {
         if (mountedRef.current) {
@@ -67,9 +72,11 @@ export function SubscriptionSync() {
     }
 
     checkUserStatus();
-  }, [user?.id, setProStatus, setProStatusSettled]);
+  }, [mounted, user?.id, setProStatus, setProStatusSettled]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     async function onFocus() {
       if (!user?.id) return;
       setProStatusSettled(false);
@@ -89,7 +96,7 @@ export function SubscriptionSync() {
     }
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [user?.id, setProStatus, setProStatusSettled]);
+  }, [mounted, user?.id, setProStatus, setProStatusSettled]);
 
   return null;
 }

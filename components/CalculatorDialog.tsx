@@ -65,10 +65,14 @@ const NUMPAD_LAYOUT: string[][] = [
 ];
 
 export default function CalculatorDialog({ isOpen, onClose, onSave }: CalculatorDialogProps) {
+  const [mounted, setMounted] = useState(false);
   const { theme: themeVal, resolvedTheme } = useTheme();
   const isPro = useSubscriptionStore((s) => s.isPro);
   const { open: openPremium } = usePremiumModal();
-  const theme = (themeVal || resolvedTheme || "default") as "default" | "sultan" | "forest";
+
+  useEffect(() => setMounted(true), []);
+
+  const theme = (mounted ? (themeVal || resolvedTheme || "default") : "default") as "default" | "sultan" | "forest";
 
   // Calculator state
   const [display, setDisplay] = useState("0");
