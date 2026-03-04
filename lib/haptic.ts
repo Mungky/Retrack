@@ -6,8 +6,12 @@
  */
 
 function vibratePattern(pattern: number | number[]): void {
-  if (typeof window !== "undefined" && "vibrate" in navigator) {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return;
+  if (!navigator.vibrate) return;
+  try {
     navigator.vibrate(pattern);
+  } catch {
+    // No-op: beberapa browser mobile bisa throw (mis. tanpa user gesture)
   }
 }
 

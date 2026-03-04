@@ -110,6 +110,7 @@ export function SubscriptionSync() {
         }
       }
     }
+    if (typeof window === "undefined") return;
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [mounted, user?.id, setProStatus, setProStatusSettled]);
