@@ -195,6 +195,8 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
 
   if (!isOpen) return null;
 
+  if (typeof document === "undefined") return null;
+
   const availableToWallets = wallets.filter((w) => w.id !== fromWallet);
 
   return createPortal(

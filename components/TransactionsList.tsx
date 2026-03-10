@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import TransactionItem from "./TransactionItem";
 import type { Transaction } from "@/types";
@@ -48,6 +48,8 @@ export default function TransactionsList({
   initialTransactions: Transaction[];
 }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const filteredTransactions = useMemo(() => {
     if (!searchQuery.trim()) return initialTransactions;
@@ -67,8 +69,8 @@ export default function TransactionsList({
   }, [initialTransactions, searchQuery]);
 
   const groupedTransactions = useMemo(
-    () => groupTransactionsByDate(filteredTransactions),
-    [filteredTransactions]
+    () => (mounted ? groupTransactionsByDate(filteredTransactions) : {}),
+    [filteredTransactions, mounted]
   );
 
   if (initialTransactions.length === 0) {
@@ -78,6 +80,19 @@ export default function TransactionsList({
         <p className="text-white/40 text-sm mt-2">
           Mulai tambahkan transaksi untuk melihat riwayat di sini
         </p>
+      </div>
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <div className="space-y-6">
+        <div className="h-14 rounded-2xl bg-white/5 animate-pulse" />
+        <div className="glass-card px-4 py-6 space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }

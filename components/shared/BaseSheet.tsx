@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -42,11 +43,14 @@ export function BaseSheet({
   contentClassName,
   contentMaxHeight = "calc(90vh - 140px)",
 }: BaseSheetProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const handleBackdropClick = () => {
     if (!disabled) onClose();
   };
 
-  if (typeof document === "undefined") return null;
+  if (!mounted || typeof document === "undefined") return null;
 
   return createPortal(
     <AnimatePresence mode="wait">

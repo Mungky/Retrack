@@ -12,7 +12,7 @@ export function LandingFooter() {
       className="px-4 py-12 md:py-16 border-t border-border/50 mt-8"
     >
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground" suppressHydrationWarning>
           © {new Date().getFullYear()} Re-Start. Catat keuangan lebih mudah.
         </p>
         <nav className="flex items-center gap-6">

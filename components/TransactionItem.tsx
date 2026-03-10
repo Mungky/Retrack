@@ -47,8 +47,11 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => setMounted(true), []);
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("id-ID", {
@@ -185,7 +188,7 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
         {/* Text */}
         <div className="flex-1 min-w-0">
           <h3 className="text-white font-semibold truncate">{title}</h3>
-          <p className="text-sm text-white/50 truncate">{subtitle}</p>
+          <p className="text-sm text-white/50 truncate" suppressHydrationWarning>{subtitle}</p>
         </div>
 
         {/* Amount - right aligned */}
@@ -205,7 +208,7 @@ export default function TransactionItem({ transaction, isLastItem = false }: Tra
             <MoreVertical className="text-white/50" size={20} />
           </button>
 
-          {typeof document !== "undefined" &&
+          {mounted && typeof document !== "undefined" &&
             createPortal(dropdownContent, document.body)}
         </div>
       </div>
