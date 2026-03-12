@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Script from "next/script";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +18,19 @@ import { upgradeToProLifetime } from "@/app/actions/subscription";
 import { cn } from "@/lib/cn";
 import { Loader2 } from "lucide-react";
 
+declare global {
+  interface Window {
+    snap?: {
+      pay: (token: string, options?: {
+        onSuccess?: (result: unknown) => void;
+        onPending?: (result: unknown) => void;
+        onError?: (result: unknown) => void;
+        onClose?: () => void;
+      }) => void;
+    };
+  }
+}
+
 const BENEFITS = [
   { icon: "🎨", text: "Unlock Sultan & Forest Themes" },
   { icon: "📂", text: "Custom Categories (Add/Edit)" },
@@ -24,32 +39,99 @@ const BENEFITS = [
   { icon: "📈", text: "Unlimited Budgets" },
 ] as const;
 
+/** Harga Lifetime Premium - Rp 49.000 (harga promo) */
+const LIFETIME_GROSS_AMOUNT = 49000;
+
 export function PremiumModal() {
   const { isOpen, close } = usePremiumModalStore();
   const { user } = useAuth();
   const { showToast } = useToast();
   const upgrade = useSubscriptionStore((s) => s.upgrade);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [snapReady, setSnapReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.snap) {
+      setSnapReady(true);
+    }
+  }, []);
 
   const handleUnlock = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !clientKey?.trim()) return;
     try {
       setIsUpgrading(true);
-      const res = await upgradeToProLifetime();
-      if (res.success) {
-        upgrade();
-        close();
-      } else {
-        showToast(res.error, "error");
+
+      const res = await fetch("/api/transaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gross_amount: LIFETIME_GROSS_AMOUNT,
+          customer_details: {
+            first_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Customer",
+            email: user.email || "customer@example.com",
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal membuat transaksi");
       }
+
+      const { token } = data;
+      if (!token) {
+        throw new Error("Token pembayaran tidak diterima");
+      }
+
+      if (!window.snap) {
+        throw new Error("Midtrans Snap belum siap. Tunggu sebentar dan coba lagi.");
+      }
+
+      window.snap.pay(token, {
+        onSuccess: async (result: { transaction_status?: string }) => {
+          const status = result?.transaction_status;
+          if (status !== "capture" && status !== "settlement") {
+            showToast("Status pembayaran tidak valid. Silakan coba lagi.", "error");
+            return;
+          }
+          const upgradeRes = await upgradeToProLifetime();
+          if (upgradeRes.success) {
+            upgrade();
+            close();
+            showToast("Pembayaran berhasil! Akun Pro Anda telah diaktifkan.", "success");
+          } else {
+            showToast(upgradeRes.error, "error");
+          }
+        },
+        onPending: () => {
+          showToast("Menunggu pembayaran. Silakan selesaikan pembayaran.", "success");
+        },
+        onError: () => {
+          showToast("Pembayaran gagal. Silakan coba lagi.", "error");
+        },
+        onClose: () => {
+          // User menutup popup tanpa membayar
+        },
+      });
     } catch (error) {
-      showToast("Gagal upgrade ke Pro. Coba lagi.", "error");
+      showToast(error instanceof Error ? error.message : "Gagal memproses pembayaran.", "error");
     } finally {
       setIsUpgrading(false);
     }
   };
 
+  const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
+  const canPay = Boolean(clientKey?.trim());
+
   return (
+    <>
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={clientKey ?? ""}
+        strategy="afterInteractive"
+        onLoad={() => setSnapReady(true)}
+      />
     <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
       <DialogContent
         className={cn(
@@ -92,8 +174,8 @@ export function PremiumModal() {
             <span className="text-xl">👑</span>
           </div>
           <div className="flex items-baseline justify-center gap-2">
-            <del className="text-amber-200/50 text-base">$39.99</del>
-            <span className="text-2xl font-bold text-amber-100">$19.99</span>
+            <del className="text-amber-200/50 text-base">Rp 299.000</del>
+            <span className="text-2xl font-bold text-amber-100">Rp 49.000</span>
           </div>
           <p className="text-center text-amber-200/80 text-sm mt-3 leading-relaxed">
             Pay once. Own it forever. No monthly subscriptions, no hidden fees.
@@ -103,7 +185,7 @@ export function PremiumModal() {
         <div className="space-y-2 pt-2">
           <Button
             onClick={handleUnlock}
-            disabled={!user?.id || isUpgrading}
+            disabled={!user?.id || isUpgrading || !snapReady || !canPay}
             className={cn(
               "w-full py-4 text-lg font-bold",
               "bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950",
@@ -117,19 +199,42 @@ export function PremiumModal() {
                 Memproses...
               </>
             ) : (
-              "Get Lifetime Access - $19.99"
+              "Get a lifetime premium"
             )}
           </Button>
 
-          <button
-            type="button"
-            onClick={() => close()}
-            className="w-full py-2.5 text-sm text-amber-200/70 hover:text-amber-200 transition-colors underline underline-offset-2"
-          >
-            Restore Purchase
-          </button>
+          {/* Footer Links — Midtrans Compliance */}
+          <footer className="pt-4 mt-4 border-t border-amber-500/20">
+            <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500">
+              <Link
+                href="/terms"
+                className="hover:text-amber-200/80 transition-colors"
+              >
+                Terms & Conditions
+              </Link>
+              <Link
+                href="/privacy"
+                className="hover:text-amber-200/80 transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/refund"
+                className="hover:text-amber-200/80 transition-colors"
+              >
+                Refund Policy
+              </Link>
+              <a
+                href="mailto:support@domainanda.com"
+                className="hover:text-amber-200/80 transition-colors"
+              >
+                Contact Support: support@domainanda.com
+              </a>
+            </nav>
+          </footer>
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
