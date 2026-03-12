@@ -52,6 +52,7 @@ export async function POST(request: Request) {
       gross_amount: grossAmount,
     },
     customer_details: customerDetails,
+    custom_field1: userId,
   };
 
   try {
