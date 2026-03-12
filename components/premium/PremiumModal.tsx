@@ -96,9 +96,10 @@ export function PremiumModal() {
 
       setTimeout(() => {
         window.snap!.pay(token, {
-          onSuccess: async (result: { order_id?: string; transaction_status?: string }) => {
-          const paidOrderId = result?.order_id || orderId;
-          const status = result?.transaction_status;
+          onSuccess: async (result: unknown) => {
+          const r = result as { order_id?: string; transaction_status?: string };
+          const paidOrderId = r?.order_id || orderId;
+          const status = r?.transaction_status;
           if (status !== "capture" && status !== "settlement") {
             showToast("Status pembayaran tidak valid. Silakan coba lagi.", "error");
             return;
