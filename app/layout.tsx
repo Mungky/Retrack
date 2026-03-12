@@ -7,9 +7,9 @@ import { SheetProvider } from "@/contexts/SheetContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
-import { PremiumModal } from "@/components/premium/PremiumModal";
 import { SubscriptionSync } from "@/components/SubscriptionSync";
 import { ClientErrorHandler } from "@/components/ClientErrorHandler";
+import { PremiumModal } from "@/components/premium/PremiumModal";
 
 const inter = Inter({
   subsets: ["latin"],

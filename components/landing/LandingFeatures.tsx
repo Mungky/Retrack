@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   CreditCard,
 } from "lucide-react";
+import { LIFETIME_PREMIUM_LABEL } from "@/lib/constants";
 
 const features = [
   {
@@ -27,7 +28,7 @@ const features = [
   {
     icon: CreditCard,
     title: "Sekali Bayar",
-    description: "Rp 49.999 sekali bayar, akses selamanya. Tidak ada langganan bulanan.",
+    description: `${LIFETIME_PREMIUM_LABEL} sekali bayar, akses selamanya. Tidak ada langganan bulanan.`,
   },
 ];
 

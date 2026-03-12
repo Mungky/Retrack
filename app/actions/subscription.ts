@@ -31,7 +31,8 @@ export async function getProStatus(): Promise<boolean> {
 /**
  * Upgrade user ke Pro Lifetime (beli putus).
  * Mengambil userId dari sesi server (tidak menerima parameter dari client).
- * Dipanggil saat pembayaran sukses.
+ * Dipanggil saat pembayaran sukses (onSuccess Midtrans).
+ * Update: isPro = true, theme = 'sultan'.
  */
 export async function upgradeToProLifetime(): Promise<SubscriptionResult> {
   const userId = await getServerUserId();
@@ -42,7 +43,7 @@ export async function upgradeToProLifetime(): Promise<SubscriptionResult> {
   const supabase = await createClient();
   const { error } = await supabase
     .from("users")
-    .update({ isPro: true })
+    .update({ isPro: true, theme: "sultan" })
     .eq("id", userId);
 
   if (error) {

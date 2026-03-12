@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         const status = data.transaction_status;
         if (status === "settlement" || status === "capture") {
           const supabase = await createClient();
-          await supabase.from("users").update({ is_pro: true }).eq("id", userId);
+          await supabase.from("users").update({ isPro: true }).eq("id", userId);
 
           return NextResponse.json({
             success: true,

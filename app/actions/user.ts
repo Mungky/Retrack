@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore } from "next/cache";
 import { createClient } from "@/lib/supabase-server";
 import { getServerUserId } from "@/lib/auth-helpers";
 
@@ -84,10 +84,15 @@ export async function updateUserTheme(theme: string): Promise<UpdateThemeResult>
 
 /**
  * Ambil status Pro dan tema dalam satu query (untuk sinkronisasi awal).
+ * unstable_noStore: disable Next.js cache — selalu fetch fresh dari DB.
  */
 export async function getProStatusAndTheme(): Promise<ProStatusAndTheme> {
+  unstable_noStore();
   const userId = await getServerUserId();
-  if (!userId) return null;
+  if (!userId) {
+    console.log("[getProStatusAndTheme] No userId (not authenticated)");
+    return null;
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -96,13 +101,18 @@ export async function getProStatusAndTheme(): Promise<ProStatusAndTheme> {
     .eq("id", userId)
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.log("[getProStatusAndTheme] DB RESULT: error or no data", { userId, error: error?.message, data });
+    return null;
+  }
   const row = data as { isPro?: boolean; theme?: string };
   const isPro = row.isPro === true;
   const theme = (row.theme && VALID_THEMES.includes(row.theme as ThemeId))
     ? (row.theme as ThemeId)
     : "default";
-  return { isPro, theme };
+  const result = { isPro, theme };
+  console.log("[getProStatusAndTheme] DB RESULT:", result);
+  return result;
 }
 
 export type CycleType = "calendar" | "paycheck";
@@ -115,10 +125,15 @@ export type UpdateCycleResult =
 
 /**
  * Get user's financial cycle preferences.
+ * unstable_noStore: disable Next.js cache — selalu fetch fresh dari DB.
  */
 export async function getCyclePrefs(): Promise<CyclePrefs> {
+  unstable_noStore();
   const userId = await getServerUserId();
-  if (!userId) return null;
+  if (!userId) {
+    console.log("[getCyclePrefs] No userId (not authenticated)");
+    return null;
+  }
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -127,7 +142,10 @@ export async function getCyclePrefs(): Promise<CyclePrefs> {
     .eq("id", userId)
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.log("[getCyclePrefs] DB RESULT: error or no data", { userId, error: error?.message, data });
+    return null;
+  }
   const row = data as { cycle_type?: string; paycheck_date?: number };
   const cycleType =
     row.cycle_type === "paycheck" ? "paycheck" : "calendar";
@@ -135,7 +153,9 @@ export async function getCyclePrefs(): Promise<CyclePrefs> {
     1,
     Math.min(31, Number(row.paycheck_date) || 1)
   );
-  return { cycleType, paycheckDate };
+  const result = { cycleType, paycheckDate };
+  console.log("[getCyclePrefs] DB RESULT:", result);
+  return result;
 }
 
 /**

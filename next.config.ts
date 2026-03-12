@@ -11,6 +11,19 @@ const pwa = withPWA({
 });
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/((?!_next/static|_next/image|favicon|icon|manifest).*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, max-age=0, must-revalidate",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       { source: "/stats", destination: "/statistics", permanent: true },

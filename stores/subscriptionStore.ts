@@ -14,7 +14,7 @@ interface SubscriptionState {
 /**
  * Pro users bypass all limits.
  * Free users: true if currentCount < limit, false otherwise (show paywall).
- * Source of Truth: database (users.is_pro). Di-sync via SubscriptionSync.
+ * Source of Truth: database (users.isPro). Di-sync via SubscriptionSync.
  * TIDAK di-persist ke localStorage — murni state memory dari fetch DB.
  */
 export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({

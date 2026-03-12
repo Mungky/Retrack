@@ -13,8 +13,11 @@ import { Button } from "@/components/ui";
 import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModalStore } from "@/stores/premiumModalStore";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "next-themes";
 import { useToast } from "@/contexts/ToastContext";
 import { cn } from "@/lib/cn";
+import { LIFETIME_PREMIUM_AMOUNT, LIFETIME_PREMIUM_LABEL } from "@/lib/constants";
+import { upgradeToProLifetime } from "@/app/actions/subscription";
 import { Loader2 } from "lucide-react";
 
 declare global {
@@ -38,13 +41,12 @@ const BENEFITS = [
   { icon: "📈", text: "Unlimited Budgets" },
 ] as const;
 
-/** Harga Lifetime Premium - Rp 49.999 */
-const LIFETIME_GROSS_AMOUNT = 49999;
 
 export function PremiumModal() {
   const { isOpen, close } = usePremiumModalStore();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { setTheme } = useTheme();
   const upgrade = useSubscriptionStore((s) => s.upgrade);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [snapReady, setSnapReady] = useState(false);
@@ -64,7 +66,7 @@ export function PremiumModal() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          gross_amount: LIFETIME_GROSS_AMOUNT,
+          gross_amount: LIFETIME_PREMIUM_AMOUNT,
           customer_details: {
             first_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Customer",
             email: user.email || "customer@example.com",
@@ -101,17 +103,20 @@ export function PremiumModal() {
             showToast("Status pembayaran tidak valid. Silakan coba lagi.", "error");
             return;
           }
-          const statusRes = await fetch(
-            `/api/transaction/status?order_id=${encodeURIComponent(paidOrderId)}`
-          );
-          const statusData = await statusRes.json();
-          if (statusData.success) {
-            upgrade();
-            close();
-            showToast("Pembayaran berhasil! Akun Pro Anda telah diaktifkan.", "success");
-          } else {
-            showToast(statusData.message || "Verifikasi pembayaran gagal.", "error");
+
+          const dbResult = await upgradeToProLifetime();
+          if (!dbResult.success) {
+            showToast(dbResult.error || "Gagal mengaktifkan akun Premium.", "error");
+            return;
           }
+
+          upgrade();
+          setTheme("sultan");
+          if (typeof window !== "undefined") {
+            localStorage.setItem("remula-theme", "sultan");
+          }
+          close();
+          showToast("Pembayaran Berhasil! Akun Anda sekarang Premium.", "success");
         },
         onPending: () => {
           showToast("Menunggu pembayaran. Silakan selesaikan pembayaran.", "success");
@@ -184,7 +189,7 @@ export function PremiumModal() {
             <span className="text-xl">👑</span>
           </div>
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-2xl font-bold text-amber-100">Rp 49.999</span>
+            <span className="text-2xl font-bold text-amber-100" data-price={LIFETIME_PREMIUM_LABEL}>{LIFETIME_PREMIUM_LABEL}</span>
           </div>
           <p className="text-center text-amber-200/80 text-sm mt-3 leading-relaxed">
             Pay once. Own it forever. No monthly subscriptions, no hidden fees.
@@ -208,13 +213,13 @@ export function PremiumModal() {
                 Memproses...
               </>
             ) : (
-              "Get a lifetime premium"
+              "Unlock Premium"
             )}
           </Button>
 
           {/* Footer Links — Midtrans Compliance */}
           <footer className="pt-4 mt-4 border-t border-amber-500/20">
-            <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500">
+            <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-400">
               <Link
                 href="/terms"
                 className="hover:text-amber-200/80 transition-colors"
@@ -237,7 +242,7 @@ export function PremiumModal() {
                 href="mailto:support@domainanda.com"
                 className="hover:text-amber-200/80 transition-colors"
               >
-                Contact Support: support@domainanda.com
+                Contact Support
               </a>
             </nav>
           </footer>

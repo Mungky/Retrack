@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { LIFETIME_PREMIUM_LABEL } from "@/lib/constants";
 
 export function LandingHero() {
   return (
@@ -21,7 +22,7 @@ export function LandingHero() {
         transition={{ delay: 0.2, duration: 0.5 }}
         className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl"
       >
-        Sekali Bayar <span className="font-semibold text-foreground">Rp 49.999</span>,
+        Sekali Bayar <span className="font-semibold text-foreground">{LIFETIME_PREMIUM_LABEL}</span>,
         Akses Selamanya.
       </motion.p>
       <motion.div

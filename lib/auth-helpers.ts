@@ -13,6 +13,7 @@ export async function getServerUser() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
+    console.log("[getServerUser] No user on server:", error?.message ?? "no session");
     return null;
   }
 

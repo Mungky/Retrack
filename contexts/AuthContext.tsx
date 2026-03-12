@@ -31,9 +31,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     timeoutRef.current = setTimeout(finish, MAX_LOADING_MS);
 
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    supabaseClient.auth.getSession().then(({ data: { session }, error }) => {
       if (mounted) {
-        setUser(session?.user ?? null);
+        if (error) {
+          console.warn("[AuthContext] getSession error:", error.message);
+        }
+        const u = session?.user ?? null;
+        console.log("[AuthContext] Session from getSession:", u ? { id: u.id, email: u.email } : "null (no session)");
+        setUser(u);
         setLoading(false);
         setSessionCheckComplete(true);
         if (timeoutRef.current) {
@@ -45,8 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
       if (mounted) {
+        console.log("[AuthContext] onAuthStateChange:", event, session?.user ? { id: session.user.id } : "null");
         setUser(session?.user ?? null);
         setLoading(false);
         setSessionCheckComplete(true);
