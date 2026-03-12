@@ -21,7 +21,7 @@ export function LandingHero() {
         transition={{ delay: 0.2, duration: 0.5 }}
         className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl"
       >
-        Sekali Bayar <span className="font-semibold text-foreground">Rp 50.000</span>,
+        Sekali Bayar <span className="font-semibold text-foreground">Rp 49.999</span>,
         Akses Selamanya.
       </motion.p>
       <motion.div

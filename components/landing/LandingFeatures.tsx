@@ -27,7 +27,7 @@ const features = [
   {
     icon: CreditCard,
     title: "Sekali Bayar",
-    description: "Rp 50.000 sekali bayar, akses selamanya. Tidak ada langganan bulanan.",
+    description: "Rp 49.999 sekali bayar, akses selamanya. Tidak ada langganan bulanan.",
   },
 ];
 

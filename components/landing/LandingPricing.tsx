@@ -84,7 +84,7 @@ export function LandingPricing() {
           </span>
           <h3 className="text-xl font-semibold text-foreground">Pro</h3>
           <p className="text-muted-foreground text-sm mt-1">Lifetime access</p>
-          <p className="mt-4 text-2xl font-bold text-foreground">Rp 50.000</p>
+          <p className="mt-4 text-2xl font-bold text-foreground">Rp 49.999</p>
           <p className="text-sm text-muted-foreground">Sekali bayar, selamanya</p>
           <ul className="mt-6 space-y-3">
             {proFeatures.map((f) => (

@@ -4,8 +4,8 @@ import { getServerUserId } from "@/lib/auth-helpers";
 
 const MIDTRANS_SNAP_URL = "https://app.sandbox.midtrans.com/snap/v1/transactions";
 
-/** Default: Rp 49.000 (harga promo) */
-const DEFAULT_GROSS_AMOUNT = 49000;
+/** Default: Rp 49.999 */
+const DEFAULT_GROSS_AMOUNT = 49999;
 
 export async function POST(request: Request) {
   const serverKey = process.env.MIDTRANS_SERVER_KEY;

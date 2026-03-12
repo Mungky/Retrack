@@ -14,7 +14,6 @@ import { useSubscriptionStore } from "@/stores/subscriptionStore";
 import { usePremiumModalStore } from "@/stores/premiumModalStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { upgradeToProLifetime } from "@/app/actions/subscription";
 import { cn } from "@/lib/cn";
 import { Loader2 } from "lucide-react";
 
@@ -39,8 +38,8 @@ const BENEFITS = [
   { icon: "📈", text: "Unlimited Budgets" },
 ] as const;
 
-/** Harga Lifetime Premium - Rp 49.000 (harga promo) */
-const LIFETIME_GROSS_AMOUNT = 49000;
+/** Harga Lifetime Premium - Rp 49.999 */
+const LIFETIME_GROSS_AMOUNT = 49999;
 
 export function PremiumModal() {
   const { isOpen, close } = usePremiumModalStore();
@@ -79,29 +78,39 @@ export function PremiumModal() {
         throw new Error(data.error || "Gagal membuat transaksi");
       }
 
-      const { token } = data;
+      const { token, order_id: orderId } = data;
       if (!token) {
         throw new Error("Token pembayaran tidak diterima");
+      }
+      if (!orderId) {
+        throw new Error("Order ID tidak diterima");
       }
 
       if (!window.snap) {
         throw new Error("Midtrans Snap belum siap. Tunggu sebentar dan coba lagi.");
       }
 
-      window.snap.pay(token, {
-        onSuccess: async (result: { transaction_status?: string }) => {
+      close();
+
+      setTimeout(() => {
+        window.snap!.pay(token, {
+          onSuccess: async (result: { order_id?: string; transaction_status?: string }) => {
+          const paidOrderId = result?.order_id || orderId;
           const status = result?.transaction_status;
           if (status !== "capture" && status !== "settlement") {
             showToast("Status pembayaran tidak valid. Silakan coba lagi.", "error");
             return;
           }
-          const upgradeRes = await upgradeToProLifetime();
-          if (upgradeRes.success) {
+          const statusRes = await fetch(
+            `/api/transaction/status?order_id=${encodeURIComponent(paidOrderId)}`
+          );
+          const statusData = await statusRes.json();
+          if (statusData.success) {
             upgrade();
             close();
             showToast("Pembayaran berhasil! Akun Pro Anda telah diaktifkan.", "success");
           } else {
-            showToast(upgradeRes.error, "error");
+            showToast(statusData.message || "Verifikasi pembayaran gagal.", "error");
           }
         },
         onPending: () => {
@@ -113,7 +122,8 @@ export function PremiumModal() {
         onClose: () => {
           // User menutup popup tanpa membayar
         },
-      });
+        });
+      }, 150);
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Gagal memproses pembayaran.", "error");
     } finally {
@@ -174,8 +184,7 @@ export function PremiumModal() {
             <span className="text-xl">👑</span>
           </div>
           <div className="flex items-baseline justify-center gap-2">
-            <del className="text-amber-200/50 text-base">Rp 299.000</del>
-            <span className="text-2xl font-bold text-amber-100">Rp 49.000</span>
+            <span className="text-2xl font-bold text-amber-100">Rp 49.999</span>
           </div>
           <p className="text-center text-amber-200/80 text-sm mt-3 leading-relaxed">
             Pay once. Own it forever. No monthly subscriptions, no hidden fees.
