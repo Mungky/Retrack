@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui";
@@ -10,6 +11,10 @@ interface ErrorProps {
 }
 
 export default function Error({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    console.error("[Error] Client-side error:", error?.message, error?.stack);
+  }, [error]);
+
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-md w-full text-center space-y-6">
@@ -25,6 +30,11 @@ export default function Error({ error, reset }: ErrorProps) {
           <p className="text-muted-foreground text-sm leading-relaxed">
             Jangan khawatir, data Anda aman. Silakan coba muat ulang halaman.
           </p>
+          {error?.message && (
+            <pre className="text-left text-xs text-destructive bg-destructive/10 p-4 rounded-xl overflow-auto max-w-full">
+              {error.message}
+            </pre>
+          )}
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button

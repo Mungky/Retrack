@@ -50,8 +50,8 @@ function GaugeChart({
   return (
     <div className="fintech-card p-4 flex flex-col items-center">
       <p className="text-white/60 text-xs font-medium mb-2">{label}</p>
-      <div className="w-full h-24 -mt-2">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full h-24 min-h-[96px] -mt-2">
+        <ResponsiveContainer width="100%" height={96} minHeight={96}>
           <PieChart>
             <Pie
               data={data}

@@ -288,7 +288,7 @@ export default function StatisticsTabs({
                 Income vs Expense Trend
               </h3>
               {stats.dailySeriesData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={280} minHeight={280}>
                   <AreaChart data={stats.dailySeriesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
@@ -400,7 +400,7 @@ export default function StatisticsTabs({
           <div className="fintech-card p-6">
             <h3 className="font-playfair text-xl font-semibold text-white mb-4">Cash Flow</h3>
             {stats.dailySeriesData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={280} minHeight={280}>
                 <BarChart data={stats.dailySeriesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
                   <XAxis

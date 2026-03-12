@@ -2,13 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/AppShell";
-import { AuroraBackground } from "@/components/ui/aurora-background";
+import { AuroraBackgroundClient } from "@/components/ui/aurora-background-client";
 import { SheetProvider } from "@/contexts/SheetContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { SubscriptionSync } from "@/components/SubscriptionSync";
+import { ClientErrorHandler } from "@/components/ClientErrorHandler";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -73,7 +74,8 @@ export default function RootLayout({
           aria-hidden
         />
         <ThemeProvider attribute="data-theme" defaultTheme="default">
-        <AuroraBackground />
+        <ClientErrorHandler />
+        <AuroraBackgroundClient />
         <AuthProvider>
           <SubscriptionSync />
           <ToastProvider>

@@ -15,7 +15,7 @@ export interface CategoryPoint {
 }
 
 interface CategoryChartProps {
-  data: CategoryPoint[];
+  data?: CategoryPoint[] | null;
   title?: string;
   subtitle?: string;
   /** "income" = Emerald/green shades | "expense" = Rose/amber shades */
@@ -31,7 +31,8 @@ export default function CategoryChart({
   subtitle = "Current period expenses",
   variant = "expense",
 }: CategoryChartProps) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const safeData = data ?? [];
+  const total = safeData.reduce((sum, item) => sum + item.value, 0);
   const colors = variant === "income" ? INCOME_COLORS : EXPENSE_COLORS;
   const emptyMsg =
     variant === "income"
@@ -43,17 +44,17 @@ export default function CategoryChart({
       <h3 className="text-lg font-semibold text-white mb-1">{title}</h3>
       <p className="text-sm text-slate-400 mb-4">{subtitle}</p>
 
-      {data.length === 0 ? (
+      {safeData.length === 0 ? (
         <div className="h-[220px] flex items-center justify-center text-slate-400">
           {emptyMsg}
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-1/2 h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full lg:w-1/2 h-[220px] min-h-[220px]">
+            <ResponsiveContainer width="100%" height={220} minHeight={220}>
               <PieChart>
                 <Pie
-                  data={data}
+                  data={safeData}
                   cx="50%"
                   cy="50%"
                   innerRadius={52}
@@ -61,7 +62,7 @@ export default function CategoryChart({
                   dataKey="value"
                   paddingAngle={2}
                 >
-                  {data.map((_, idx) => (
+                  {safeData.map((_, idx) => (
                     <Cell key={idx} fill={colors[idx % colors.length]} />
                   ))}
                 </Pie>
@@ -71,7 +72,7 @@ export default function CategoryChart({
           </div>
 
           <div className="w-full lg:w-1/2 space-y-2">
-            {data.map((item, idx) => {
+            {safeData.map((item, idx) => {
               const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
               return (
                 <div

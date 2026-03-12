@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 export default function GlobalError({
   error,
   reset,
@@ -7,6 +9,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("[GlobalError] Client-side error:", error?.message, error?.stack);
+  }, [error]);
+
   return (
     <html lang="en">
       <body>
@@ -26,9 +32,26 @@ export default function GlobalError({
           <h1 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
             Oops! Sesuatu berjalan tidak semestinya.
           </h1>
-          <p style={{ color: "#a1a1aa", marginBottom: "1.5rem", fontSize: "0.875rem" }}>
+          <p style={{ color: "#a1a1aa", marginBottom: "0.5rem", fontSize: "0.875rem" }}>
             Jangan khawatir, data Anda aman. Silakan coba muat ulang halaman.
           </p>
+          {typeof window !== "undefined" && error?.message && (
+            <pre
+              style={{
+                color: "#f87171",
+                fontSize: "0.75rem",
+                maxWidth: "100%",
+                overflow: "auto",
+                padding: "1rem",
+                backgroundColor: "rgba(0,0,0,0.3)",
+                borderRadius: "0.5rem",
+                marginBottom: "1rem",
+                textAlign: "left",
+              }}
+            >
+              {error.message}
+            </pre>
+          )}
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
             <button
               type="button"

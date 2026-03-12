@@ -19,7 +19,7 @@ export interface TrendPoint {
 }
 
 interface TrendChartProps {
-  data: TrendPoint[];
+  data?: TrendPoint[] | null;
 }
 
 function formatChartDate(isoDate: string): string {
@@ -35,7 +35,7 @@ function formatChartDate(isoDate: string): string {
 }
 
 export default function TrendChart({ data }: TrendChartProps) {
-  const chartData = data.map((d) => ({
+  const chartData = (data ?? []).map((d) => ({
     ...d,
     dateLabel: formatChartDate(d.date),
   }));
@@ -48,7 +48,8 @@ export default function TrendChart({ data }: TrendChartProps) {
           No data in selected period
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={280}>
+        <div className="w-full min-h-[280px]">
+        <ResponsiveContainer width="100%" height={280} minHeight={280}>
           <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
@@ -84,6 +85,7 @@ export default function TrendChart({ data }: TrendChartProps) {
             <Area type="monotone" dataKey="expense" name="Expense" stroke="#F43F5E" strokeWidth={2} fill="url(#expenseFill)" />
           </AreaChart>
         </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

@@ -45,16 +45,17 @@ function groupTransactionsByDate(transactions: Transaction[]) {
 export default function TransactionsList({
   initialTransactions,
 }: {
-  initialTransactions: Transaction[];
+  initialTransactions?: Transaction[] | null;
 }) {
+  const safeTransactions = initialTransactions ?? [];
   const [searchQuery, setSearchQuery] = useState("");
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const filteredTransactions = useMemo(() => {
-    if (!searchQuery.trim()) return initialTransactions;
+    if (!searchQuery.trim()) return safeTransactions;
     const query = searchQuery.toLowerCase();
-    return initialTransactions.filter((transaction) => {
+    return safeTransactions.filter((transaction) => {
       const categoryName = transaction.category?.name?.toLowerCase() || "";
       const sourceWalletName = transaction.source_wallet?.name?.toLowerCase() || "";
       const destinationWalletName = transaction.destination_wallet?.name?.toLowerCase() || "";
@@ -66,14 +67,14 @@ export default function TransactionsList({
         amount.includes(query)
       );
     });
-  }, [initialTransactions, searchQuery]);
+  }, [safeTransactions, searchQuery]);
 
   const groupedTransactions = useMemo(
     () => (mounted ? groupTransactionsByDate(filteredTransactions) : {}),
     [filteredTransactions, mounted]
   );
 
-  if (initialTransactions.length === 0) {
+  if (safeTransactions.length === 0) {
     return (
       <div className="glass-card p-12 text-center">
         <p className="text-white/60 text-lg">Belum ada transaksi</p>

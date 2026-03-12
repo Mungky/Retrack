@@ -209,7 +209,7 @@ export default function StatisticsClient({
           Spending Trend
         </h3>
         {stats.chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={260} minHeight={260}>
             <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
@@ -259,7 +259,8 @@ export default function StatisticsClient({
         <p className="text-white/50 text-sm mb-4">Your income sources</p>
         {stats.incomeCategoryData.length > 0 ? (
           <div className="flex flex-col lg:flex-row gap-6 items-center">
-            <ResponsiveContainer width="100%" height={220}>
+            <div className="w-full min-w-0 min-h-[220px]">
+            <ResponsiveContainer width="100%" height={220} minHeight={220}>
               <PieChart>
                 <Tooltip
                   content={(props) => (
@@ -287,6 +288,7 @@ export default function StatisticsClient({
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
+            </div>
             <div className="flex-1 w-full grid grid-cols-2 gap-2">
               {stats.incomeCategoryData.slice(0, 6).map((d) => {
                 const total = stats.incomeCategoryData.reduce((s, x) => s + x.value, 0);
@@ -315,7 +317,8 @@ export default function StatisticsClient({
         <p className="text-white/50 text-sm mb-4">Your expense sources</p>
         {stats.expenseCategoryData.length > 0 ? (
           <div className="flex flex-col lg:flex-row gap-6 items-center">
-            <ResponsiveContainer width="100%" height={220}>
+            <div className="w-full min-w-0 min-h-[220px]">
+            <ResponsiveContainer width="100%" height={220} minHeight={220}>
               <PieChart>
                 <Tooltip
                   content={(props) => (
@@ -343,6 +346,7 @@ export default function StatisticsClient({
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
+            </div>
             <div className="flex-1 w-full grid grid-cols-2 gap-2">
               {stats.expenseCategoryData.slice(0, 6).map((d) => {
                 const total = stats.expenseCategoryData.reduce((s, x) => s + x.value, 0);

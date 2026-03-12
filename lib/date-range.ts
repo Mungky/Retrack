@@ -95,14 +95,15 @@ export function toDateOnly(dateStr: string): string {
 }
 
 export function filterTransactionsByRange<T extends { date: string }>(
-  transactions: T[],
+  transactions: T[] | null | undefined,
   range: DateRangeKey,
   cycleParams?: CycleParams
 ): T[] {
+  const safe = transactions ?? [];
   const { start, end } = getDateRange(range, cycleParams);
   const startStr = toLocalDateString(start);
   const endStr = toLocalDateString(end);
-  return transactions.filter((t) => {
+  return safe.filter((t) => {
     const tDate = toDateOnly(t.date);
     return tDate >= startStr && tDate <= endStr;
   });

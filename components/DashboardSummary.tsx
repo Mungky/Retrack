@@ -135,8 +135,8 @@ export default function DashboardSummary({
 
         {/* Mini preview chart - full chart ada di halaman Stats */}
         {chartData.length > 0 ? (
-          <div className="flex-1 min-w-0 h-14">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 min-w-0 h-14 min-h-[56px]">
+            <ResponsiveContainer width="100%" height={56} minHeight={56}>
               <LineChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                 <XAxis dataKey="dateLabel" hide />
                 <YAxis dataKey="cumulativeNet" hide />

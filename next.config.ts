@@ -17,9 +17,11 @@ const nextConfig: NextConfig = {
       { source: "/stats/:path*", destination: "/statistics", permanent: true },
     ];
   },
-  // Optimize bundle size
+  // Optimize bundle size (keep console.error/warn for debugging production errors)
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole: process.env.NODE_ENV === "production"
+      ? { exclude: ["error", "warn"] }
+      : false,
   },
   // Optimize images
   images: {
