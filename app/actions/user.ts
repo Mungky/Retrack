@@ -147,13 +147,12 @@ export async function getCyclePrefs(): Promise<CyclePrefs> {
     return null;
   }
   const row = data as { cycle_type?: string; paycheck_date?: number };
-  const cycleType =
-    row.cycle_type === "paycheck" ? "paycheck" : "calendar";
+  const cycleType = (row.cycle_type === "paycheck" ? "paycheck" : "calendar") as CycleType;
   const paycheckDate = Math.max(
     1,
     Math.min(31, Number(row.paycheck_date) || 1)
   );
-  const result = { cycleType, paycheckDate };
+  const result: CyclePrefs = { cycleType, paycheckDate };
   console.log("[getCyclePrefs] DB RESULT:", result);
   return result;
 }
