@@ -1,7 +1,7 @@
 import { getServerUserId } from "@/lib/auth-helpers";
 import { createClient } from "@/lib/supabase-server";
 import ProfileClient from "@/components/ProfileClient";
-import { redirect } from "next/navigation";
+import { ClientRedirect } from "@/components/ClientRedirect";
 import type { Wallet, Category } from "@/types";
 
 async function getWallets(userId: string | null): Promise<Wallet[]> {
@@ -45,7 +45,7 @@ export const metadata = {
 
 export default async function SettingsPage() {
   const userId = await getServerUserId();
-  if (!userId) redirect("/login");
+  if (!userId) return <ClientRedirect to="/login" />;
 
   const [wallets, categories] = await Promise.all([
     getWallets(userId),
