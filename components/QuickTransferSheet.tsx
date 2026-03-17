@@ -110,7 +110,7 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
     lightTap();
 
     if (!isOnline) {
-      showToast(TOAST_MESSAGES.ERROR.OFFLINE, "error");
+      showToast("Koneksi terputus. Pastikan Anda online untuk mentransfer uang.", "error");
       return;
     }
 
@@ -303,14 +303,14 @@ export default function QuickTransferSheet({ isOpen, onClose }: QuickTransferShe
           {/* Submit Button - blue themed */}
           <button
             type="submit"
-            disabled={!isOnline || isLoadingWallets}
+            disabled={isLoadingWallets}
             className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
             style={{ boxShadow: theme.submitShadow }}
           >
             {!isOnline ? (
               <>
                 <WifiOff size={18} className="shrink-0" />
-                Menunggu koneksi...
+                Offline - Klik untuk info
               </>
             ) : (
               "Transfer Now"

@@ -20,7 +20,7 @@ export function LandingHero() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl"
+        className="mt-6 text-lg md:text-xl text-foreground/90 max-w-2xl"
       >
         Sekali Bayar <span className="font-semibold text-foreground">{LIFETIME_PREMIUM_LABEL}</span>,
         Akses Selamanya.

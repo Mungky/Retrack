@@ -215,7 +215,7 @@ export default function RegisterPage() {
                 <Input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setError(null); }}
                   placeholder="Your name"
                   className="pl-12 rounded-2xl h-12"
                   disabled={isLoading}
@@ -230,7 +230,7 @@ export default function RegisterPage() {
                 <Input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError(null); }}
                   placeholder="nama@email.com"
                   required
                   className="pl-12 rounded-2xl h-12"
@@ -246,7 +246,7 @@ export default function RegisterPage() {
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   placeholder="At least 6 characters"
                   required
                   minLength={6}
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                 <Input
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
                   placeholder="Repeat password"
                   required
                   minLength={6}

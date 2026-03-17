@@ -107,7 +107,7 @@ export default function LoginPage() {
                 <Input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError(null); }}
                   placeholder="nama@email.com"
                   required
                   className="pl-12 rounded-2xl h-12"
@@ -123,7 +123,7 @@ export default function LoginPage() {
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   placeholder="••••••••"
                   required
                   className="pl-12 rounded-2xl h-12"

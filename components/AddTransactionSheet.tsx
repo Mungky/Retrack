@@ -174,7 +174,7 @@ export default function AddTransactionSheet({
     lightTap();
 
     if (!isOnline) {
-      showToast(TOAST_MESSAGES.ERROR.OFFLINE, "error");
+      showToast("Koneksi terputus. Pastikan Anda online untuk menyimpan transaksi.", "error");
       return;
     }
 
@@ -438,14 +438,14 @@ export default function AddTransactionSheet({
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={!isOnline}
+              disabled={isLoadingWallets || isLoadingCategories}
               size="lg"
               className="w-full"
             >
               {!isOnline ? (
                 <>
                   <WifiOff size={18} className="shrink-0" />
-                  Menunggu koneksi...
+                  Offline - Klik untuk info
                 </>
               ) : (
                 isIncome ? "Save Income" : "Save Expense"

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { revalidateTransactionPaths } from "@/app/actions";
-import { X, Loader2, Calendar } from "lucide-react";
+import { X, Loader2, Calendar, WifiOff } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase-client";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { useSheet } from "@/contexts/SheetContext";
 import { REFRESH_CATEGORIES_EVENT } from "@/lib/app-events";
 import { CategoryIconDisplay } from "@/components/shared/CategoryIconDisplay";
 import CurrencyInput from "./CurrencyInput";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { ThemeSelect, Input } from "@/components/ui";
 import { formThemes, getTransactionAccent } from "@/lib/form-themes";
 import { Z_INDEX } from "@/lib/z-index";
@@ -47,6 +48,7 @@ export default function EditTransactionSheet({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const isOnline = useNetworkStatus();
 
   // Dynamic theme based on current type toggle
   const accent = getTransactionAccent(isIncome ? "income" : "expense");
@@ -137,6 +139,11 @@ export default function EditTransactionSheet({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isOnline) {
+      showToast("Koneksi terputus. Pastikan Anda online untuk menyimpan transaksi.", "error");
+      return;
+    }
 
     if (!description?.trim() || !selectedWallet || !selectedCategory) {
       showToast(TOAST_MESSAGES.ERROR.VALIDATE_ALL_FIELDS, "error");
@@ -373,11 +380,16 @@ export default function EditTransactionSheet({
           {/* Submit - themed */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isLoadingWallets || isLoadingCategories}
             className={`w-full py-4 rounded-2xl ${theme.submitGradient} text-white font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
             style={{ boxShadow: theme.submitShadow }}
           >
-            {isLoading ? (
+            {!isOnline ? (
+              <>
+                <WifiOff size={20} />
+                <span>Offline - Klik untuk info</span>
+              </>
+            ) : isLoading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
                 <span>Processing...</span>
