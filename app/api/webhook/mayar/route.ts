@@ -49,24 +49,33 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient();
     
-    let userQuery = admin.from("users").update({ isPro: true, theme: "sultan" });
+    // REVERT: Mengikuti konfirmasi user bahwa nama kolom aslinya adalah camelCase 'isPro'
+    const updateData = { isPro: true, theme: "sultan" };
     
-    if (customField && customField.length > 10) { 
-      // Asumsikan custom_field berisi uuid Supabase (panjangnya lebih dari 10 karakter)
-      userQuery = userQuery.eq("id", customField);
+    // Mayar kadang mengirim 'custom_field' atau 'customField' atau 'metadata.custom_field'
+    const identifier = customField || data.customField || data.metadata?.custom_field || payload.custom_field;
+
+    console.log(`[Mayar Webhook] Processing event: ${payload.event}. Identifier: ${identifier || customerEmail}`);
+
+    const userQuery = admin.from("users").update(updateData);
+
+    if (identifier && identifier.length > 20) { 
+      userQuery.eq("id", identifier);
     } else if (customerEmail) {
-      userQuery = userQuery.eq("email", customerEmail);
+      userQuery.eq("email", customerEmail);
+    } else {
+      console.warn("[Mayar Webhook] No valid identifier found in payload");
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
     const { error } = await userQuery;
 
     if (error) {
-      console.error("[Mayar Webhook] Update user failed:", error);
+      console.error("[Mayar Webhook] Supabase Update Error:", error.message);
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    console.log(`[Mayar Webhook] Upgraded user to Pro: ${customField || customerEmail}`);
-    
+    console.log(`[Mayar Webhook] Success! Upgraded: ${identifier || customerEmail}`);
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     console.error("[Mayar Webhook] Error processing payload:", err);
