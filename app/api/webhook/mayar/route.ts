@@ -30,23 +30,24 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(rawBody);
     console.log("[Mayar Webhook] Received Payload:", JSON.stringify(payload, null, 2));
 
-    // Mendukung berbagai struktur payload Mayar
+    // Mendukung berbagai struktur payload Mayar (data asli menggunakan SUCCESS)
     const data = payload.data || payload;
     
-    // Hanya proses jika eventnya berhasil (payment.received atau status PAID)
     const isPaid = 
       payload.event === "payment.received" || 
       payload.event === "transaction.paid" || 
+      data.status === "SUCCESS" || 
       data.status === "PAID" || 
       payload.statusCode === "PAID" ||
       payload.event_type === "payment.received";
 
     if (!isPaid) {
-      console.log(`[Mayar Webhook] Event ${payload.event || 'unknown'} ignored.`);
+      console.log(`[Mayar Webhook] Event ${payload.event || 'unknown'} with status ${data.status} ignored.`);
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    const customerEmail = data.customer?.email || data.email || payload.email;
+    // Dari payload asli Mayar: menggunakan customerEmail (camelCase)
+    const customerEmail = data.customerEmail || data.customer?.email || data.email || payload.email;
     const customField = data.custom_field || data.customField || data.metadata?.custom_field || payload.custom_field; 
 
     // Cari user berdasarkan custom_field (id) atau email
