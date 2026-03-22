@@ -20,18 +20,7 @@ import { LIFETIME_PREMIUM_AMOUNT, LIFETIME_PREMIUM_LABEL } from "@/lib/constants
 import { upgradeToProLifetime } from "@/app/actions/subscription";
 import { Loader2 } from "lucide-react";
 
-declare global {
-  interface Window {
-    snap?: {
-      pay: (token: string, options?: {
-        onSuccess?: (result: unknown) => void;
-        onPending?: (result: unknown) => void;
-        onError?: (result: unknown) => void;
-        onClose?: () => void;
-      }) => void;
-    };
-  }
-}
+// Midtrans snap typings removed
 
 const BENEFITS = [
   { icon: "🎨", text: "Unlock Sultan & Forest Themes" },
@@ -49,105 +38,44 @@ export function PremiumModal() {
   const { setTheme } = useTheme();
   const upgrade = useSubscriptionStore((s) => s.upgrade);
   const [isUpgrading, setIsUpgrading] = useState(false);
-  const [snapReady, setSnapReady] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.snap) {
-      setSnapReady(true);
-    }
-  }, []);
-
   const handleUnlock = async () => {
-    if (!user?.id || !clientKey?.trim()) return;
+    if (!user?.id) return;
     try {
       setIsUpgrading(true);
-
-      const res = await fetch("/api/transaction", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gross_amount: LIFETIME_PREMIUM_AMOUNT,
-          customer_details: {
-            first_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Customer",
-            email: user.email || "customer@example.com",
-          },
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal membuat transaksi");
+      
+      const paymentLink = process.env.NEXT_PUBLIC_MAYAR_PAYMENT_LINK;
+      if (!paymentLink) {
+        showToast("Link pembayaran belum dikonfigurasi.", "error");
+        setIsUpgrading(false);
+        return;
       }
 
-      const { token, order_id: orderId } = data;
-      if (!token) {
-        throw new Error("Token pembayaran tidak diterima");
+      // Mengarahkan langsung ke URL pembayaran Mayar dengan membawa identifier user
+      const checkoutUrl = new URL(paymentLink);
+      
+      const userName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Customer";
+      
+      if (user.email) {
+        checkoutUrl.searchParams.append("customer_email", user.email);
+        checkoutUrl.searchParams.append("email", user.email);
       }
-      if (!orderId) {
-        throw new Error("Order ID tidak diterima");
-      }
+      checkoutUrl.searchParams.append("customer_name", userName);
+      checkoutUrl.searchParams.append("name", userName);
+      checkoutUrl.searchParams.append("custom_field", user.id);
 
-      if (!window.snap) {
-        throw new Error("Midtrans Snap belum siap. Tunggu sebentar dan coba lagi.");
-      }
-
-      close();
-
-      setTimeout(() => {
-        window.snap!.pay(token, {
-          onSuccess: async (result: unknown) => {
-          const r = result as { order_id?: string; transaction_status?: string };
-          const paidOrderId = r?.order_id || orderId;
-          const status = r?.transaction_status;
-          if (status !== "capture" && status !== "settlement") {
-            showToast("Status pembayaran tidak valid. Silakan coba lagi.", "error");
-            return;
-          }
-
-          const dbResult = await upgradeToProLifetime();
-          if (!dbResult.success) {
-            showToast(dbResult.error || "Gagal mengaktifkan akun Premium.", "error");
-            return;
-          }
-
-          upgrade();
-          setTheme("sultan");
-          if (typeof window !== "undefined") {
-            localStorage.setItem("remula-theme", "sultan");
-          }
-          close();
-          showToast("Pembayaran Berhasil! Akun Anda sekarang Premium.", "success");
-        },
-        onPending: () => {
-          showToast("Menunggu pembayaran. Silakan selesaikan pembayaran.", "success");
-        },
-        onError: () => {
-          showToast("Pembayaran gagal. Silakan coba lagi.", "error");
-        },
-        onClose: () => {
-          // User menutup popup tanpa membayar
-        },
-        });
-      }, 150);
+      window.location.href = checkoutUrl.toString();
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Gagal memproses pembayaran.", "error");
-    } finally {
       setIsUpgrading(false);
     }
   };
 
-  const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
-  const canPay = Boolean(clientKey?.trim());
+  const paymentLink = process.env.NEXT_PUBLIC_MAYAR_PAYMENT_LINK;
+  const canPay = Boolean(paymentLink?.trim());
 
   return (
     <>
-      <Script
-        src="https://app.sandbox.midtrans.com/snap/snap.js"
-        data-client-key={clientKey ?? ""}
-        strategy="afterInteractive"
-        onLoad={() => setSnapReady(true)}
-      />
+
     <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
       <DialogContent
         className={cn(
@@ -200,7 +128,7 @@ export function PremiumModal() {
         <div className="space-y-2 pt-2">
           <Button
             onClick={handleUnlock}
-            disabled={!user?.id || isUpgrading || !snapReady || !canPay}
+            disabled={!user?.id || isUpgrading || !canPay}
             className={cn(
               "w-full py-4 text-lg font-bold",
               "bg-gradient-to-r from-amber-500 to-amber-600 text-amber-950",
