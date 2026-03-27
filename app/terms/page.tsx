@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Syarat & Ketentuan | Re-Start",
-  description: "Syarat dan ketentuan penggunaan aplikasi Re-Start.",
+  title: "Syarat & Ketentuan | ReTrack",
+  description: "Syarat dan ketentuan penggunaan aplikasi ReTrack.",
 };
 
 export default function TermsPage() {
@@ -20,7 +20,7 @@ export default function TermsPage() {
         </h1>
         <div className="prose prose-invert max-w-none text-muted-foreground space-y-6">
           <p className="text-sm leading-relaxed">
-            Halaman ini berisi syarat dan ketentuan penggunaan aplikasi Re-Start.
+            Halaman ini berisi syarat dan ketentuan penggunaan aplikasi ReTrack.
             Dokumen lengkap akan ditambahkan sesuai kebutuhan operasional dan
             persyaratan Payment Gateway (Midtrans).
           </p>
@@ -29,7 +29,7 @@ export default function TermsPage() {
               1. Penggunaan Layanan
             </h2>
             <p className="text-sm leading-relaxed">
-              Dengan mendaftar dan menggunakan Re-Start, Anda setuju untuk mematuhi
+              Dengan mendaftar dan menggunakan ReTrack, Anda setuju untuk mematuhi
               syarat dan ketentuan yang berlaku. Aplikasi ini menyediakan layanan
               pelacakan keuangan pribadi.
             </p>

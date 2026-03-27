@@ -51,10 +51,6 @@ export function ThemeSwitcher() {
   const currentTheme = (mounted ? (theme || resolvedTheme || "default") : "default") as ThemeId;
 
   const handleThemeClick = async (id: ThemeId) => {
-    if ((id === "sultan" || id === "forest") && !isPro) {
-      openPremium();
-      return;
-    }
     setTheme(id);
     const result = await updateUserTheme(id);
     if (!result.success) {
@@ -76,7 +72,7 @@ export function ThemeSwitcher() {
       </p>
       <div className="grid grid-cols-3 gap-3">
         {THEMES.map((t) => {
-          const isLocked = !isPro && (t.id === "sultan" || t.id === "forest");
+          const isLocked = false;
           return (
             <button
               key={t.id}

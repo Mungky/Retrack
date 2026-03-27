@@ -187,31 +187,23 @@ export default function CategoryManager({
                   <button
                     onClick={() => {
                       setMenuOpenId(null);
-                      if (!isPro) {
-                        openPremium();
-                        return;
-                      }
                       setSelectedCategory(category);
                       setIsFormOpen(true);
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                   >
-                    {!isPro ? <Lock size={16} className="text-amber-500" /> : <Pencil size={16} className="text-primary" />}
+                    <Pencil size={16} className="text-primary" />
                     Edit
                   </button>
                   <button
                     onClick={() => {
                       setMenuOpenId(null);
-                      if (!isPro) {
-                        openPremium();
-                        return;
-                      }
                       setSelectedCategory(category);
                       setIsDeleteOpen(true);
                     }}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-card-foreground hover:bg-muted transition-colors text-left"
                   >
-                    {!isPro ? <Lock size={16} className="text-amber-500" /> : <Trash2 size={16} className="text-rose-400" />}
+                    <Trash2 size={16} className="text-rose-400" />
                     Delete
                   </button>
                 </div>
@@ -229,16 +221,12 @@ export default function CategoryManager({
       <div className="flex items-center gap-3">
         <Button
           onClick={() => {
-            if (!isPro) {
-              openPremium();
-              return;
-            }
             setSelectedCategory(null);
             setIsFormOpen(true);
           }}
-          className={`flex-1 justify-center gap-2 ${!isPro ? "opacity-85" : ""}`}
+          className="flex-1 justify-center gap-2"
         >
-          {!isPro ? <Lock size={18} className="text-amber-500" /> : <Plus size={18} />}
+          <Plus size={18} />
           Add Category
         </Button>
         <div className="flex rounded-xl border border-border bg-card p-1">

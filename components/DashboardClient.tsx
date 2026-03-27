@@ -42,10 +42,6 @@ export default function DashboardClient({
   }, [wallets, walletDeltas]);
 
   const handleDateRangeChange = (range: DateRangeKey) => {
-    if (!isPro && range !== "this_month") {
-      openPremium();
-      return;
-    }
     setDateRange(range);
   };
 
@@ -59,7 +55,7 @@ export default function DashboardClient({
           </p>
         </div>
         <DateRangeFilter
-          value={isPro ? dateRange : "this_month"}
+          value={dateRange}
           onChange={handleDateRangeChange}
         />
       </div>

@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Kebijakan Privasi | Re-Start",
-  description: "Kebijakan privasi dan perlindungan data pengguna Re-Start.",
+  title: "Kebijakan Privasi | ReTrack",
+  description: "Kebijakan privasi dan perlindungan data pengguna ReTrack.",
 };
 
 export default function PrivacyPage() {
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         </h1>
         <div className="prose prose-invert max-w-none text-muted-foreground space-y-6">
           <p className="text-sm leading-relaxed">
-            Re-Start menghormati privasi pengguna. Dokumen kebijakan privasi ini
+            ReTrack menghormati privasi pengguna. Dokumen kebijakan privasi ini
             menjelaskan bagaimana kami mengumpulkan, menyimpan, dan melindungi
             data Anda. Dokumen lengkap akan diperbarui sesuai kebutuhan dan
             persyaratan Payment Gateway (Midtrans).

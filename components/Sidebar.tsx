@@ -42,7 +42,7 @@ export default function Sidebar() {
       )}
     >
       <Link href="/dashboard" className="mb-8 px-4">
-        <span className={clsx("text-xl font-bold font-playfair", isForest ? "text-slate-800" : "text-white")}>Re-Start</span>
+        <span className={clsx("text-xl font-bold font-playfair", isForest ? "text-slate-800" : "text-white")}>ReTrack</span>
       </Link>
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {

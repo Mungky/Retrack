@@ -88,7 +88,7 @@ export default function LoginPage() {
         {/* Glassmorphism Card */}
         <Card variant="glass" className="p-8 border border-white/5 shadow-2xl">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-white mb-1 font-playfair">Re-Start</h1>
+            <h1 className="text-3xl font-bold text-white mb-1 font-playfair">ReTrack</h1>
             <p className="text-white/50 text-sm">Sign in to your account</p>
           </div>
 

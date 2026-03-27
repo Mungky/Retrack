@@ -58,7 +58,7 @@ export function LandingFeatures() {
         variants={item}
         className="text-2xl md:text-3xl font-bold text-center text-foreground font-[var(--font-playfair)] mb-12"
       >
-        Mengapa Re-Start?
+        Mengapa ReTrack?
       </motion.h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
         {features.map((feature) => {

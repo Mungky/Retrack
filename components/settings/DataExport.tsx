@@ -45,10 +45,6 @@ export default function DataExport() {
 
   const handleExport = async () => {
     if (!isValidRange) return;
-    if (!isPro) {
-      openPremium();
-      return;
-    }
     setLoading(true);
     try {
       const result = await getAllTransactionsForExport(startDate, endDate);
@@ -99,16 +95,14 @@ export default function DataExport() {
         variant="outline"
         onClick={handleExport}
         disabled={!isValidRange || loading}
-        className={`w-full justify-center gap-3 py-4 rounded-xl border-border hover:border-primary/30 ${!isPro ? "opacity-90" : ""}`}
+        className="w-full justify-center gap-3 py-4 rounded-xl border-border hover:border-primary/30"
       >
         {loading ? (
           <Loader2 className="animate-spin text-primary" size={20} />
-        ) : !isPro ? (
-          <Lock className="text-amber-500" size={20} />
         ) : (
           <Download className="text-primary" size={20} />
         )}
-        <span>{isPro ? "Export CSV" : "Export CSV (Pro)"}</span>
+        <span>Export CSV</span>
       </Button>
     </div>
   );

@@ -13,7 +13,7 @@ export function LandingHeader() {
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <Link href="/" className="text-xl font-bold font-[var(--font-playfair)] text-foreground">
-          Re-Start
+          ReTrack
         </Link>
         <nav className="flex items-center gap-3">
           <Link

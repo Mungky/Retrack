@@ -50,10 +50,6 @@ export default function StatisticsTabs({
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("report");
 
   const handleDateRangeChange = (range: DateRangeKey) => {
-    if (!isPro && range !== "this_month") {
-      openPremium();
-      return;
-    }
     setDateRange(range);
   };
 
@@ -138,7 +134,7 @@ export default function StatisticsTabs({
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <DateRangeFilter
-            value={isPro ? dateRange : "this_month"}
+            value={dateRange}
             onChange={handleDateRangeChange}
           />
         </div>
@@ -147,7 +143,7 @@ export default function StatisticsTabs({
       {/* Tab Nav */}
       <div className="flex gap-1 p-1 fintech-card rounded-2xl">
         {TABS.map(({ id, label, icon: Icon }) => {
-          const isLocked = !isPro && PRO_TABS.includes(id);
+          const isLocked = false;
           const handleClick = () => {
             if (isLocked) {
               openPremium();

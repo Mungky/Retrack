@@ -13,7 +13,7 @@ export function LandingFooter() {
     >
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-          © {new Date().getFullYear()} Re-Start. Catat keuangan lebih mudah.
+          © {new Date().getFullYear()} ReTrack. Catat keuangan lebih mudah.
         </p>
         <nav className="flex items-center gap-6">
           <Link

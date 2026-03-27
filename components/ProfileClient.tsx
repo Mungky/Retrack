@@ -124,26 +124,7 @@ export default function ProfileClient({
                 {displayName}
               </h2>
               <p className="text-muted-foreground text-sm truncate">{user.email}</p>
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                    isPro
-                      ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                      : "bg-muted text-muted-foreground border-border"
-                  }`}
-                >
-                  {isPro ? "Pro" : "Free"}
-                </span>
-                {!isPro && (
-                  <button
-                    type="button"
-                    onClick={openPremium}
-                    className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/40 hover:bg-primary/30 transition-colors"
-                  >
-                    Upgrade to Pro
-                  </button>
-                )}
-              </div>
+              {/* Pro / Free badge and Upgrade button hidden temporarily */}
             </div>
           </div>
 
